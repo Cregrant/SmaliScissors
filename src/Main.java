@@ -9,7 +9,7 @@ public class Main {
     public static int rules_mode = 1;    //0=TruePatcher, 1=AE
     public static int verbose_level = 0;
     public static int arch_device = 0;
-
+//
     public static void main(String[] args) {
         out.println(System.getProperty("user.dir"));
         final String arch = System.getProperty("os.arch");
