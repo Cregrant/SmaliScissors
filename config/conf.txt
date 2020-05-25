@@ -1,0 +1,8 @@
+#Saved settings
+#Sun May 10 18:40:34 ICT 2020
+frameHeight=300
+yPos=45
+frameWidth=500
+width=500
+xPos=655
+height=300
