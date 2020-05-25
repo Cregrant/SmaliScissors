@@ -17,7 +17,6 @@ public class Regex {
     static ArrayList<String> replacementList = new ArrayList<>();
     static ArrayList<String> projectSmaliList = new ArrayList<>();
     static ArrayList<String> projectSmaliText = new ArrayList<>();
-    //static ArrayList<String> projectSmaliListModified = new ArrayList<>();
 
     public static void rulesHandler(String projectPath, String rule){
         String patDetect = "\\[(.+?)][\\S\\s]*?\\[/.+?]";
@@ -102,8 +101,6 @@ public class Regex {
                             ruleReplacementInt++;
                         }
                         if (Main.verbose_level == 0) out.println(projectSmaliList.get(j) + " patched.");
-                        //projectSmaliListModified.add(projectSmaliList.get(j));
-                        //projectSmaliText.set(j, str.replaceAll(ruleMatch, ruleReplacement));
                         IO.write(projectSmaliList.get(j), str.replaceAll(ruleMatch, ruleReplacement));
                         c++;
                         replacementList.clear();
@@ -204,10 +201,6 @@ public class Regex {
                 IO.deleteInDirectory(tempFolder);
 
             }
-            //for (String str : projectSmaliListModified) {
-            //    IO.write(str, projectSmaliText.get(projectSmaliList.indexOf(str)));
-            //}
-            //out.println("Changes wrote");
         }
     }
 }
