@@ -1,5 +1,4 @@
 import java.io.File;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Scanner;
@@ -47,7 +46,7 @@ public class Main {
         out.println("All done in " + timeSpent + " ms");
     }
 
-    static ArrayList<String> select(ArrayList<String> stringsList, String msg) {      //for patch selection too
+    static ArrayList<String> select(ArrayList<String> stringsList, String msg) {
         out.println(msg);
         for (String i : stringsList) {
             out.println(stringsList.indexOf(i) + " - " + i);
@@ -55,7 +54,7 @@ public class Main {
         Scanner br = new Scanner(System.in);
         //StringBuilder name = new StringBuilder(br.nextLine());
         //if (name.toString().equals("")){                       //uncomment for release
-        StringBuilder name = new StringBuilder();               //delete
+        StringBuilder name = new StringBuilder();
         for (String str : stringsList) name.append(stringsList.indexOf(str));
         //}
         if (name.length() == 0) {
