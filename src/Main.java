@@ -14,12 +14,13 @@ public class Main {
         out.println(System.getProperty("user.dir"));
         final String arch = System.getProperty("os.arch");
         String MainDirPath = "";
+        out.println(arch);
         ArrayList<String> projectsList = new ArrayList<>();
         if (arch.equals("amd64") || arch.equals("x86") || arch.equals("i386") || arch.equals("ppc")) {
             MainDirPath = "C:\\BAT\\_INPUT_APK";                 // путь
             //MainFrame.startFrame();
         }
-        else if (arch.contains("arm")){
+        else if (arch.contains("aarch")){
             MainDirPath = "/sdcard/ApkEditor/decoded";
             projectsList.add(MainDirPath);
             arch_device = 1;
@@ -52,11 +53,10 @@ public class Main {
             out.println(stringsList.indexOf(i) + " - " + i);
         }
         Scanner br = new Scanner(System.in);
-        //StringBuilder name = new StringBuilder(br.nextLine());
-        //if (name.toString().equals("")){                       //uncomment for release
-        StringBuilder name = new StringBuilder();
+        StringBuilder name = new StringBuilder(br.nextLine());
+        if (name.toString().equals("")){                       //uncomment for release
         for (String str : stringsList) name.append(stringsList.indexOf(str));
-        //}
+        }
         if (name.length() == 0) {
             out.println("No way...");
             System.exit(0);

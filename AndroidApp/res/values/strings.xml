@@ -1,0 +1,9 @@
+<resources>
+
+    <string name="app_name">ConsoleApp</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_exit">Exit</string>
+    <string name="menu_clear">Clear</string>
+    <string name="input_hint">&gt;</string>
+
+</resources>
