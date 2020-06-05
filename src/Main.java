@@ -6,9 +6,9 @@ import java.util.Scanner;
 import static java.lang.System.out;
 
 public class Main {
-    public static int rules_mode = 1;    //0=TruePatcher, 1=AE
-    public static int verbose_level = 0;
-    public static int arch_device = 0;
+    static int rules_mode = 1;    //0=TruePatcher, 1=AE
+    static int verbose_level = 0;
+    static int arch_device = 0;
 
     public static void main(String[] args) {
         out.println(System.getProperty("user.dir"));
@@ -16,12 +16,13 @@ public class Main {
         String MainDirPath = "";
         out.println(arch);
         ArrayList<String> projectsList = new ArrayList<>();
+        assert arch != null;
         if (arch.equals("amd64") || arch.equals("x86") || arch.equals("i386") || arch.equals("ppc")) {
             MainDirPath = "C:\\BAT\\_INPUT_APK";                 // путь
             //MainFrame.startFrame();
         }
         else if (arch.contains("aarch")){
-            MainDirPath = "/sdcard/ApkEditor/decoded";
+            //MainDirPath = Environment.getExternalStorageDirectory() + "/ApkEditor/decoded";
             projectsList.add(MainDirPath);
             arch_device = 1;
         }
@@ -31,17 +32,18 @@ public class Main {
             System.exit(0);
         }
         if (projectsList.isEmpty()){
-            for (String MainDirFolder : Objects.requireNonNull(MainDir.list())) {                   //убираем апк файлы
-                if (!MainDirFolder.endsWith(".apk")) projectsList.add(MainDirFolder);
+            for (String MainDirFolder : Objects.requireNonNull(MainDir.list())) {      //убираем апк файлы
+                File f = new File(MainDirPath + File.separator + MainDirFolder);
+                if (f.isDirectory()) projectsList.add(MainDirFolder);
             }
         }
         String msg = "Select project. Enter = all. Example: 0 or 012 (means 0 and 1 and 2).";
         long startTime = 0;
-        for (String project : select(projectsList, msg)){
+        for (String projectPath : select(projectsList, msg)){
             startTime = System.currentTimeMillis();
-            String projectPath = project;
-            if (arch_device == 0) projectPath = MainDirPath + File.separator + project;      //путь до проекта
-            Regex.doPatch(projectPath);
+            if (arch_device == 0) projectPath = MainDirPath + File.separator + projectPath;      //путь до проекта
+            else projectPath = MainDirPath;
+            if (Regex.doPatch(projectPath).equals("error")) Regex.doPatch(projectPath);
         }
         long timeSpent = System.currentTimeMillis() - startTime;
         out.println("All done in " + timeSpent + " ms");
@@ -55,7 +57,7 @@ public class Main {
         Scanner br = new Scanner(System.in);
         StringBuilder name = new StringBuilder(br.nextLine());
         if (name.toString().equals("")){                       //uncomment for release
-        for (String str : stringsList) name.append(stringsList.indexOf(str));
+            for (String str : stringsList) name.append(stringsList.indexOf(str));
         }
         if (name.length() == 0) {
             out.println("No way...");

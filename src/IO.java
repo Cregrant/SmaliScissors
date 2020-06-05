@@ -1,6 +1,4 @@
 import java.io.*;
-import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Stack;
@@ -10,7 +8,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static java.lang.System.out;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class IO {
     static ArrayList<String> loadRules(File home, String path){
@@ -45,15 +42,14 @@ public class IO {
         Matcher ruleMatched = patRule.matcher(content);
         while (ruleMatched.find()) {
             for (int i = 0; i < ruleMatched.groupCount(); i++) {
-                String s = ruleMatched.group(i);
-                rulesListArr.add(s);
+                rulesListArr.add(ruleMatched.group(i));
             }
         }
         out.println(rulesListArr.size() + " rules found\n");
         return rulesListArr;
     }
 
-    public static String read(String path) {
+    static String read(String path) {
         FileInputStream inputStream = null;
         try {
             inputStream = new FileInputStream(path);
@@ -73,15 +69,16 @@ public class IO {
         catch (IOException e) {
             e.printStackTrace();
         }
-        return result.toString(UTF_8);
+        return result.toString();
     }
 
-    public static void write(String path, String content)
+    static synchronized void write(String path, String content)
     {
         try
         {
             BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path));
             bufferedWriter.write(content);
+            bufferedWriter.flush();
             bufferedWriter.close();
         }
         catch (Exception e)
@@ -90,27 +87,45 @@ public class IO {
         }
     }
 
-
-    public static void deleteInDirectory(File directoryFile) {
-        try {
-            for (File dir : Objects.requireNonNull(directoryFile.listFiles())){
-                Path directory = Paths.get(dir.toString());
-                Files.walkFileTree(directory, new SimpleFileVisitor<>() {
-                    @Override
-                    public FileVisitResult visitFile(Path path, BasicFileAttributes basicFileAttributes) throws IOException {
-                        Files.delete(path);
-                        return FileVisitResult.CONTINUE;
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path directory, IOException ioException) throws IOException {
-                        Files.delete(directory);
-                        return FileVisitResult.CONTINUE;
-                    }
-                });
+    static synchronized void copy(String src, String dst) {
+        try (InputStream is = new FileInputStream(src); OutputStream os = new FileOutputStream(dst)) {
+            byte[] buffer = new byte[4096];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
             }
-        } catch (IOException e) {
-            out.println("Error deleting temp folders");
+            os.flush();
+        }catch (IOException e){
+            out.println("Hmm.. error during copying file");
+            e.printStackTrace();
+        }
+    }
+
+    static synchronized void deleteInDirectory(File file) {
+        if(file.isDirectory()){
+            //directory is empty, then delete it
+            if(Objects.requireNonNull(file.list()).length==0){
+                if (file.delete()) System.out.println("Directory is deleted : " + file.getAbsolutePath());
+            }
+            else {
+                //list all the directory contents
+                String[] files = file.list();
+                assert files != null;
+                for (String temp : files) {
+                    //construct the file structure
+                    File fileDelete = new File(file, temp);
+                    //recursive delete
+                    deleteInDirectory(fileDelete);
+                }
+                //check the directory again, if empty then delete it
+                if(Objects.requireNonNull(file.list()).length==0){
+                    if (file.delete()) System.out.println("Directory is deleted : " + file.getAbsolutePath());
+                }
+            }
+
+        }else{
+            //if file, then delete it
+            if (file.delete()) System.out.println("File is deleted : " + file.getAbsolutePath());
         }
     }
 
