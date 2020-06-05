@@ -96,37 +96,28 @@ public class IO {
             }
             os.flush();
         }catch (IOException e){
-            out.println("Hmm.. error during copying file");
+            out.println("Hmm.. error during copying file. No smali folders?");
             e.printStackTrace();
         }
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     static synchronized void deleteInDirectory(File file) {
         if(file.isDirectory()){
-            //directory is empty, then delete it
-            if(Objects.requireNonNull(file.list()).length==0){
-                if (file.delete()) System.out.println("Directory is deleted : " + file.getAbsolutePath());
+            if (Objects.requireNonNull(file.list()).length==0){
+                file.delete();
             }
             else {
-                //list all the directory contents
                 String[] files = file.list();
                 assert files != null;
                 for (String temp : files) {
-                    //construct the file structure
                     File fileDelete = new File(file, temp);
-                    //recursive delete
                     deleteInDirectory(fileDelete);
                 }
-                //check the directory again, if empty then delete it
-                if(Objects.requireNonNull(file.list()).length==0){
-                    if (file.delete()) System.out.println("Directory is deleted : " + file.getAbsolutePath());
-                }
+                if (Objects.requireNonNull(file.list()).length==0) file.delete();
             }
-
-        }else{
-            //if file, then delete it
-            if (file.delete()) System.out.println("File is deleted : " + file.getAbsolutePath());
         }
+        else file.delete();
     }
 
     static ArrayList<String> scan(String projectPath) {
