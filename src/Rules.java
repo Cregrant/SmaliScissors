@@ -1,10 +1,16 @@
 import java.io.File;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.PatternSyntaxException;
 
 import static java.lang.System.out;
 
 class Rules {
+    ExecutorService service = Executors.newFixedThreadPool(4);
+    //Runnable task = () -> {};
+    //service.submit(task);
+
     static boolean replace(String rule, String patMatch, String ruleTarget) {
         String patReplacement = "REPLACE:\\n([\\S\\s]*?)\\n?\\[\\/MATCH_REPLACE]";
         String patReplacementInt = "REPLACE:\\n[\\S\\s]*?(\\$\\{GROUP\\d\\})";
@@ -44,14 +50,15 @@ class Rules {
                             i++;
                         }
                     }
-                    IO.write(Regex.projectSmaliList.get(j), str.replaceAll(ruleMatch, ruleReplacement));
+                    Regex.projectSmaliText.set(j, str.replaceAll(ruleMatch, ruleReplacement));
+
                     if (Main.verbose_level == 0){
-                        if (clone != j){                                          //suppress clone messages
+                        if (clone != j){                                          //suppress clones
                             out.println(Regex.projectSmaliList.get(j) + " patched.");
                             clone = j;
+                            c++;
                         }
                     }
-                    c++;
                     Regex.replaceList.clear();
                     j--;
                 }
@@ -60,10 +67,16 @@ class Rules {
         } catch (PatternSyntaxException e) {
             e.printStackTrace();
             out.println("You can try again. It was (assign rule bug) or (your rule error). Sorry =(");
-            return true;
+            return false;
         }
         if (Main.verbose_level <= 1) out.println(c + " files patched.");
-        return false;
+
+        for (j = 0; j < Regex.projectSmaliList.size(); j++) {
+            if (!Regex.projectSmaliText.get(j).equals(Regex.projectSmaliTextOriginal.get(j))) {
+                IO.write(Regex.projectSmaliList.get(j), Regex.projectSmaliText.get(j));
+            }
+        }
+        return true;
     }
 
     static void assign(String patMatch, String ruleTarget, String rule){

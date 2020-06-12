@@ -12,6 +12,7 @@ class Regex {
     static ArrayList<String> replaceList = new ArrayList<>();
     static ArrayList<String> projectSmaliList = new ArrayList<>();
     static ArrayList<String> projectSmaliText = new ArrayList<>();
+    static ArrayList<String> projectSmaliTextOriginal = new ArrayList<>();
     static ArrayList<String> ruleReplacementIntArr = new ArrayList<>();
 
 
@@ -44,7 +45,7 @@ class Regex {
                 Rules.assign(patMatch, ruleTarget, rule);
                 break;
             case "MATCH_REPLACE":
-                if (Rules.replace(rule, patMatch, ruleTarget)) return "error";
+                if (!Rules.replace(rule, patMatch, ruleTarget)) return "error";
                 break;
             case "ADD_FILES":
                 Rules.add(projectPath, rule, ruleTarget);
@@ -102,11 +103,14 @@ class Regex {
         out.println("\nScanning " + projectPath);
         long timeSpent;
         long startTime = System.currentTimeMillis();
-        projectSmaliList = (IO.scan(projectPath));
         projectSmaliText.clear();
-        for (String file : projectSmaliList) {
-            projectSmaliText.add(IO.read(file));
+        projectSmaliList.clear();
+        IO.scan(projectPath);
+        if (projectSmaliList.size() == 0) {
+            out.println("No smali folders provided?");
+            return "ok";
         }
+        projectSmaliTextOriginal = projectSmaliText;
         timeSpent = System.currentTimeMillis()-startTime;
         out.println("Scan completed successfully for " + timeSpent + " ms. " + projectSmaliList.size() + " smali files found.\n");
         File tempFolder = new File(home + File.separator + "temp");

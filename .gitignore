@@ -26,3 +26,4 @@ patches/*
 .idea
 run.bat
 exe
+/.idea/

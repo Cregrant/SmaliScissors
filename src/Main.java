@@ -1,6 +1,9 @@
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Scanner;
 
 import static java.lang.System.out;
@@ -11,10 +14,9 @@ public class Main {
     static int arch_device = 0;
 
     public static void main(String[] args) {
-        out.println(System.getProperty("user.dir"));
+        loadConf();
         final String arch = System.getProperty("os.arch");
         String MainDirPath = "";
-        out.println(arch);
         ArrayList<String> projectsList = new ArrayList<>();
         assert arch != null;
         if (arch.equals("amd64") || arch.equals("x86") || arch.equals("i386") || arch.equals("ppc")) {
@@ -26,9 +28,10 @@ public class Main {
             projectsList.add(MainDirPath);
             arch_device = 1;
         }
+
         File MainDir = new File(MainDirPath);
         if (!MainDir.isDirectory()) {
-            out.println("Error loading INPUT APK folder");
+            out.println("Error loading projects folder");
             System.exit(0);
         }
         if (projectsList.isEmpty()){
@@ -47,6 +50,7 @@ public class Main {
         }
         long timeSpent = System.currentTimeMillis() - startTime;
         out.println("All done in " + timeSpent + " ms");
+        saveConf();
     }
 
     static ArrayList<String> select(ArrayList<String> stringsList, String msg) {
@@ -69,5 +73,40 @@ public class Main {
         }
 
         return out;
+    }
+
+    private static void loadConf() {
+        Properties props = new Properties();
+        final String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
+        out.println(settingsFilename);
+        try {
+            FileInputStream input = new FileInputStream(settingsFilename);
+            props.load(input);
+            input.close();
+        } catch(Exception e){
+            out.println("Error loading conf!");
+            e.printStackTrace();
+        }
+
+        try {
+            verbose_level = Integer.parseInt(props.getProperty("verbose_level"));
+
+        } catch(NumberFormatException e) {
+            out.println("Error reading conf! ");
+        }
+    }
+
+    private static void saveConf() {
+        try {
+            final String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
+            FileOutputStream output = new FileOutputStream(settingsFilename);
+            Properties props = new Properties();
+            props.store(output, "");
+            output.close();
+            out.println("Conf wrote");
+        }
+        catch(Exception ignore) {
+            out.println("Error writing conf");
+        }
     }
 }
