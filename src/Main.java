@@ -12,6 +12,8 @@ public class Main {
     static int rules_mode = 1;    //0=TruePatcher, 1=AE
     static int verbose_level = 0;
     static int arch_device = 0;
+    static final int max_thread_num = Runtime.getRuntime().availableProcessors();
+    private static float version;
 
     public static void main(String[] args) {
         loadConf();
@@ -78,7 +80,8 @@ public class Main {
     private static void loadConf() {
         Properties props = new Properties();
         final String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
-        out.println(settingsFilename);
+        out.println();
+        //out.println(settingsFilename);
         try {
             FileInputStream input = new FileInputStream(settingsFilename);
             props.load(input);
@@ -90,7 +93,8 @@ public class Main {
 
         try {
             verbose_level = Integer.parseInt(props.getProperty("verbose_level"));
-
+            version = Float.parseFloat(props.getProperty("version"));
+            rules_mode = Integer.parseInt(props.getProperty("rules_mode"));
         } catch(NumberFormatException e) {
             out.println("Error reading conf! ");
         }
@@ -101,11 +105,15 @@ public class Main {
             final String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
             FileOutputStream output = new FileOutputStream(settingsFilename);
             Properties props = new Properties();
-            props.store(output, "");
+            props.put("version", String.valueOf(version));
+            props.put("verbose_level", String.valueOf(verbose_level));
+            props.put("rules_mode", String.valueOf(rules_mode));
+            props.store(output, "Config v0.1a");
             output.close();
             out.println("Conf wrote");
         }
-        catch(Exception ignore) {
+        catch(Exception e) {
+            e.printStackTrace();
             out.println("Error writing conf");
         }
     }

@@ -11,8 +11,8 @@ class Regex {
     static ArrayList<String> assignList = new ArrayList<>();
     static ArrayList<String> replaceList = new ArrayList<>();
     static ArrayList<String> projectSmaliList = new ArrayList<>();
-    static ArrayList<String> projectSmaliText = new ArrayList<>();
-    static ArrayList<String> projectSmaliTextOriginal = new ArrayList<>();
+    static ArrayList<String> projectSmaliText;
+    static ArrayList<String> projectSmaliTextOriginal;
     static ArrayList<String> ruleReplacementIntArr = new ArrayList<>();
 
 
@@ -103,8 +103,8 @@ class Regex {
         out.println("\nScanning " + projectPath);
         long timeSpent;
         long startTime = System.currentTimeMillis();
-        projectSmaliText.clear();
-        projectSmaliList.clear();
+        if (projectSmaliText != null) projectSmaliText.clear();
+        if (projectSmaliList != null) projectSmaliList.clear();
         IO.scan(projectPath);
         if (projectSmaliList.size() == 0) {
             out.println("No smali folders provided?");

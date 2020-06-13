@@ -2,8 +2,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Stack;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -12,7 +11,7 @@ import java.util.zip.ZipInputStream;
 import static java.lang.System.out;
 
 public class IO {
-    static int running = 0;
+    static CountDownLatch cdl;
 
     static ArrayList<String> loadRules(File home, String path) {
         Pattern patRule = Pattern.compile("(\\[.+?])(?:\\nSOURCE:\\n.+)?\\nTARGET:\\n[\\s\\S]+?\\[/.+?]", Pattern.MULTILINE);
@@ -118,38 +117,54 @@ public class IO {
     }
 
     static void scan(String projectPath) {
-        Object object = new Object();
-        ExecutorService service = Executors.newFixedThreadPool(16);
-            for (String i : Objects.requireNonNull(new File(projectPath).list())) {
-                if (i.startsWith("smali")) {
-                    running++;
-                    Runnable task = () -> {
-                        Stack<String> stack = new Stack<>();
-                        stack.push(projectPath + File.separator + i);
-                        while (!stack.isEmpty()) {
-                            for (File file : Objects.requireNonNull(new File(stack.pop()).listFiles())){
-                                String str = file.toString();
-                                if (file.isDirectory()) stack.push(str);
-                                else {
-                                    synchronized (object) {
-                                        Regex.projectSmaliList.add(str);
-                                        Regex.projectSmaliText.add(IO.read(str));
-                                    }
-                                }
-                            }
+        ArrayList<String> smFolders = new ArrayList<>();
+        for (String i : Objects.requireNonNull(new File(projectPath).list())) if (i.startsWith("smali")) smFolders.add(i);
+        cdl = new CountDownLatch(smFolders.size());
+        for (String folder : smFolders) {
+            new Thread(() -> {
+                Stack<String> stack = new Stack<>();
+                stack.push(projectPath + File.separator + folder);
+                while (!stack.isEmpty()) {
+                    for (File file : Objects.requireNonNull(new File(stack.pop()).listFiles())) {
+                        String str = file.toString();
+                        if (file.isDirectory()) stack.push(str);
+                        else synchronized (smFolders) {Regex.projectSmaliList.add(str);
                         }
-                        IO.running--;
-                    };
-                    service.submit(task);
+                    }
                 }
-            }
-
-        while (running!=0) {  //  В - велосипед =D
-            try {
-                Thread.sleep(1);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                cdl.countDown();
+            }).start();
+        }
+        try {
+            cdl.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+/*      long st=System.currentTimeMillis();
+        Collections.sort(Regex.projectSmaliList);       //should i sort it???
+        long sm = System.currentTimeMillis()-st;
+        out.print("time " + sm);*/
+        Regex.projectSmaliText = Regex.projectSmaliList;
+        int thrNum = Main.max_thread_num;
+        cdl = new CountDownLatch(thrNum);
+        int start, end = 0;
+        for (int cycle = 1; cycle <= thrNum; cycle++) {             //make 8-thread scan
+            start = end;
+            end = (Regex.projectSmaliList.size()/thrNum) * cycle;
+            if (cycle == thrNum) end = Regex.projectSmaliList.size()-start;
+            int finalStart = start, finalEnd = end;
+            new Thread(() -> {
+                for (int co = finalStart; co < finalEnd; co++) {
+                    String cont =  read(Regex.projectSmaliList.get(co));
+                    Regex.projectSmaliText.set(co, cont);
+                }
+                cdl.countDown();
+            }).start();
+        }
+        try {
+            cdl.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

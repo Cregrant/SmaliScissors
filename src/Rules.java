@@ -1,15 +1,10 @@
 import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.PatternSyntaxException;
 
 import static java.lang.System.out;
 
 class Rules {
-    ExecutorService service = Executors.newFixedThreadPool(4);
-    //Runnable task = () -> {};
-    //service.submit(task);
 
     static boolean replace(String rule, String patMatch, String ruleTarget) {
         String patReplacement = "REPLACE:\\n([\\S\\s]*?)\\n?\\[\\/MATCH_REPLACE]";

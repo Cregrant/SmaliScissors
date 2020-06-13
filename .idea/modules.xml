@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/SmaliScissors.iml" filepath="$PROJECT_DIR$/SmaliScissors.iml" />
+      <module fileurl="file://$PROJECT_DIR$/SmaliCutter.iml" filepath="$PROJECT_DIR$/SmaliCutter.iml" />
     </modules>
   </component>
 </project>
