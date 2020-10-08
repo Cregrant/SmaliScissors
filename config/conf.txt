@@ -1,5 +1,6 @@
-#Config v0.1a
-#Sat Jun 13 16:30:45 ICT 2020
-verbose_level=0
-rules_mode=1
-version=0.0
+#Config v0.01a
+#Thu Oct 08 23:11:58 ICT 2020
+Verbose_level=1
+Version=0.01
+Rules_mode=1
+Version_type=a
