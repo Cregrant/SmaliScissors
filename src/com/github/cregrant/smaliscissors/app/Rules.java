@@ -1,4 +1,6 @@
-package com.creel.app;
+package com.github.cregrant.smaliscissors.app;
+
+import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
 import static java.lang.System.out;
 
 class Rules {
@@ -16,7 +19,8 @@ class Rules {
     static int patchedFilesNum = 0;
     static HashMap<String, String> assignMap = new HashMap<>();
 
-    boolean replace(String rule, Pattern patMatch, String ruleTarget) {
+    @SuppressWarnings("RegExpRedundantEscape")
+    String replace(String rule, Pattern patMatch, String ruleTarget) {
         Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
         String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace(".smali", "\\.smali");
         String ruleMatch = new Regex().match(patMatch, rule, "").get(0);
@@ -24,14 +28,14 @@ class Rules {
         if (!assignMap.isEmpty()) {
             Set<Map.Entry<String, String>> set = assignMap.entrySet();
             if (Prefs.verbose_level == 0) {
-                System.out.println("Replacing numbers to text...\n" + set);
+                out.println("Replacing variables to text...\n" + set);
             }
             for (Map.Entry<String, String> entry : set) {
                 String key = "${" + entry.getKey() + "}";
                 if (!ruleMatch.contains(key)) continue;
                 String value = entry.getValue();
                 if (Prefs.verbose_level == 0) {
-                    System.out.println(key + " -> " + value);
+                    out.println(key + " -> " + value);
                 }
                 ruleMatch = ruleMatch.replace(key, value);
             }
@@ -43,20 +47,19 @@ class Rules {
             for (int cycle = 1; cycle <= thrNum; ++cycle) {
                 int totalSmaliNum = smaliList.size() - 1;
                 String finalRuleMatch = ruleMatch;
-                String finalRuleReplacement = ruleReplacement.replaceAll("\\$\\{GROUP(\\d{1,2})}", "\\$$1");
+                //important escape for android
+                String finalRuleReplacement = ruleReplacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
                 new Thread(() -> {
                     int num;
                     while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
-                        Smali patchedSmaliFile = new Rules().simpleReplace(smaliList.get(num), finalRuleMatch, ruleTarget, ruleTargetRegex, finalRuleReplacement);
-                        if (!patchedSmaliFile.isModified()) continue;
-                        ++patchedFilesNum;
-                        System.out.println(patchedSmaliFile.getBody()+"\n"+smaliList.get(num).getBody());
-                        System.out.println(patchedSmaliFile.getBody().equals(smaliList.get(num).getBody()));
+                        Smali smali = smaliList.get(num);
+                        new Rules().simpleReplace(smali, finalRuleMatch, ruleTarget, ruleTargetRegex, finalRuleReplacement);
+                        if (smali.isNotModified()) continue;
                         if (Prefs.verbose_level == 0) {
-                            System.out.println(patchedSmaliFile.getPath().replaceAll(".+/smali", "smali") + " patched.");
+                            out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
                         }
                         synchronized (patReplacement) {
-                            smaliList.set(num, patchedSmaliFile);
+                            ++patchedFilesNum;
                         }
                     }
                     cdl.countDown();
@@ -70,18 +73,19 @@ class Rules {
             }
         }
         catch (PatternSyntaxException e) {
-            e.printStackTrace();
-            System.out.println("You can try again. It was (assign rule bug) or (your rule error). Sorry =(");
-            return false;
+            //FIXME CATCH ME
+            out.println("Error - some [MATCH_ASSIGN] rule was processed with an error");
+            if (Prefs.verbose_level == 0) e.printStackTrace();
+            return "error";
         }
         if (Prefs.verbose_level <= 2) {
-            System.out.println(patchedFilesNum + " files patched.");
+            out.println(patchedFilesNum + " files patched.");
         }
         patchedFilesNum = 0;
-        return true;
+        return "";
     }
 
-    Smali simpleReplace(Smali tmpSmali, String ruleMatch, String ruleTarget, String ruleTargetRegex, String ruleReplacement) {
+    private void simpleReplace(Smali tmpSmali, String ruleMatch, String ruleTarget, String ruleTargetRegex, String ruleReplacement) {
         String smaliPath = tmpSmali.getPath();
         if (smaliPath.contains(ruleTarget) | smaliPath.matches(ruleTargetRegex)) {
             String smaliBody = tmpSmali.getBody();
@@ -91,7 +95,6 @@ class Rules {
                 tmpSmali.setModified(true);
             }
         }
-        return tmpSmali;
     }
 
     void assign(String rule, Pattern patMatch, String ruleTarget) {
@@ -99,13 +102,13 @@ class Rules {
         String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace(".smali", "\\.smali");
         String ruleMatch = new Regex().match(patMatch, rule, "").get(0);
         if (Prefs.verbose_level == 0) {
-            System.out.println("Match - " + ruleMatch);
+            out.println("Match - " + ruleMatch);
         }
         ArrayList<String> assignArr = new ArrayList<>();
         for (Smali tmpSmali : smaliList) {
             if (!(tmpSmali.getPath().contains(ruleTarget) | tmpSmali.getPath().matches(ruleTargetRegex))) continue;
             for (String variable : new Regex().match(patAssign, rule, "replace")) {
-                for (String str : variable.strip().split("=")) {
+                for (String str : variable.split("=")) {
                     if (str.contains("${GROUP")) continue;
                     assignArr.add(str);
                 }
@@ -113,53 +116,63 @@ class Rules {
             ArrayList<String> valuesArr = new Regex().match(Pattern.compile(ruleMatch), tmpSmali.getBody(), "replace");
             for (int k = 0; k < valuesArr.size(); ++k) {
                 if (Prefs.verbose_level <= 1) {
-                    System.out.println("assigned " + valuesArr.get(k) + " to \"" + assignArr.get(k) + "\"");
+                    out.println("assigned " + valuesArr.get(k) + " to \"" + assignArr.get(k) + "\"");
                 }
                 assignMap.put(assignArr.get(k), valuesArr.get(k));
             }
         }
         if (assignMap.isEmpty()) {
-            System.out.println("Nothing found in assign rule??");
+            out.println("Nothing found in assign rule??");
         }
     }
 
     void add(String projectPath, String rule, String ruleTarget) {
         Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
+        Pattern patExtract = Pattern.compile("EXTRACT:\\R(.+)");
+        boolean extractZip = Boolean.parseBoolean(new Regex().match(patExtract, rule, "rules").get(0));
         String ruleSource = new Regex().match(patSource, rule, "").get(0);
+
         if (Prefs.verbose_level == 0) {
-            System.out.println("Source - " + ruleSource);
+            out.println("Source - " + ruleSource);
+            if (extractZip) out.println("Extracting zip..");
         }
-        String src = System.getProperty("user.dir") + File.separator + "patches" + File.separator + "temp" + File.separator + ruleSource;
+        String src = new CompatibilityData().getTempDir() + File.separator + ruleSource;
         String dst = projectPath + File.separator + ruleTarget;
         File file = new File(dst);
         if (file.exists()) {
-            new IO().deleteInDirectory(file);
+            new IO().deleteAll(file);
         }
-        new IO().copy(src, dst);
+        if (extractZip) new IO().zipExtract(src, dst);
+        else new IO().copy(src, dst);
         if (ruleSource.contains(".smali")) {
             if (Prefs.verbose_level <= 1) {
-                System.out.println("Added.");
+                out.println("Added.");
             }
             Smali newSmali = new Smali();
             newSmali.setPath(projectPath + File.separator + ruleTarget.replace('/', File.separatorChar));
-            //if (Prefs.arch_device.equals("android")) newSmali.setBody((new IO().read(projectPath + File.separator + ruleTarget)).replace("\r\n", "\n"));
-            //else newSmali.setBody((new IO().read(projectPath + File.separator + ruleTarget)).replace("\n", "\r\n"));
             newSmali.setBody(new IO().read(projectPath + File.separator + ruleTarget));
-            smaliList.removeIf(smali -> smali.getPath().equals(newSmali.getPath()));
+            for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
+                Smali sm = smaliList.get(i);
+                if (sm.getPath().equals(newSmali.getPath())) smaliList.remove(i);
+            }
             smaliList.add(newSmali);
         }
     }
 
-    void remove(String projectPath, ArrayList<String> targetArr) {
+    void remove(String projectPath, String target) {
         if (Prefs.verbose_level == 0) {
-            System.out.println("Dst - " + targetArr);
+            out.println("Dst - " + target);
         }
-        for (String ruleTarget : targetArr) {
-            new IO().deleteInDirectory(new File(projectPath + File.separator + ruleTarget));
-            smaliList.removeIf(smali -> smali.getPath().equals(projectPath + File.separator + ruleTarget));
+        new IO().deleteAll(new File(projectPath + File.separator + target));
+        for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
+            Smali sm = smaliList.get(i);
+            if (sm.getPath().equals(projectPath + File.separator + target)) {
+                smaliList.remove(i);
+                i--;
+            }
         }
-        if (Prefs.verbose_level <= 1 && !targetArr.get(0).contains("/temp")) {
-            System.out.println("Removed.");
+        if (Prefs.verbose_level <= 1 && !target.contains("/temp")) {
+            out.println("Removed.");
         }
     }
 }

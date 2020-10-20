@@ -1,4 +1,4 @@
-package com.creel.app;
+package com.github.cregrant.smaliscissors.app;
 
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -33,7 +33,7 @@ class Select {
             if (inputString.equals("")) {
                 return stringsList;
             }
-            if (inputString.equals("X") | inputString.equals("x") | inputString.equals("\u0445") | inputString.equals("\u0425")) {
+            if (inputString.equals("X") | inputString.equals("x") | inputString.equals("х") | inputString.equals("Х")) {
                 outArr.add("cancel");
                 return outArr;
             }

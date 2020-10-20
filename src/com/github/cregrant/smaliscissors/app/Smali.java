@@ -1,4 +1,4 @@
-package com.creel.app;
+package com.github.cregrant.smaliscissors.app;
 
 public class Smali {
     private String path;
@@ -13,8 +13,8 @@ public class Smali {
         this.isModified = state;
     }
 
-    public boolean isModified() {
-        return this.isModified;
+    public boolean isNotModified() {
+        return !this.isModified;
     }
 
     public void setPath(String newPath) {

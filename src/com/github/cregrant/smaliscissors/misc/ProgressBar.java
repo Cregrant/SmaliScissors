@@ -1,4 +1,4 @@
-package com.creel.misc;
+package com.github.cregrant.smaliscissors.misc;
 
 public class ProgressBar {
     static int curValue = 0;

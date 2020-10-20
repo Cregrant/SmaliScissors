@@ -1,4 +1,4 @@
-package com.creel.app;
+package com.github.cregrant.smaliscissors.app;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,9 +10,9 @@ public class Prefs {
     static boolean bigMemoryDevice = false;
     private static String versionType;
     private static double versionConf;
-    static int rules_mode;
-    static int verbose_level;
-    static final int max_thread_num;
+    static int rules_AEmode = 1;
+    static int verbose_level = 1;
+    static final int max_thread_num = Runtime.getRuntime().availableProcessors();
 
     void loadConf() {
         if (Runtime.getRuntime().maxMemory() > 200000000L) {
@@ -38,7 +38,7 @@ public class Prefs {
             if (versionType.equals("a")) {
                 System.out.print("Unstable version. Prepare your anus");
             }
-            rules_mode = Integer.parseInt(props.getProperty("Rules_mode"));
+            rules_AEmode = Integer.parseInt(props.getProperty("Rules_mode"));
         }
         catch (Exception e) {
             System.out.println("Error reading conf!");
@@ -55,7 +55,7 @@ public class Prefs {
             props.put("Version", String.format("%.2f", versionConf).replace(',', '.'));
             props.put("Version_type", String.valueOf(versionType));
             props.put("Verbose_level", String.valueOf(verbose_level));
-            props.put("Rules_mode", String.valueOf(rules_mode));
+            props.put("Rules_mode", String.valueOf(rules_AEmode));
             props.store(output, "Config v0.01" + versionType);
             output.close();
         }
@@ -70,11 +70,5 @@ public class Prefs {
         versionConf = 0.01f;
         this.saveConf();
         System.out.println("Upgraded.");
-    }
-
-    static {
-        rules_mode = 1;
-        verbose_level = 0;
-        max_thread_num = Runtime.getRuntime().availableProcessors();
     }
 }
