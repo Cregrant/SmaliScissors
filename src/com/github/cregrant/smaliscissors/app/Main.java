@@ -1,10 +1,12 @@
-package com.creel.app;
+package com.github.cregrant.smaliscissors.app;
 
-import com.creel.misc.CompatibilityData;
+import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
+
+import static java.lang.System.out;
 
 public class Main {
     static final double version = 0.01;
@@ -15,7 +17,7 @@ public class Main {
         String mainDir = new CompatibilityData().getHomeDir();
         File mainDirFile = new File(mainDir);
         if (!mainDirFile.isDirectory()) {
-            System.out.println("Error loading projects folder");
+            out.println("Error loading projects folder");
             System.exit(1);
         }
         if (Prefs.arch_device.equals("android")) {
@@ -30,23 +32,24 @@ public class Main {
         }
         String msg = "\nSelect project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
         ArrayList<String> projectsToPatch = new Select().select(projectsList, msg);
-        String patchResult = null;
+        String patchResult;
         long startTimeTotal = System.currentTimeMillis();
-        while (!projectsToPatch.get(0).equals("cancel")) {
+        while (true) {
             for (String currentProjectPath : projectsToPatch) {
-                patchResult = Prefs.arch_device.equals("pc") ? Regex.doPatch(mainDir + File.separator + currentProjectPath) : Regex.doPatch(mainDir);
+                if (currentProjectPath.equals("cancel")) break;
+                patchResult = Prefs.arch_device.equals("pc") ? Patch.doPatch(mainDir + File.separator + currentProjectPath) : Patch.doPatch(mainDir);
                 if (patchResult.equals("error")) {
-                    System.out.println("Some error occurred?");
-                    continue;
+                    new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
+                    out.println("Patch error occurred");
                 }
                 if (!patchResult.equals("cancel")) continue;
                 projectsToPatch.set(0, "cancel");
             }
-            if (patchResult.equals("cancel")) continue;
+            if (projectsToPatch.get(0).equals("cancel")) break;
             projectsToPatch = new Select().select(projectsList, msg);
         }
-        System.out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
+        out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
         new Prefs().saveConf();
-        System.out.println("Good bye Sir.");
+        out.println("Good bye Sir.");
     }
 }

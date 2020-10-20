@@ -1,5 +1,5 @@
 #Config v0.01a
-#Thu Oct 08 23:11:58 ICT 2020
+#Sun Oct 18 01:32:51 ICT 2020
 Verbose_level=1
 Version=0.01
 Rules_mode=1
