@@ -1,6 +1,5 @@
 package com.github.cregrant.smaliscissors.app;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.regex.Matcher;
@@ -28,7 +27,7 @@ public class Regex {
         return matchedArr;
     }
 
-    String getEndOfPath(File path){
-        return path.toString().replaceAll(".+[^a-z0-9 _]","");
+    String getEndOfPath(String path) {
+        return path.replaceAll(".+\\\\", "");
     }
 }

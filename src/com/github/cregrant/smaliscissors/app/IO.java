@@ -112,8 +112,7 @@ class IO {
         try (ZipInputStream zip = new ZipInputStream(new FileInputStream(src))) {
             ZipEntry zipEntry;
             while ((zipEntry = zip.getNextEntry()) != null) {
-                //File filePath = mergePath(new File(dst), new File(zipEntry.getName())); //fix path merge
-                File filePath = new File(dst + zipEntry.getName());
+                File filePath = mergePath(dst, zipEntry.getName().replace('/', '\\'));  //fix path with merge
                 if (!zipEntry.isDirectory()) {
                     new File(filePath.getParent()).mkdirs();
                     FileOutputStream fout = new FileOutputStream(filePath);
@@ -136,21 +135,26 @@ class IO {
         }
     }
 
-    File mergePath(File dstFolder, File fileToMerge) {
-        File resultFile = new File(dstFolder + File.separator + fileToMerge); //best case - patch is cool
+    File mergePath(String dstFolder, String toMerge) {
+        ArrayList<String> pathTree = new ArrayList<>();
+        File resultFile = new File(dstFolder + File.separator + toMerge);
         File parent;
+        StringBuilder sb = new StringBuilder();
         Regex tmp = new Regex();
         String dstEnd = tmp.getEndOfPath(dstFolder);
-        ArrayList<String> pathTree = new ArrayList<>();
-        pathTree.add(tmp.getEndOfPath(fileToMerge));
-        while ((parent = fileToMerge.getParentFile()) != null) {
+        pathTree.add(tmp.getEndOfPath(toMerge));
+        File fileToMerge = new File(toMerge);
+        while ((parent = fileToMerge.getParentFile()) != null) {   //get rid of wrong paths
             if (parent.getName().equals(dstEnd)) {
-                //resultFile = new File(dstFolder + File.separator + fileToMerge); //get rid of wrong pathes
-                //paste path from array
-
+                sb.append(dstFolder);
+                for (int k=pathTree.size(); k>0;) {
+                    k--;
+                    sb.append(File.separator).append(pathTree.get(k));
+                }
+                resultFile = new File(sb.toString());
                 break;
             } else {
-                pathTree.add(tmp.getEndOfPath(parent));
+                pathTree.add(tmp.getEndOfPath(parent.toString()));
                 fileToMerge = parent;
             }
         }
