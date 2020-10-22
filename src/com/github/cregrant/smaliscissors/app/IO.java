@@ -37,14 +37,6 @@ class IO {
             System.exit(1);
         }
 
-/*        if (Objects.requireNonNull(tempFolder.list()).length == 0) {
-            if (Prefs.arch_device.equals("android")) {
-                out.println("Put patches in /ApkEditor/patches!");
-            } else {
-                out.println("Can`t load patches");
-            }
-            System.exit(1);
-        }*/
         ArrayList<String> rulesListArr = new Regex().matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
         RuleParser parser = new RuleParser();
         for (String rule : rulesListArr) patch.addRule(parser.parseRule(rule));

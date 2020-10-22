@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static java.lang.System.out;
 
@@ -20,7 +19,7 @@ class ProcessRule {
     static HashMap<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
-    String replace(Rule rule) {
+    void replace(Rule rule) {
         if (!assignMap.isEmpty()) {
             Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
             if (Prefs.verbose_level == 0) {
@@ -40,46 +39,38 @@ class ProcessRule {
         rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
         CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
 
-        try {
-            Object lock = new Object();
-            AtomicInteger currentNum = new AtomicInteger(0);
-            int thrNum = Prefs.max_thread_num;
-            for (int cycle = 1; cycle <= thrNum; ++cycle) {
-                int totalSmaliNum = smaliList.size() - 1;
-                new Thread(() -> {
-                    int num;
-                    while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
-                        Smali smali = smaliList.get(num);
-                        new ProcessRule().simpleReplace(smali, rule);
-                        if (smali.isNotModified()) continue;
-                        if (Prefs.verbose_level == 0) {
-                            out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
-                        }
-                        synchronized (lock) {
-                            ++patchedFilesNum;
-                        }
+        Object lock = new Object();
+        AtomicInteger currentNum = new AtomicInteger(0);
+        int thrNum = Prefs.max_thread_num;
+        for (int cycle = 1; cycle <= thrNum; ++cycle) {
+            int totalSmaliNum = smaliList.size() - 1;
+            new Thread(() -> {
+                int num;
+                while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
+                    Smali smali = smaliList.get(num);
+                    new ProcessRule().simpleReplace(smali, rule);
+                    if (smali.isNotModified()) continue;
+                    if (Prefs.verbose_level == 0) {
+                        out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
                     }
-                    cdl.countDown();
-                }).start();
-            }
-            try {
-                cdl.await();
-            }
-            catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+                    synchronized (lock) {
+                        ++patchedFilesNum;
+                    }
+                }
+                cdl.countDown();
+            }).start();
         }
-        catch (PatternSyntaxException e) {
-            //FIXME CATCH ME
-            out.println("Error - some [MATCH_ASSIGN] rule was processed with an error");
-            if (Prefs.verbose_level == 0) e.printStackTrace();
-            return "error";
+        try {
+            cdl.await();
         }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if (Prefs.verbose_level <= 2) {
             out.println(patchedFilesNum + " files patched.");
         }
         patchedFilesNum = 0;
-        return "";
     }
 
     private void simpleReplace(Smali tmpSmali, Rule rule) {

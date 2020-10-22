@@ -34,10 +34,6 @@ class ApplyPatch {
                 applySingleRule(currentProjectPath, rule);
             }
 
-/*            for (String ruleOld : new IO().loadRules(patchesDir, zipName, patch)) {
-                String result = new ApplyPatch().AllRulesPrepare(currentProjectPath, ruleOld);
-                if (result.equals("error")) return "error";
-            }*/
             if (Prefs.verbose_level == 0) out.println("Writing..");
             new IO().writeChangesInSmali();
             new IO().deleteAll(new File(patchesDir + File.separator + "temp"));
@@ -45,21 +41,6 @@ class ApplyPatch {
         out.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
         return "ok";
     }
-
-/*    private String AllRulesPrepare(String projectPath, String rule) {
-        Pattern patDetect = Pattern.compile("\\[(.+?)][\\S\\s]*?\\[/.+?]");
-        Pattern patTarget = Pattern.compile("TARGET:\\R([\\s\\S]*?)(?:(?:MATCH|EXTRACT):|\\[/)");
-        Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
-        if (Prefs.rules_AEmode == 0) {
-            out.println("TruePatcher mode on.");
-        }
-        String ruleType = new Regex().matchSingleLine(patDetect, rule);
-        ArrayList<String> targetArr = new Regex().matchMultiLines(patTarget, rule, "target");
-        for (String ruleTarget : targetArr) {
-            if (applySingleRule(projectPath, rule, patMatch, ruleTarget, ruleType).equals("error")) return "error";
-        }
-        return "ok";
-    }*/
 
     private void applySingleRule(String projectPath, Rule rule) {
         if (Prefs.verbose_level == 0)
@@ -82,8 +63,7 @@ class ApplyPatch {
                     processRule.assign(rule);
                     break;
                 case "MATCH_REPLACE":
-                    if (processRule.replace(rule).equals("error"))
-                        return;
+                    processRule.replace(rule);
                     break;
                 case "ADD_FILES":
                     processRule.add(projectPath, rule);
@@ -97,37 +77,4 @@ class ApplyPatch {
         }
         out.println();
     }
-
-/*    private String applySingleRule(String projectPath, String rule, Pattern patMatch, String ruleTarget, String ruleType) {
-        if (Prefs.verbose_level <= 1) {
-            out.println("Rule - " + ruleType);
-            out.println("Target - " + ruleTarget);
-            if (Prefs.verbose_level == 0) {
-                out.println(rule);
-            }
-        }
-        if (ruleTarget.contains(".xml") && !ruleType.equals("ADD_FILES") && !ruleType.equals("REMOVE_FILES")) {
-            out.println("Sorry, .xml patch is not supported.");
-            ruleType = "";
-        }
-        String patTargetRegex = ruleTarget.replaceAll("([^.])\\*", "$1.*").replace('/', '\\');
-        switch (ruleType) {
-            case "MATCH_ASSIGN":
-                new ProcessRule().assign(rule, patMatch, patTargetRegex);
-                break;
-            case "MATCH_REPLACE":
-                if (new ProcessRule().replace(rule, patMatch, patTargetRegex).equals("error"))
-                    return "error";
-                break;
-            case "ADD_FILES":
-                new ProcessRule().add(projectPath, rule, ruleTarget);
-                break;
-            case "REMOVE_FILES":
-                new ProcessRule().remove(projectPath, ruleTarget);
-                break;
-        }
-        out.println();
-        return "";
-    }*/
-
 }

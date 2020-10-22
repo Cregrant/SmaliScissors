@@ -33,6 +33,7 @@ class RuleParser {
                 break;
             case "MATCH_REPLACE":
                 matchRule(rule, patch);
+                break;
             case "REMOVE_FILES":
                 removeRule(rule, patch);
                 break;
