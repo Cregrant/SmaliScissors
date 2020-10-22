@@ -25,5 +25,6 @@ hs_err_pid*
 patches/*
 run.bat
 exe
-/.idea/*
-/out/*
+.idea/
+out/
+/TODO

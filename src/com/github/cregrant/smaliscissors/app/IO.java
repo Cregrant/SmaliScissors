@@ -19,22 +19,25 @@ class IO {
 
     static String currentProjectPathCached = "";
 
-    ArrayList<String> loadRules(File home, String zipName) {
+    ArrayList<String> loadRules(File patchesDir, String zipName, Patch patch) {
         Pattern patRule = null;
         if (Prefs.rules_AEmode == 1) {
             patRule = Pattern.compile("(\\[.+?](?:\\RSOURCE:\\R.++)?\\RTARGET:\\R[\\s\\S]+?\\[/.+?])", Pattern.UNIX_LINES);
         }
         out.println("Loading rules...");
         new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
-        String tempFolder = home + File.separator + "temp";
+        File tempFolder = new File(patchesDir + File.separator + "temp");
+        if (!tempFolder.exists()) {
+            tempFolder.mkdir();
+        }
         String txtFile = tempFolder + File.separator + "patch.txt";
-        zipExtract(home + File.separator + zipName, tempFolder);
+        zipExtract(patchesDir + File.separator + zipName, tempFolder.toString());
         if (!new File(txtFile).exists()) {
             out.println("No patch.txt file in patch!");
             System.exit(1);
         }
 
-        if (Objects.requireNonNull(new File(tempFolder).list()).length == 0) {
+        if (Objects.requireNonNull(tempFolder.list()).length == 0) {
             if (Prefs.arch_device.equals("android")) {
                 out.println("Put patches in /ApkEditor/patches!");
             } else {
@@ -42,8 +45,13 @@ class IO {
             }
             System.exit(1);
         }
-        ArrayList<String> rulesListArr = new Regex().match(Objects.requireNonNull(patRule), read(txtFile), "rules");
+        ArrayList<String> rulesListArr = new Regex().matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
+        RuleParser parser = new RuleParser();
+        for (String rule : rulesListArr) patch.addRule(parser.parseRule(rule));
+
         out.println(rulesListArr.size() + " rules found\n");
+        
+        //todo delete return
         return rulesListArr;
     }
 
@@ -81,8 +89,8 @@ class IO {
     }
 
     void writeChangesInSmali() {
-        for (int j = 0; j < Rules.smaliList.size(); ++j) {
-            Smali tmpSmali = Rules.smaliList.get(j);
+        for (int j = 0; j < ProcessRule.smaliList.size(); ++j) {
+            Smali tmpSmali = ProcessRule.smaliList.get(j);
             if (tmpSmali.isNotModified()) continue;
             tmpSmali.setModified(false);
             write(tmpSmali.getPath(), tmpSmali.getBody());
@@ -180,7 +188,7 @@ class IO {
 
     void checkIfScanned(String currentProjectPath) {
         if (!currentProjectPath.equals(currentProjectPathCached)) {
-            Rules.smaliList.clear();
+            ProcessRule.smaliList.clear();
             out.println("\nScanning " + currentProjectPath);
             scan(currentProjectPath);
             currentProjectPathCached = currentProjectPath;
@@ -215,7 +223,7 @@ class IO {
                         Smali tmp = new Smali();
                         tmp.setPath(file.toString());
                         synchronized (lock) {
-                            Rules.smaliList.add(tmp);
+                            ProcessRule.smaliList.add(tmp);
                         }
                     }
                 }
@@ -228,14 +236,14 @@ class IO {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-        AtomicInteger currentNum = new AtomicInteger(Rules.smaliList.size() - 1);
+        AtomicInteger currentNum = new AtomicInteger(ProcessRule.smaliList.size() - 1);
         int thrNum = Prefs.max_thread_num;
         cdl = new CountDownLatch(thrNum);
         for (int curThread = 1; curThread <= thrNum; ++curThread) {
             new Thread(() -> {
                 int num;
                 while ((num = currentNum.getAndDecrement()) >= 0) {
-                    Smali tmpSmali = Rules.smaliList.get(num);
+                    Smali tmpSmali = ProcessRule.smaliList.get(num);
                     for (int S =0; S<10; S++){
                         tmpSmali.setBody(read(tmpSmali.getPath()));
                     }
@@ -250,11 +258,11 @@ class IO {
             e.printStackTrace();
         }
         if (Prefs.bigMemoryDevice) {
-            int totalSmaliNum = Rules.smaliList.size() - 1;
+            int totalSmaliNum = ProcessRule.smaliList.size() - 1;
             ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
             ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
             for (int i = 0; i < totalSmaliNum; ++i) {
-                int len = Rules.smaliList.get(i).getBody().length();
+                int len = ProcessRule.smaliList.get(i).getBody().length();
                 boolean isAdded = false;
                 for (int k = 0; k < positionArr.size(); ++k) {
                     if (len <= lengthArr.get(k)) continue;
@@ -269,10 +277,10 @@ class IO {
             }
             ArrayList<Smali> optimizedSmaliList = new ArrayList<>(totalSmaliNum+20); //+20 backup for [ADD_FILES] rules
             for (int k = 0; k < totalSmaliNum; ++k) {
-                optimizedSmaliList.add(Rules.smaliList.get(positionArr.get(k)));
+                optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
             }
-            Rules.smaliList = optimizedSmaliList;
+            ProcessRule.smaliList = optimizedSmaliList;
         }
-        out.println(Rules.smaliList.size() + " smali files found in " + (System.currentTimeMillis() - startTime) + "ms.");
+        out.println(ProcessRule.smaliList.size() + " smali files found in " + (System.currentTimeMillis() - startTime) + "ms.");
     }
 }

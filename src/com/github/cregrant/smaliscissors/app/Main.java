@@ -37,10 +37,10 @@ public class Main {
         while (true) {
             for (String currentProjectPath : projectsToPatch) {
                 if (currentProjectPath.equals("cancel")) break;
-                patchResult = Prefs.arch_device.equals("pc") ? Patch.doPatch(mainDir + File.separator + currentProjectPath) : Patch.doPatch(mainDir);
+                patchResult = Prefs.arch_device.equals("pc") ? new ApplyPatch().doPatch(mainDir + File.separator + currentProjectPath) : new ApplyPatch().doPatch(mainDir);
                 if (patchResult.equals("error")) {
                     new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
-                    out.println("Patch error occurred");
+                    out.println("ApplyPatch error occurred");
                 }
                 if (!patchResult.equals("cancel")) continue;
                 projectsToPatch.set(0, "cancel");

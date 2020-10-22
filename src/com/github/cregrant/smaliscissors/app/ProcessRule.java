@@ -14,7 +14,7 @@ import java.util.regex.PatternSyntaxException;
 
 import static java.lang.System.out;
 
-class Rules {
+class ProcessRule {
     static ArrayList<Smali> smaliList = new ArrayList<>();
     static int patchedFilesNum = 0;
     static HashMap<String, String> assignMap = new HashMap<>();
@@ -23,8 +23,8 @@ class Rules {
     String replace(String rule, Pattern patMatch, String ruleTarget) {
         Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
         String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace(".smali", "\\.smali");
-        String ruleMatch = new Regex().match(patMatch, rule, "").get(0);
-        String ruleReplacement = new Regex().match(patReplacement, rule, "replace").get(0);
+        String ruleMatch = new Regex().matchSingleLine(patMatch, rule);
+        String ruleReplacement = new Regex().matchSingleLine(patReplacement, rule);
         if (!assignMap.isEmpty()) {
             Set<Map.Entry<String, String>> set = assignMap.entrySet();
             if (Prefs.verbose_level == 0) {
@@ -53,7 +53,7 @@ class Rules {
                     int num;
                     while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
                         Smali smali = smaliList.get(num);
-                        new Rules().simpleReplace(smali, finalRuleMatch, ruleTarget, ruleTargetRegex, finalRuleReplacement);
+                        new ProcessRule().simpleReplace(smali, finalRuleMatch, ruleTarget, ruleTargetRegex, finalRuleReplacement);
                         if (smali.isNotModified()) continue;
                         if (Prefs.verbose_level == 0) {
                             out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
@@ -99,21 +99,21 @@ class Rules {
 
     void assign(String rule, Pattern patMatch, String ruleTarget) {
         Pattern patAssign = Pattern.compile("\\n(.+?=\\$\\{GROUP\\d})");
-        String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace(".smali", "\\.smali");
-        String ruleMatch = new Regex().match(patMatch, rule, "").get(0);
+        String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace("/", "\\").replace(".smali", "\\.smali");
+        String ruleMatch = new Regex().matchSingleLine(patMatch, rule);
         if (Prefs.verbose_level == 0) {
             out.println("Match - " + ruleMatch);
         }
         ArrayList<String> assignArr = new ArrayList<>();
         for (Smali tmpSmali : smaliList) {
             if (!(tmpSmali.getPath().contains(ruleTarget) | tmpSmali.getPath().matches(ruleTargetRegex))) continue;
-            for (String variable : new Regex().match(patAssign, rule, "replace")) {
+            for (String variable : new Regex().matchMultiLines(patAssign, rule, "replace")) {
                 for (String str : variable.split("=")) {
                     if (str.contains("${GROUP")) continue;
                     assignArr.add(str);
                 }
             }
-            ArrayList<String> valuesArr = new Regex().match(Pattern.compile(ruleMatch), tmpSmali.getBody(), "replace");
+            ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(ruleMatch), tmpSmali.getBody(), "replace");
             for (int k = 0; k < valuesArr.size(); ++k) {
                 if (Prefs.verbose_level <= 1) {
                     out.println("assigned " + valuesArr.get(k) + " to \"" + assignArr.get(k) + "\"");
@@ -129,8 +129,8 @@ class Rules {
     void add(String projectPath, String rule, String ruleTarget) {
         Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
         Pattern patExtract = Pattern.compile("EXTRACT:\\R(.+)");
-        boolean extractZip = Boolean.parseBoolean(new Regex().match(patExtract, rule, "rules").get(0));
-        String ruleSource = new Regex().match(patSource, rule, "").get(0);
+        boolean extractZip = Boolean.parseBoolean(new Regex().matchSingleLine(patExtract, rule));
+        String ruleSource = new Regex().matchSingleLine(patSource, rule);
 
         if (Prefs.verbose_level == 0) {
             out.println("Source - " + ruleSource);
