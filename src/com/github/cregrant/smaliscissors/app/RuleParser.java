@@ -5,13 +5,13 @@ import java.util.regex.Pattern;
 import static java.lang.System.out;
 
 class RuleParser {
-    final Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
-    final Pattern patExtract = Pattern.compile("EXTRACT:\\R(.+)");
-    final Pattern patAssign = Pattern.compile("\\R*?(.+?=\\$\\{GROUP\\d})");
+    final Pattern patSource = Pattern.compile("SOURCE:\\n(?:\\s{4})?(.+)");
+    final Pattern patExtract = Pattern.compile("EXTRACT:\\R(?:\\s{4})?(.+)");
+    final Pattern patAssignment = Pattern.compile("\\R(?:\\s{4})?(.+?=\\$\\{GROUP\\d})");
     final Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
-    final Pattern patTarget = Pattern.compile("TARGET:\\R([\\s\\S]*?)(?:(?:MATCH|EXTRACT):|\\[/)");
+    final Pattern patTarget = Pattern.compile("TARGET:\\R(?:\\s{4})?([\\s\\S]*?)\\R(?:(?:MATCH|EXTRACT):|\\[/)");
     final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
-    final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(.+)");
+    final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(?:\\s{4})?(.+)");
     Regex regex = new Regex();
     int num = 0;
 
@@ -44,22 +44,25 @@ class RuleParser {
 
     void matchRule(Rule rule, String patch) {
         rule.targetArr = regex.matchMultiLines(patTarget, patch, "target");
+        if (rule.targetArr.size() == 1) {
+            rule.target = rule.targetArr.get(0);
+            rule.targetArr = null;
+        }
         rule.match = regex.matchSingleLine(patMatch, patch);
         rule.replacement = regex.matchSingleLine(patReplacement, patch);
-        rule.isRegex = regex.matchSingleLine(patRegexEnabled, patch);
-
+        rule.isRegex = Boolean.parseBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
     }
 
     void assignRule(Rule rule, String patch) {
         rule.target = regex.matchSingleLine(patTarget, patch);
         rule.match = regex.matchSingleLine(patMatch, patch);
-        rule.isRegex = regex.matchSingleLine(patRegexEnabled, patch);
-        rule.assignments = regex.matchMultiLines(patAssign, patch, "assign");
+        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
+        rule.assignments = regex.matchMultiLines(patAssignment, patch, "assign");
     }
 
     void addRule(Rule rule, String patch) {
         rule.source = regex.matchSingleLine(patSource, patch);
-        rule.extract = regex.matchSingleLine(patExtract, patch);
+        rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).strip());
         rule.target = regex.matchSingleLine(patTarget, patch);
     }
 

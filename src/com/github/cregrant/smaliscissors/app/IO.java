@@ -19,7 +19,7 @@ class IO {
 
     static String currentProjectPathCached = "";
 
-    ArrayList<String> loadRules(File patchesDir, String zipName, Patch patch) {
+    void loadRules(File patchesDir, String zipName, Patch patch) {
         Pattern patRule = null;
         if (Prefs.rules_AEmode == 1) {
             patRule = Pattern.compile("(\\[.+?](?:\\RSOURCE:\\R.++)?\\RTARGET:\\R[\\s\\S]+?\\[/.+?])", Pattern.UNIX_LINES);
@@ -37,22 +37,19 @@ class IO {
             System.exit(1);
         }
 
-        if (Objects.requireNonNull(tempFolder.list()).length == 0) {
+/*        if (Objects.requireNonNull(tempFolder.list()).length == 0) {
             if (Prefs.arch_device.equals("android")) {
                 out.println("Put patches in /ApkEditor/patches!");
             } else {
                 out.println("Can`t load patches");
             }
             System.exit(1);
-        }
+        }*/
         ArrayList<String> rulesListArr = new Regex().matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
         RuleParser parser = new RuleParser();
         for (String rule : rulesListArr) patch.addRule(parser.parseRule(rule));
 
         out.println(rulesListArr.size() + " rules found\n");
-        
-        //todo delete return
-        return rulesListArr;
     }
 
     String read(String path) {

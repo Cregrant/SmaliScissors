@@ -31,7 +31,7 @@ public class Regex {
     String matchSingleLine(Pattern readyPattern, String content) {
         Matcher matcher = readyPattern.matcher(content);
         if (matcher.find())
-            return matcher.group(1);
+            return matcher.group(1).replace("smali*/*.smali", ".*smali");
         else
             return null;
     }

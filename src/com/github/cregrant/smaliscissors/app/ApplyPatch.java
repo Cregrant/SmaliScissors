@@ -5,7 +5,6 @@ import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.regex.Pattern;
 
 import static java.lang.System.currentTimeMillis;
 import static java.lang.System.out;
@@ -29,16 +28,16 @@ class ApplyPatch {
             }
             out.println("\nApplyPatch - " + zipName);
             Patch patch = new Patch();
-            Rule rule;
-            new IO().loadRules(patchesDir, zipName, patch);
+            Rule rule; new IO().loadRules(patchesDir, zipName, patch);
+
             while ((rule = patch.getNextRule())!=null) {
                 applySingleRule(currentProjectPath, rule);
             }
 
-            for (String ruleOld : new IO().loadRules(patchesDir, zipName, patch)) {
+/*            for (String ruleOld : new IO().loadRules(patchesDir, zipName, patch)) {
                 String result = new ApplyPatch().AllRulesPrepare(currentProjectPath, ruleOld);
                 if (result.equals("error")) return "error";
-            }
+            }*/
             if (Prefs.verbose_level == 0) out.println("Writing..");
             new IO().writeChangesInSmali();
             new IO().deleteAll(new File(patchesDir + File.separator + "temp"));
@@ -47,7 +46,7 @@ class ApplyPatch {
         return "ok";
     }
 
-    private String AllRulesPrepare(String projectPath, String rule) {
+/*    private String AllRulesPrepare(String projectPath, String rule) {
         Pattern patDetect = Pattern.compile("\\[(.+?)][\\S\\s]*?\\[/.+?]");
         Pattern patTarget = Pattern.compile("TARGET:\\R([\\s\\S]*?)(?:(?:MATCH|EXTRACT):|\\[/)");
         Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
@@ -60,42 +59,46 @@ class ApplyPatch {
             if (applySingleRule(projectPath, rule, patMatch, ruleTarget, ruleType).equals("error")) return "error";
         }
         return "ok";
-    }
+    }*/
 
-    private String applySingleRule(String projectPath, Rule rule) {
+    private void applySingleRule(String projectPath, Rule rule) {
         if (Prefs.verbose_level == 0)
             out.println(rule.toString());
 
         else if (Prefs.verbose_level == 1) {
             out.println("Type - " + rule.type);
             if (rule.target != null)
-                out.println("Target:\n    " + rule.target);
+                out.println("Target - " + rule.target);
             else {
                 out.println("Targets:\n    ");
                 for (String target : rule.targetArr) out.println(target + "\n    ");
             }
         }
+        ProcessRule processRule = new ProcessRule();
 
-/*        switch (rule.type) {
-            case "MATCH_ASSIGN":
-                new ProcessRule().assign(rule);
-                break;
-            case "MATCH_REPLACE":
-                if (new ProcessRule().replace(rule).equals("error"))
-                    return "error";
-                break;
-            case "ADD_FILES":
-                new ProcessRule().add(projectPath, rule);
-                break;
-            case "REMOVE_FILES":
-                new ProcessRule().remove(projectPath);
-                break;
-        }*/
+        try {
+            switch (rule.type) {
+                case "MATCH_ASSIGN":
+                    processRule.assign(rule);
+                    break;
+                case "MATCH_REPLACE":
+                    if (processRule.replace(rule).equals("error"))
+                        return;
+                    break;
+                case "ADD_FILES":
+                    processRule.add(projectPath, rule);
+                    break;
+                case "REMOVE_FILES":
+                    processRule.remove(projectPath, rule);
+                    break;
+            }
+        } catch (Exception e) {
+            out.println(e.getMessage());
+        }
         out.println();
-        return "";
     }
 
-    private String applySingleRule(String projectPath, String rule, Pattern patMatch, String ruleTarget, String ruleType) {
+/*    private String applySingleRule(String projectPath, String rule, Pattern patMatch, String ruleTarget, String ruleType) {
         if (Prefs.verbose_level <= 1) {
             out.println("Rule - " + ruleType);
             out.println("Target - " + ruleTarget);
@@ -125,6 +128,6 @@ class ApplyPatch {
         }
         out.println();
         return "";
-    }
+    }*/
 
 }

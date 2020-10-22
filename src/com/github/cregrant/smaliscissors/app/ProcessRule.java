@@ -20,45 +20,42 @@ class ProcessRule {
     static HashMap<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
-    String replace(String rule, Pattern patMatch, String ruleTarget) {
-        Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
-        String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace(".smali", "\\.smali");
-        String ruleMatch = new Regex().matchSingleLine(patMatch, rule);
-        String ruleReplacement = new Regex().matchSingleLine(patReplacement, rule);
+    String replace(Rule rule) {
         if (!assignMap.isEmpty()) {
-            Set<Map.Entry<String, String>> set = assignMap.entrySet();
+            Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
             if (Prefs.verbose_level == 0) {
                 out.println("Replacing variables to text...\n" + set);
             }
             for (Map.Entry<String, String> entry : set) {
                 String key = "${" + entry.getKey() + "}";
-                if (!ruleMatch.contains(key)) continue;
+                if (!rule.match.contains(key)) continue;
                 String value = entry.getValue();
                 if (Prefs.verbose_level == 0) {
                     out.println(key + " -> " + value);
                 }
-                ruleMatch = ruleMatch.replace(key, value);
+                rule.match = rule.match.replace(key, value);
             }
         }
+        //important escape for android
+        rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
         CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
+
         try {
+            Object lock = new Object();
             AtomicInteger currentNum = new AtomicInteger(0);
             int thrNum = Prefs.max_thread_num;
             for (int cycle = 1; cycle <= thrNum; ++cycle) {
                 int totalSmaliNum = smaliList.size() - 1;
-                String finalRuleMatch = ruleMatch;
-                //important escape for android
-                String finalRuleReplacement = ruleReplacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
                 new Thread(() -> {
                     int num;
                     while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
                         Smali smali = smaliList.get(num);
-                        new ProcessRule().simpleReplace(smali, finalRuleMatch, ruleTarget, ruleTargetRegex, finalRuleReplacement);
+                        new ProcessRule().simpleReplace(smali, rule);
                         if (smali.isNotModified()) continue;
                         if (Prefs.verbose_level == 0) {
                             out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
                         }
-                        synchronized (patReplacement) {
+                        synchronized (lock) {
                             ++patchedFilesNum;
                         }
                     }
@@ -85,11 +82,15 @@ class ProcessRule {
         return "";
     }
 
-    private void simpleReplace(Smali tmpSmali, String ruleMatch, String ruleTarget, String ruleTargetRegex, String ruleReplacement) {
+    private void simpleReplace(Smali tmpSmali, Rule rule) {
         String smaliPath = tmpSmali.getPath();
-        if (smaliPath.contains(ruleTarget) | smaliPath.matches(ruleTargetRegex)) {
+        if (smaliPath.contains(rule.target) | smaliPath.matches(rule.target)) {
             String smaliBody = tmpSmali.getBody();
-            String smaliBodyNew = smaliBody.replaceAll(ruleMatch, ruleReplacement);
+            String smaliBodyNew;
+            if (rule.isRegex)
+                smaliBodyNew = smaliBody.replaceAll(rule.match, rule.replacement);
+            else
+                smaliBodyNew = smaliBody.replace(rule.match, rule.replacement);
             if (!smaliBodyNew.equals(smaliBody)) {
                 tmpSmali.setBody(smaliBodyNew);
                 tmpSmali.setModified(true);
@@ -97,23 +98,17 @@ class ProcessRule {
         }
     }
 
-    void assign(String rule, Pattern patMatch, String ruleTarget) {
-        Pattern patAssign = Pattern.compile("\\n(.+?=\\$\\{GROUP\\d})");
-        String ruleTargetRegex = ruleTarget.replace("\\", "\\\\").replace("/", "\\").replace(".smali", "\\.smali");
-        String ruleMatch = new Regex().matchSingleLine(patMatch, rule);
-        if (Prefs.verbose_level == 0) {
-            out.println("Match - " + ruleMatch);
-        }
+    void assign(Rule rule) {
         ArrayList<String> assignArr = new ArrayList<>();
         for (Smali tmpSmali : smaliList) {
-            if (!(tmpSmali.getPath().contains(ruleTarget) | tmpSmali.getPath().matches(ruleTargetRegex))) continue;
-            for (String variable : new Regex().matchMultiLines(patAssign, rule, "replace")) {
+            if (!(tmpSmali.getPath().contains(rule.target) | tmpSmali.getPath().matches(rule.target))) continue;
+            for (String variable : rule.assignments) {
                 for (String str : variable.split("=")) {
                     if (str.contains("${GROUP")) continue;
                     assignArr.add(str);
                 }
             }
-            ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(ruleMatch), tmpSmali.getBody(), "replace");
+            ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(rule.match), tmpSmali.getBody(), "replace");
             for (int k = 0; k < valuesArr.size(); ++k) {
                 if (Prefs.verbose_level <= 1) {
                     out.println("assigned " + valuesArr.get(k) + " to \"" + assignArr.get(k) + "\"");
@@ -126,31 +121,22 @@ class ProcessRule {
         }
     }
 
-    void add(String projectPath, String rule, String ruleTarget) {
-        Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
-        Pattern patExtract = Pattern.compile("EXTRACT:\\R(.+)");
-        boolean extractZip = Boolean.parseBoolean(new Regex().matchSingleLine(patExtract, rule));
-        String ruleSource = new Regex().matchSingleLine(patSource, rule);
-
-        if (Prefs.verbose_level == 0) {
-            out.println("Source - " + ruleSource);
-            if (extractZip) out.println("Extracting zip..");
-        }
-        String src = new CompatibilityData().getTempDir() + File.separator + ruleSource;
-        String dst = projectPath + File.separator + ruleTarget;
+    void add(String projectPath, Rule rule) {
+        String src = new CompatibilityData().getTempDir() + File.separator + rule.source;
+        String dst = projectPath + File.separator + rule.target;
         File file = new File(dst);
         if (file.exists()) {
             new IO().deleteAll(file);
         }
-        if (extractZip) new IO().zipExtract(src, dst);
+        if (rule.extract) new IO().zipExtract(src, dst);
         else new IO().copy(src, dst);
-        if (ruleSource.contains(".smali")) {
+        if (rule.source.contains(".smali")) {
             if (Prefs.verbose_level <= 1) {
                 out.println("Added.");
             }
             Smali newSmali = new Smali();
-            newSmali.setPath(projectPath + File.separator + ruleTarget.replace('/', File.separatorChar));
-            newSmali.setBody(new IO().read(projectPath + File.separator + ruleTarget));
+            newSmali.setPath(projectPath + File.separator + rule.target.replace('/', File.separatorChar));
+            newSmali.setBody(new IO().read(projectPath + File.separator + rule.target));
             for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
                 Smali sm = smaliList.get(i);
                 if (sm.getPath().equals(newSmali.getPath())) smaliList.remove(i);
@@ -159,19 +145,16 @@ class ProcessRule {
         }
     }
 
-    void remove(String projectPath, String target) {
-        if (Prefs.verbose_level == 0) {
-            out.println("Dst - " + target);
-        }
-        new IO().deleteAll(new File(projectPath + File.separator + target));
+    void remove(String projectPath, Rule rule) {
+        new IO().deleteAll(new File(projectPath + File.separator + rule.target));
         for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
             Smali sm = smaliList.get(i);
-            if (sm.getPath().equals(projectPath + File.separator + target)) {
+            if (sm.getPath().equals(projectPath + File.separator + rule.target)) {
                 smaliList.remove(i);
                 i--;
             }
         }
-        if (Prefs.verbose_level <= 1 && !target.contains("/temp")) {
+        if (Prefs.verbose_level <= 1 && !rule.target.contains("/temp")) {
             out.println("Removed.");
         }
     }

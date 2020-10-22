@@ -8,31 +8,31 @@ class Rule {
     int num;
     String type;
     String source;
-    String extract;
     String match;
     String target;
     String replacement;
-    String isRegex;
     String script;
     String smali_needed;
     String main_class;
     String entrance;
     String param;
+    boolean isRegex = false;
+    boolean extract = false;
     ArrayList<String> targetArr;
     ArrayList<String> assignments;
 
     boolean checkRuleIntegrity() {
         switch (type) {
             case "MATCH_ASSIGN":
-                if (target==null | match==null | isRegex==null | assignments==null)
+                if (target==null | match==null | assignments==null)
                     return false;
                 break;
             case "ADD_FILES":
-                if (target==null | source==null | extract==null)
+                if (target==null | source==null)
                     return false;
                 break;
             case "MATCH_REPLACE":
-                if (target==null | match==null | isRegex==null | replacement==null)
+                if (target==null | match==null | replacement==null)
                     return false;
                 break;
             case "REMOVE_FILES":
