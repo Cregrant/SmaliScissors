@@ -2,5 +2,5 @@
 #Sun Oct 18 01:32:51 ICT 2020
 Verbose_level=1
 Version=0.01
-Rules_mode=1
+Rules_AEmode=true
 Version_type=a

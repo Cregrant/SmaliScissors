@@ -11,8 +11,10 @@ class Patch {
             rules.add(rule);
     }
 
-    public void setRuleNum(int num){
-        currentRuleNum = num;
+    public void setRuleName(String someName) {
+        for (Rule r : rules) {
+            if (r.name.equalsIgnoreCase(someName)) currentRuleNum = r.num;
+        }
     }
 
     Rule getNextRule() {

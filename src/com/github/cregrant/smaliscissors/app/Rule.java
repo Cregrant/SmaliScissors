@@ -11,11 +11,13 @@ class Rule {
     String match;
     String target;
     String replacement;
+    String name;
     String script;
-    String smali_needed;
-    String main_class;
+    String isSmaliNeeded;
+    String mainClass;
     String entrance;
     String param;
+    String goTo;
     boolean isRegex = false;
     boolean extract = false;
     ArrayList<String> targetArr;
@@ -39,17 +41,32 @@ class Rule {
                 if (target==null)
                     return false;
                 break;
+            case "DUMMY":
+                if (name==null)
+                    return false;
+                break;
+            case "EXECUTE_DEX":
+                if (script==null | isSmaliNeeded==null | mainClass==null | entrance==null | param==null)
+                    return false;
+                break;
+            case "GOTO":
+                if (goTo==null)
+                    return false;
+                break;
+            case "MATCH_GOTO":
+                if (target==null | match==null | goTo==null)
+                    return false;
+                break;
         }
         return true;
     }
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type:\n    ").append(type);
+        sb.append("Type:    ").append(type);
 
         if (target != null) {
-            sb.append("Target:\n    ");
-            out.println(target);
+            sb.append("Target:    ").append(target);
         }
         else {
             out.println("Targets:\n    ");
@@ -58,22 +75,45 @@ class Rule {
         switch (type) {
             case "MATCH_ASSIGN":
                 sb
-                        .append("Match:\n    ").append(match)
-                        .append("IsRegex:\n    ").append(isRegex)
-                        .append("Assignments:\n    ");
-                for (String ass : assignments) sb.append(ass).append("\n    ");
-
+                        .append("Match:    ").append(match)
+                        .append("Regex:    ").append(isRegex)
+                        .append("Assignments:");
+                if (assignments.size()==1)
+                    sb.append("    ").append(assignments.get(0));
+                else {
+                    sb.append("\n    ");
+                    for (String ass : assignments) sb.append(ass).append("\n    ");
+                }
                 break;
             case "ADD_FILES":
                 sb
-                        .append("Source:\n    ").append(source)
-                        .append("Extract:\n    ").append(extract);
+                        .append("Source:    ").append(source)
+                        .append("Extract:    ").append(extract);
                 break;
             case "MATCH_REPLACE":
                 sb
-                        .append("Match:\n    ").append(match)
-                        .append("IsRegex:\n    ").append(isRegex)
-                        .append("Replacement:\n    ").append(replacement);
+                        .append("Match:    ").append(match)
+                        .append("Regex:    ").append(isRegex)
+                        .append("Replacement:    ").append(replacement);
+            case "DUMMY":
+                sb.append(name);
+                break;
+            case "EXECUTE_DEX":
+                sb
+                        .append("Script:    ").append(script)
+                        .append("Smali needed:    ").append(isSmaliNeeded)
+                        .append("Main class:    ").append(mainClass)
+                        .append("Entrance:    ").append(entrance)
+                        .append("Param:    ").append(param);
+                break;
+            case "GOTO":
+                sb
+                        .append("Goto:    ").append(goTo);
+                break;
+            case "MATCH_GOTO":
+                sb
+                        .append("Match:    ").append(match)
+                        .append("Goto:    ").append(goTo);
                 break;
         }
         return sb.toString();

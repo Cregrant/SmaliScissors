@@ -10,7 +10,7 @@ public class Prefs {
     static boolean bigMemoryDevice = false;
     private static String versionType;
     private static double versionConf;
-    static int rules_AEmode = 1;
+    static boolean rules_AEmode = true;
     static int verbose_level = 1;
     static final int max_thread_num = Runtime.getRuntime().availableProcessors();
 
@@ -38,7 +38,7 @@ public class Prefs {
             if (versionType.equals("a")) {
                 System.out.print("Unstable version. Prepare your anus");
             }
-            rules_AEmode = Integer.parseInt(props.getProperty("Rules_mode"));
+            rules_AEmode = Boolean.parseBoolean(props.getProperty("Rules_AEmode"));
         }
         catch (Exception e) {
             System.out.println("Error reading conf!");
@@ -55,7 +55,7 @@ public class Prefs {
             props.put("Version", String.format("%.2f", versionConf).replace(',', '.'));
             props.put("Version_type", String.valueOf(versionType));
             props.put("Verbose_level", String.valueOf(verbose_level));
-            props.put("Rules_mode", String.valueOf(rules_AEmode));
+            props.put("Rules_AEmode", rules_AEmode);
             props.store(output, "Config v0.01" + versionType);
             output.close();
         }
