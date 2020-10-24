@@ -30,10 +30,12 @@ public class Regex {
 
     String matchSingleLine(Pattern readyPattern, String content) {
         Matcher matcher = readyPattern.matcher(content);
-        if (matcher.find())
+        if (matcher.find()) {
+            if (matcher.groupCount()==0)
+                return matcher.group(0).replace("smali*/*.smali", ".*smali");
             return matcher.group(1).replace("smali*/*.smali", ".*smali");
-        else
-            return null;
+        }
+        return null;
     }
 
     String getEndOfPath(String path) {

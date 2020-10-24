@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -19,45 +20,40 @@ class ProcessRule {
     static HashMap<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
-    void replace(Rule rule) {
-        if (!assignMap.isEmpty()) {
-            Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
-            if (Prefs.verbose_level == 0) {
-                out.println("Replacing variables to text...\n" + set);
-            }
-            for (Map.Entry<String, String> entry : set) {
-                String key = "${" + entry.getKey() + "}";
-                if (!rule.match.contains(key)) continue;
-                String value = entry.getValue();
-                if (Prefs.verbose_level == 0) {
-                    out.println(key + " -> " + value);
-                }
-                rule.match = rule.match.replace(key, value);
-            }
-        }
+    void matchReplace(Rule rule) {
+        applyAssign(rule);
         //important escape for android
         rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
         CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
 
         Object lock = new Object();
+        AtomicBoolean error = new AtomicBoolean(false);
         AtomicInteger currentNum = new AtomicInteger(0);
         int thrNum = Prefs.max_thread_num;
         for (int cycle = 1; cycle <= thrNum; ++cycle) {
             int totalSmaliNum = smaliList.size() - 1;
             new Thread(() -> {
-                int num;
-                while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
-                    Smali smali = smaliList.get(num);
-                    new ProcessRule().simpleReplace(smali, rule);
-                    if (smali.isNotModified()) continue;
-                    if (Prefs.verbose_level == 0) {
-                        out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
+                try {
+                    int num;
+                    while ((num = currentNum.getAndIncrement()) <= totalSmaliNum) {
+                        Smali smali = smaliList.get(num);
+                        replace(smali, rule);
+                        if (smali.isNotModified()) continue;
+                        if (Prefs.verbose_level == 0) {
+                            out.println(smali.getPath().replaceAll(".+/smali", "smali") + " patched.");
+                        }
+                        synchronized (lock) {
+                            ++patchedFilesNum;
+                        }
                     }
-                    synchronized (lock) {
-                        ++patchedFilesNum;
+                    cdl.countDown();
+                } catch (Exception e) {
+                    if (!error.get()) {
+                        error.set(true);
+                        out.println(e.getMessage());
                     }
+                    System.exit(1);
                 }
-                cdl.countDown();
             }).start();
         }
         try {
@@ -73,7 +69,7 @@ class ProcessRule {
         patchedFilesNum = 0;
     }
 
-    private void simpleReplace(Smali tmpSmali, Rule rule) {
+    private void replace(Smali tmpSmali, Rule rule) {
         String smaliPath = tmpSmali.getPath();
         if (smaliPath.contains(rule.target) | smaliPath.matches(rule.target)) {
             String smaliBody = tmpSmali.getBody();
@@ -148,5 +144,57 @@ class ProcessRule {
         if (Prefs.verbose_level <= 1 && !rule.target.contains("/temp")) {
             out.println("Removed.");
         }
+    }
+
+    void matchGoto(Rule rule, Patch patch) {
+        applyAssign(rule);
+        CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
+        AtomicInteger currentNum = new AtomicInteger(0);
+        int thrNum = Prefs.max_thread_num;
+        AtomicBoolean running = new AtomicBoolean(true);
+        Regex regex = new Regex();
+        Pattern pattern = Pattern.compile(rule.match);
+        for (int cycle = 1; cycle <= thrNum; ++cycle) {
+            int totalSmaliNum = smaliList.size() - 1;
+            new Thread(() -> {
+                int num;
+                while ((num = currentNum.getAndIncrement()) <= totalSmaliNum & running.get()) {
+                    Smali smali = smaliList.get(num);
+                    if (regex.matchSingleLine(pattern, smali.getBody())!=null) {
+                        patch.setRuleName(rule.goTo);
+                        running.set(false);
+                    }
+                }
+                cdl.countDown();
+            }).start();
+        }
+        try {
+            cdl.await();
+        }
+        catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void applyAssign(Rule rule) {
+        if (!assignMap.isEmpty()) {
+            Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
+            if (Prefs.verbose_level == 0) {
+                out.println("Replacing variables to text...\n" + set);
+            }
+            for (Map.Entry<String, String> entry : set) {
+                String key = "${" + entry.getKey() + "}";
+                if (!rule.match.contains(key)) continue;
+                String value = entry.getValue();
+                if (Prefs.verbose_level == 0) {
+                    out.println(key + " -> " + value);
+                }
+                rule.match = rule.match.replace(key, value);
+            }
+        }
+    }
+
+    public void dex() {
+        out.println("HAHa very fun");
     }
 }

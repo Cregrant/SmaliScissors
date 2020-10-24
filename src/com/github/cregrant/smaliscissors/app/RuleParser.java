@@ -13,11 +13,11 @@ class RuleParser {
     private final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
     private final Pattern patName = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
     private final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(?:\\s{4})?(.+)");
-    private final Pattern patScript = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
-    private final Pattern patIsSmaliNeeded = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
-    private final Pattern patMainClass = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
-    private final Pattern patEntrance = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
-    private final Pattern patParam = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
+    private final Pattern patScript = Pattern.compile("SCRIPT:\\R(?:\\s{4})?(.+)");
+    private final Pattern patIsSmaliNeeded = Pattern.compile("SMALI_NEEDED:\\R(?:\\s{4})?(.+)");
+    private final Pattern patMainClass = Pattern.compile("MAIN_CLASS:\\R(?:\\s{4})?(.+)");
+    private final Pattern patEntrance = Pattern.compile("ENTRANCE:\\R(?:\\s{4})?(.+)");
+    private final Pattern patParam = Pattern.compile("PARAM:\\R(?:\\s{4})?(.+)");
     private final Pattern patGoto = Pattern.compile("GOTO:\\R(?:\\s{4})?(.+)");
     private Rule rule;
     private String patch;
@@ -32,9 +32,19 @@ class RuleParser {
         patch = patchStr;
         rule.num = num;
         num++;
-        final Pattern patDetect = Pattern.compile("\\[(.+?)][\\S\\s]*?\\[/.+?]");
-        rule.type = regex.matchSingleLine(patDetect, patch);
+        int k = 1;
+        StringBuilder sb = new StringBuilder(17);
+        char ch;
+        while ((ch = patch.charAt(k))!=']') {
+            sb.append(ch);
+            k++;
+        }
+        rule.type = sb.toString();
         switch (rule.type) {
+            case "PACKAGE":
+            case "MIN_ENGINE_VER":
+            case "AUTHOR":
+                break;
             case "MATCH_ASSIGN":
                 assignRule();
                 break;
@@ -66,7 +76,13 @@ class RuleParser {
     }
 
     void matchRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.targetArr = regex.matchMultiLines(patTarget, patch, "target");
+        if (rule.targetArr.get(0).endsWith(".xml"))
+            rule.isXml = true;
+        else if (rule.isXml = rule.targetArr.get(0).endsWith(".smali"))
+            rule.isSmali = true;
+
         if (rule.targetArr.size() == 1) {
             rule.target = rule.targetArr.get(0);
             rule.targetArr = null;
@@ -77,19 +93,26 @@ class RuleParser {
     }
 
     void assignRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.matchSingleLine(patTarget, patch);
+        if (rule.target.endsWith(".xml"))
+            rule.isXml = true;
+        else if (rule.isXml = rule.target.endsWith(".smali"))
+            rule.isSmali = true;
         rule.match = regex.matchSingleLine(patMatch, patch);
         rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
         rule.assignments = regex.matchMultiLines(patAssignment, patch, "assign");
     }
 
     void addRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.source = regex.matchSingleLine(patSource, patch);
         rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).strip());
         rule.target = regex.matchSingleLine(patTarget, patch);
     }
 
     private void removeRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.matchSingleLine(patTarget, patch);
     }
 
@@ -98,19 +121,26 @@ class RuleParser {
     }
 
     private void dexRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.script = regex.matchSingleLine(patScript, patch);
-        rule.isSmaliNeeded = regex.matchSingleLine(patIsSmaliNeeded, patch);
+        rule.isSmali = Boolean.getBoolean(regex.matchSingleLine(patIsSmaliNeeded, patch));
         rule.mainClass = regex.matchSingleLine(patMainClass, patch);
         rule.entrance = regex.matchSingleLine(patEntrance, patch);
         rule.param = regex.matchSingleLine(patParam, patch);
     }
 
     private void gotoRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.goTo = regex.matchSingleLine(patGoto, patch);
     }
 
     private void matchGotoRule() {
+        rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.matchSingleLine(patTarget, patch);
+        if (rule.target.endsWith(".xml"))
+            rule.isXml = true;
+        else if (rule.isXml = rule.target.endsWith(".smali"))
+            rule.isSmali = true;
         rule.match = regex.matchSingleLine(patMatch, patch);
         rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
         rule.goTo = regex.matchSingleLine(patGoto, patch);

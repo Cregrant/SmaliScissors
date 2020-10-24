@@ -20,7 +20,7 @@ class IO {
     static String currentProjectPathCached = "";
 
     void loadRules(File patchesDir, String zipName, Patch patch) {
-        Pattern patRule = Pattern.compile("(\\[.+?](?:\\RSOURCE:\\R.++)?\\RTARGET:\\R[\\s\\S]+?\\[/.+?])", Pattern.UNIX_LINES);
+        Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
         if (!Prefs.rules_AEmode) {
             out.println("TruePatcher mode on.");
         }

@@ -2,8 +2,6 @@ package com.github.cregrant.smaliscissors.app;
 
 import java.util.ArrayList;
 
-import static java.lang.System.out;
-
 class Rule {
     int num;
     String type;
@@ -13,11 +11,12 @@ class Rule {
     String replacement;
     String name;
     String script;
-    String isSmaliNeeded;
     String mainClass;
     String entrance;
     String param;
     String goTo;
+    boolean isXml = false;
+    boolean isSmali = false;
     boolean isRegex = false;
     boolean extract = false;
     ArrayList<String> targetArr;
@@ -46,7 +45,7 @@ class Rule {
                     return false;
                 break;
             case "EXECUTE_DEX":
-                if (script==null | isSmaliNeeded==null | mainClass==null | entrance==null | param==null)
+                if (script==null | mainClass==null | entrance==null | param==null)
                     return false;
                 break;
             case "GOTO":
@@ -63,57 +62,56 @@ class Rule {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type:    ").append(type);
+        sb.append("Type:    ").append(type).append('\n');
 
         if (target != null) {
-            sb.append("Target:    ").append(target);
+            sb.append("Target:    ").append(target).append('\n');
         }
         else {
-            out.println("Targets:\n    ");
-            for (String target : targetArr) sb.append(target).append("\n    ");
+            sb.append("Targets:\n");
+            for (String target : targetArr) sb.append("    ").append(target).append("\n");
         }
         switch (type) {
             case "MATCH_ASSIGN":
                 sb
-                        .append("Match:    ").append(match)
-                        .append("Regex:    ").append(isRegex)
-                        .append("Assignments:");
+                        .append("Match:    ").append(match).append('\n')
+                        .append("Regex:    ").append(isRegex).append('\n');
                 if (assignments.size()==1)
-                    sb.append("    ").append(assignments.get(0));
+                    sb.append("Assignment:    ").append(assignments.get(0)).append('\n');
                 else {
-                    sb.append("\n    ");
-                    for (String ass : assignments) sb.append(ass).append("\n    ");
+                    sb.append("Assignments:\n");
+                    for (String ass : assignments) sb.append("    ").append(ass).append("\n");
                 }
                 break;
             case "ADD_FILES":
                 sb
-                        .append("Source:    ").append(source)
-                        .append("Extract:    ").append(extract);
+                        .append("Source:    ").append(source).append('\n')
+                        .append("Extract:    ").append(extract).append('\n');
                 break;
             case "MATCH_REPLACE":
                 sb
-                        .append("Match:    ").append(match)
-                        .append("Regex:    ").append(isRegex)
-                        .append("Replacement:    ").append(replacement);
+                        .append("Match:    ").append(match).append('\n')
+                        .append("Regex:    ").append(isRegex).append('\n')
+                        .append("Replacement:    ").append(replacement).append('\n');
             case "DUMMY":
-                sb.append(name);
+                sb.append(name).append('\n');
                 break;
             case "EXECUTE_DEX":
                 sb
-                        .append("Script:    ").append(script)
-                        .append("Smali needed:    ").append(isSmaliNeeded)
-                        .append("Main class:    ").append(mainClass)
-                        .append("Entrance:    ").append(entrance)
-                        .append("Param:    ").append(param);
+                        .append("Script:    ").append(script).append('\n')
+                        .append("Smali needed:    ").append(isSmali).append('\n')
+                        .append("Main class:    ").append(mainClass).append('\n')
+                        .append("Entrance:    ").append(entrance).append('\n')
+                        .append("Param:    ").append(param).append('\n');
                 break;
             case "GOTO":
                 sb
-                        .append("Goto:    ").append(goTo);
+                        .append("Goto:    ").append(goTo).append('\n');
                 break;
             case "MATCH_GOTO":
                 sb
-                        .append("Match:    ").append(match)
-                        .append("Goto:    ").append(goTo);
+                        .append("Match:    ").append(match).append('\n')
+                        .append("Goto:    ").append(goTo).append('\n');
                 break;
         }
         return sb.toString();

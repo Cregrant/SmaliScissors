@@ -13,7 +13,8 @@ class Patch {
 
     public void setRuleName(String someName) {
         for (Rule r : rules) {
-            if (r.name.equalsIgnoreCase(someName)) currentRuleNum = r.num;
+            if (r.name!=null)
+                if (r.name.equalsIgnoreCase(someName)) currentRuleNum = r.num;
         }
     }
 

@@ -31,7 +31,9 @@ class ApplyPatch {
             Rule rule; new IO().loadRules(patchesDir, zipName, patch);
 
             while ((rule = patch.getNextRule())!=null) {
-                applySingleRule(currentProjectPath, rule);
+                if (!rule.isXml)
+                    preProcessRule(currentProjectPath, rule, patch);
+                else out.println("Sorry, xml is not supported yet.\n");
             }
 
             if (Prefs.verbose_level == 0) out.println("Writing..");
@@ -42,7 +44,7 @@ class ApplyPatch {
         return "ok";
     }
 
-    private void applySingleRule(String projectPath, Rule rule) {
+    private void preProcessRule(String projectPath, Rule rule, Patch patch) {
         if (Prefs.verbose_level == 0)
             out.println(rule.toString());
 
@@ -51,8 +53,8 @@ class ApplyPatch {
             if (rule.target != null)
                 out.println("Target - " + rule.target);
             else {
-                out.println("Targets:\n    ");
-                for (String target : rule.targetArr) out.println(target + "\n    ");
+                out.println("Targets:");
+                for (String target : rule.targetArr) out.println("\n    " + target);
             }
         }
         ProcessRule processRule = new ProcessRule();
@@ -63,7 +65,7 @@ class ApplyPatch {
                     processRule.assign(rule);
                     break;
                 case "MATCH_REPLACE":
-                    processRule.replace(rule);
+                    processRule.matchReplace(rule);
                     break;
                 case "ADD_FILES":
                     processRule.add(projectPath, rule);
@@ -71,10 +73,19 @@ class ApplyPatch {
                 case "REMOVE_FILES":
                     processRule.remove(projectPath, rule);
                     break;
+                case "EXECUTE_DEX":
+                    processRule.dex();
+                    break;
+                case "GOTO":
+                    patch.setRuleName(rule.goTo);
+                    break;
+                case "MATCH_GOTO":
+                    processRule.matchGoto(rule, patch);
+                    break;
             }
+            out.println();
         } catch (Exception e) {
             out.println(e.getMessage());
         }
-        out.println();
     }
 }
