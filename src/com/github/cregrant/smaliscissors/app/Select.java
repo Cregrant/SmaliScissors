@@ -7,10 +7,10 @@ class Select {
     Select() {
     }
 
-    ArrayList<String> select(ArrayList<String> stringsList, String msg) {
+    ArrayList<String> select(ArrayList<String> stringsList, String msg, String msgError) {
         System.out.println(msg);
         if (stringsList.size() == 0) {
-            System.out.println("Hmm... nothing to select??");
+            System.out.println(msgError);
             System.exit(1);
         } else if (stringsList.size() == 1) {
             return stringsList;

@@ -31,7 +31,7 @@ public class Main {
             }
         }
         String msg = "\nSelect project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
-        ArrayList<String> projectsToPatch = new Select().select(projectsList, msg);
+        ArrayList<String> projectsToPatch = new Select().select(projectsList, msg, "No decompiled projects found");
         String patchResult;
         long startTimeTotal = System.currentTimeMillis();
         while (true) {
@@ -46,7 +46,7 @@ public class Main {
                 projectsToPatch.set(0, "cancel");
             }
             if (projectsToPatch.get(0).equals("cancel")) break;
-            projectsToPatch = new Select().select(projectsList, msg);
+            projectsToPatch = new Select().select(projectsList, msg, "No decompiled projects found");
         }
         out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
         new Prefs().saveConf();

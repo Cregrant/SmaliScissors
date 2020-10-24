@@ -20,7 +20,7 @@ class ApplyPatch {
         }
         new IO().checkIfScanned(currentProjectPath);
 
-        ArrayList<String> zipArr = new Select().select(zipFilesArr, "\nNow select patch:");
+        ArrayList<String> zipArr = new Select().select(zipFilesArr, "\nNow select patch:", "No patches detected");
         long startTime = currentTimeMillis();
         for (String zipName : zipArr) {
             if (zipName.equals("cancel")) {
