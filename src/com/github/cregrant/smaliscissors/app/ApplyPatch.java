@@ -37,7 +37,7 @@ class ApplyPatch {
             }
 
             if (Prefs.verbose_level == 0) out.println("Writing..");
-            new IO().writeChangesInSmali();
+            new IO().writeChanges();
             new IO().deleteAll(new File(patchesDir + File.separator + "temp"));
         }
         out.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");

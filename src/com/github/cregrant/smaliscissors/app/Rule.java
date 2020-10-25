@@ -99,7 +99,7 @@ class Rule {
             case "EXECUTE_DEX":
                 sb
                         .append("Script:    ").append(script).append('\n')
-                        .append("Smali needed:    ").append(isSmali).append('\n')
+                        .append("decompiledFile needed:    ").append(isSmali).append('\n')
                         .append("Main class:    ").append(mainClass).append('\n')
                         .append("Entrance:    ").append(entrance).append('\n')
                         .append("Param:    ").append(param).append('\n');

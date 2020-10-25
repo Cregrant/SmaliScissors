@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.CountDownLatch;
@@ -77,12 +78,22 @@ class IO {
         }
     }
 
-    void writeChangesInSmali() {
-        for (int j = 0; j < ProcessRule.smaliList.size(); ++j) {
-            Smali tmpSmali = ProcessRule.smaliList.get(j);
-            if (tmpSmali.isNotModified()) continue;
-            tmpSmali.setModified(false);
-            write(tmpSmali.getPath(), tmpSmali.getBody());
+    void writeChanges() {
+        if (Prefs.keepSmaliFilesInRAM) {
+            for (int j = 0; j < ProcessRule.smaliList.size(); ++j) {
+                decompiledFile tmpSmali = ProcessRule.smaliList.get(j);
+                if (tmpSmali.isNotModified()) continue;
+                tmpSmali.setModified(false);
+                write(tmpSmali.getPath(), tmpSmali.getBody());
+            }
+        }
+        if (Prefs.keepXmlFilesInRAM) {
+            for (int j = 0; j < ProcessRule.xmlList.size(); ++j) {
+                decompiledFile dFile = ProcessRule.xmlList.get(j);
+                if (dFile.isNotModified()) continue;
+                dFile.setModified(false);
+                write(dFile.getPath(), dFile.getBody());
+            }
         }
     }
 
@@ -178,7 +189,7 @@ class IO {
     void checkIfScanned(String currentProjectPath) {
         if (!currentProjectPath.equals(currentProjectPathCached)) {
             ProcessRule.smaliList.clear();
-            out.println("\nScanning " + currentProjectPath);
+            ProcessRule.xmlList.clear();
             scan(currentProjectPath);
             currentProjectPathCached = currentProjectPath;
         }
@@ -189,27 +200,28 @@ class IO {
 
     private void scan(String projectPath) {
         long startTime = System.currentTimeMillis();
+        out.println("\nScanning " + projectPath);
         ArrayList<String> smFolders = new ArrayList<>();
         for (String i : Objects.requireNonNull(new File(projectPath).list())) {
             if (!i.startsWith("smali")) continue;
             smFolders.add(i);
         }
         if (smFolders.isEmpty()) {
-            out.println("No smali folders found inside the project folder \"" + projectPath.replaceAll(".+\\\\", "") + "\"");
+            out.println("No smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
             System.exit(1);
         }
         cdl = new CountDownLatch(smFolders.size());
         for (String folder : smFolders) {
             new Thread(() -> {
                 Stack<File> stack = new Stack<>();
-                stack.push(new File(projectPath + File.separator + folder));
+                stack.push(new File(projectPath+ File.separator + folder));
                 while (!stack.isEmpty()) {
                     for (File file : Objects.requireNonNull(stack.pop().listFiles())) {
                         if (file.isDirectory()) {
                             stack.push(file);
                             continue;
                         }
-                        Smali tmp = new Smali();
+                        decompiledFile tmp = new decompiledFile(false);
                         tmp.setPath(file.toString());
                         synchronized (lock) {
                             ProcessRule.smaliList.add(tmp);
@@ -225,16 +237,31 @@ class IO {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-        AtomicInteger currentNum = new AtomicInteger(ProcessRule.smaliList.size() - 1);
-        int thrNum = Prefs.max_thread_num;
-        cdl = new CountDownLatch(thrNum);
-        for (int curThread = 1; curThread <= thrNum; ++curThread) {
+        ArrayList<String> resFolders = new ArrayList<>(Arrays.asList(Objects.requireNonNull(new File(projectPath + File.separator + "res").list())));
+        if (resFolders.isEmpty()) {
+            out.println("No resources found inside the res folder.");
+            System.exit(1);
+        }
+
+        decompiledFile manifest = new decompiledFile(true);
+        manifest.setPath(projectPath + File.separator + "AndroidManifest.xml");
+        ProcessRule.xmlList.add(manifest);
+        cdl = new CountDownLatch(resFolders.size());
+        for (String folder : resFolders) {
             new Thread(() -> {
-                int num;
-                while ((num = currentNum.getAndDecrement()) >= 0) {
-                    Smali tmpSmali = ProcessRule.smaliList.get(num);
-                    for (int S =0; S<10; S++){
-                        tmpSmali.setBody(read(tmpSmali.getPath()));
+                Stack<File> stack = new Stack<>();
+                stack.push(new File(projectPath + File.separator + "res" + File.separator + folder));
+                while (!stack.isEmpty()) {
+                    for (File file : Objects.requireNonNull(stack.pop().listFiles())) {
+                        if (file.isDirectory())
+                            stack.push(file);
+                        else if (file.getName().endsWith(".xml")) {
+                            decompiledFile tmp = new decompiledFile(true);
+                            tmp.setPath(file.toString());
+                            synchronized (lock) {
+                                ProcessRule.xmlList.add(tmp);
+                            }
+                        }
                     }
                 }
                 cdl.countDown();
@@ -246,30 +273,53 @@ class IO {
         catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (Prefs.bigMemoryDevice) {
-            int totalSmaliNum = ProcessRule.smaliList.size() - 1;
-            ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
-            ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
-            for (int i = 0; i < totalSmaliNum; ++i) {
-                int len = ProcessRule.smaliList.get(i).getBody().length();
-                boolean isAdded = false;
-                for (int k = 0; k < positionArr.size(); ++k) {
-                    if (len <= lengthArr.get(k)) continue;
-                    lengthArr.add(k, len);
-                    positionArr.add(k, i);
-                    isAdded = true;
-                    break;
+
+        if (Prefs.keepSmaliFilesInRAM) {
+            AtomicInteger currentNum = new AtomicInteger(ProcessRule.smaliList.size() - 1);
+            int thrNum = Prefs.max_thread_num;
+            cdl = new CountDownLatch(thrNum);
+            for (int curThread = 1; curThread <= thrNum; ++curThread) {
+                new Thread(() -> {
+                    int num;
+                    while ((num = currentNum.getAndDecrement()) >= 0) {
+                        decompiledFile tmpSmali = ProcessRule.smaliList.get(num);
+                        for (int S = 0; S < 10; S++) {
+                            tmpSmali.setBody(read(tmpSmali.getPath()));
+                        }
+                    }
+                    cdl.countDown();
+                }).start();
+            }
+            try {
+                cdl.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (Prefs.bigMemoryDevice) {
+                int totalSmaliNum = ProcessRule.smaliList.size() - 1;
+                ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
+                ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
+                for (int i = 0; i < totalSmaliNum; ++i) {
+                    int len = ProcessRule.smaliList.get(i).getBody().length();
+                    boolean isAdded = false;
+                    for (int k = 0; k < positionArr.size(); ++k) {
+                        if (len <= lengthArr.get(k)) continue;
+                        lengthArr.add(k, len);
+                        positionArr.add(k, i);
+                        isAdded = true;
+                        break;
+                    }
+                    if (isAdded) continue;
+                    lengthArr.add(len);
+                    positionArr.add(i);
                 }
-                if (isAdded) continue;
-                lengthArr.add(len);
-                positionArr.add(i);
+                ArrayList<decompiledFile> optimizedSmaliList = new ArrayList<>(totalSmaliNum + 20); //+20 backup for [ADD_FILES] rules
+                for (int k = 0; k < totalSmaliNum; ++k) {
+                    optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
+                }
+                ProcessRule.smaliList = optimizedSmaliList;
             }
-            ArrayList<Smali> optimizedSmaliList = new ArrayList<>(totalSmaliNum+20); //+20 backup for [ADD_FILES] rules
-            for (int k = 0; k < totalSmaliNum; ++k) {
-                optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
-            }
-            ProcessRule.smaliList = optimizedSmaliList;
         }
-        out.println(ProcessRule.smaliList.size() + " smali files found in " + (System.currentTimeMillis() - startTime) + "ms.");
+        out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
     }
 }
