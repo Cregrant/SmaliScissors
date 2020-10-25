@@ -1,7 +1,8 @@
 #
-#Sat Oct 24 22:34:04 ICT 2020
+#Sun Oct 25 20:40:35 ICT 2020
 Verbose_level=1
+Keep_smali_files_in_RAM=false
+Keep_xml_files_in_RAM=false
 Version=0.01
 Rules_AEmode=true
-Keep_all_files_in_RAM=true
 Version_type=

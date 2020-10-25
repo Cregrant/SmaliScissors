@@ -31,9 +31,9 @@ class ApplyPatch {
             Rule rule; new IO().loadRules(patchesDir, zipName, patch);
 
             while ((rule = patch.getNextRule())!=null) {
-                if (!rule.isXml)
+                //if (!rule.isXml)
                     preProcessRule(currentProjectPath, rule, patch);
-                else out.println("Sorry, xml is not supported yet.\n");
+                //else out.println("Sorry, xml is not supported yet.\n");
             }
 
             if (Prefs.verbose_level == 0) out.println("Writing..");

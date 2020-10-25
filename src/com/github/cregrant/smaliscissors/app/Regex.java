@@ -20,7 +20,7 @@ public class Regex {
                     case "assign":
                     case "":
                         for (String str : textMatched.split("\\R"))
-                            matchedArr.add(str.replace("smali*/*.smali", ".*smali"));
+                            matchedArr.add(str.replace("smali*/*.smali", ".*smali").replaceAll("([^.])\\*", "$1.*"));
                         break;
                 }
             }
