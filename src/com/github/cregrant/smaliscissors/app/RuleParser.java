@@ -98,7 +98,7 @@ class RuleParser {
 
     void assignRule() {
         rule.name = regex.matchSingleLine(patName, patch);
-        rule.target = regex.matchSingleLine(patTarget, patch).replaceAll("([^.])\\*", "$1.*");
+        rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
         if (rule.target.endsWith("xml"))
             rule.isXml = true;
         else if (rule.target.endsWith("smali"))
@@ -112,12 +112,12 @@ class RuleParser {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.source = regex.matchSingleLine(patSource, patch);
         rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).strip());
-        rule.target = regex.matchSingleLine(patTarget, patch);
+        rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
     }
 
     private void removeRule() {
         rule.name = regex.matchSingleLine(patName, patch);
-        rule.target = regex.matchSingleLine(patTarget, patch).replaceAll("([^.])\\*", "$1.*");
+        rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
     }
 
     private void dummyRule() {
@@ -140,7 +140,7 @@ class RuleParser {
 
     private void matchGotoRule() {
         rule.name = regex.matchSingleLine(patName, patch);
-        rule.target = regex.matchSingleLine(patTarget, patch).replaceAll("([^.])\\*", "$1.*");
+        rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
         if (rule.target.endsWith("xml"))
             rule.isXml = true;
         else if (rule.target.endsWith("smali"))

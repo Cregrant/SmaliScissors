@@ -93,6 +93,7 @@ class Rule {
                         .append("Match:    ").append(match).append('\n')
                         .append("Regex:    ").append(isRegex).append('\n')
                         .append("Replacement:    ").append(replacement).append('\n');
+                break;
             case "DUMMY":
                 sb.append(name).append('\n');
                 break;
