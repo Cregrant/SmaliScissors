@@ -1,12 +1,16 @@
 package com.github.cregrant.smaliscissors.app;
 
+import java.io.File;
+
 public class decompiledFile {
+    private String projectPath;
     private String path;
     private String body;
     private boolean isModified = false;
     private boolean isXML;
 
-    decompiledFile(boolean isXmlFile) {
+    decompiledFile(String currentProjectPath, boolean isXmlFile) {
+        projectPath = currentProjectPath;
         isXML = isXmlFile;
     }
 
@@ -30,14 +34,14 @@ public class decompiledFile {
         if ((!isXML && Prefs.keepSmaliFilesInRAM) || (isXML && Prefs.keepXmlFilesInRAM))
             return this.body;
         else
-            return new IO().read(path);
+            return new IO().read(projectPath + File.separator + path);
     }
 
     public void setBody(String newBody) {
         if ((!isXML && Prefs.keepSmaliFilesInRAM) || (isXML && Prefs.keepXmlFilesInRAM))
             this.body = newBody;
         else
-            new IO().write(path, newBody);
+            new IO().write(projectPath + File.separator + path, newBody);
     }
 
     public boolean equals(Object anObject) {

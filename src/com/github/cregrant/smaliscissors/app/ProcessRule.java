@@ -53,9 +53,9 @@ class ProcessRule {
                         if (dFile.isNotModified()) continue;
                         if (Prefs.verbose_level == 0) {
                             if (rule.isSmali)
-                                out.println(dFile.getPath().replaceAll(".+/smali", "smali") + " patched.");
+                                out.println(dFile.getPath().replace("/smali", "smali") + " patched.");
                             else
-                                out.println(dFile.getPath().replaceAll(".+/res/", "") + " patched.");
+                                out.println(dFile.getPath().replace("/res", "") + " patched.");
                         }
                         synchronized (lock) {
                             ++patchedFilesNum;
@@ -66,6 +66,7 @@ class ProcessRule {
                     if (!error.get()) {
                         error.set(true);
                         out.println(e.getMessage());
+                        patchedFilesNum = 0;
                     }
                     System.exit(1);
                 }
@@ -88,8 +89,7 @@ class ProcessRule {
     }
 
     private void replace(decompiledFile dFile, Rule rule) {
-        String smaliPath = dFile.getPath();
-        if (smaliPath.contains(rule.target) || smaliPath.matches(rule.target)) {
+        if (dFile.getPath().matches(rule.target)) {
             String smaliBody = dFile.getBody();
             String smaliBodyNew;
             if (rule.isRegex)
@@ -114,8 +114,7 @@ class ProcessRule {
             if (rule.isXml)
                 dFile = xmlList.get(k);
             else dFile = smaliList.get(k);
-            String path = dFile.getPath();
-            if (!(path.contains(rule.target) || path.matches(rule.target))) continue;
+            if (!dFile.getPath().matches(rule.target)) continue;
             for (String variable : rule.assignments) {
                 for (String str : variable.split("=")) {
                     if (str.contains("${GROUP")) continue;
@@ -148,12 +147,15 @@ class ProcessRule {
             if (Prefs.verbose_level <= 1) {
                 out.println("Added.");
             }
-            decompiledFile newSmali = new decompiledFile(false);
-            newSmali.setPath(projectPath + File.separator + rule.target.replace('/', File.separatorChar));
+            decompiledFile newSmali = new decompiledFile(projectPath, false);
+            newSmali.setPath(rule.target.replace('/', File.separatorChar));
             newSmali.setBody(new IO().read(projectPath + File.separator + rule.target));
             for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
                 decompiledFile sm = smaliList.get(i);
-                if (sm.getPath().equals(newSmali.getPath())) smaliList.remove(i);
+                if (sm.getPath().equals(newSmali.getPath())) {
+                    smaliList.remove(i);
+                    i--;
+                }
             }
             smaliList.add(newSmali);
         }
@@ -163,12 +165,12 @@ class ProcessRule {
         new IO().deleteAll(new File(projectPath + File.separator + rule.target));
         for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
             decompiledFile sm = smaliList.get(i);
-            if (sm.getPath().equals(projectPath + File.separator + rule.target)) {
+            if (sm.getPath().equals(rule.target)) {
                 smaliList.remove(i);
                 i--;
             }
         }
-        if (Prefs.verbose_level <= 1 && !rule.target.contains("/temp")) {
+        if (Prefs.verbose_level <= 1) {
             out.println("Removed.");
         }
     }
@@ -178,16 +180,26 @@ class ProcessRule {
         CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
         AtomicInteger currentNum = new AtomicInteger(0);
         int thrNum = Prefs.max_thread_num;
+        int totalNum;
         AtomicBoolean running = new AtomicBoolean(true);
         Regex regex = new Regex();
         Pattern pattern = Pattern.compile(rule.match);
+
         for (int cycle = 1; cycle <= thrNum; ++cycle) {
-            int totalSmaliNum = smaliList.size() - 1;
+            if (rule.isXml)
+                totalNum = xmlList.size();
+            else
+                totalNum = smaliList.size();
+            int finalTotalNum = totalNum;
             new Thread(() -> {
                 int num;
-                while ((num = currentNum.getAndIncrement()) <= totalSmaliNum & running.get()) {
-                    decompiledFile smali = smaliList.get(num);
-                    if (regex.matchSingleLine(pattern, smali.getBody())!=null) {
+                decompiledFile dFile;
+                while ((num = currentNum.getAndIncrement()) < finalTotalNum && running.get()) {
+                    if (rule.isXml)
+                        dFile = xmlList.get(num);
+                    else
+                        dFile = smaliList.get(num);
+                    if (regex.matchSingleLine(pattern, dFile.getBody())!=null) {
                         patch.setRuleName(rule.goTo);
                         running.set(false);
                     }

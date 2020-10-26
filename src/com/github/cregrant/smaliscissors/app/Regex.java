@@ -17,10 +17,17 @@ public class Regex {
                     case "replace":
                         matchedArr.add(textMatched);
                         break;
-                    case "target":
                     case "assign":
-                    case "":
                         matchedArr.addAll(Arrays.asList(textMatched.split("\\R")));
+                        break;
+                    case "target":
+                    case "":
+                        //todo move it to single match?
+                        for (String str : textMatched.split("\\R")) {
+                            if (Prefs.arch_device.equals("pc"))
+                                str = str.replace("/", "\\\\");
+                            matchedArr.add(globToRegex(str));
+                        }
                         break;
                 }
             }

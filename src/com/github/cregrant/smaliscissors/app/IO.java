@@ -98,7 +98,7 @@ class IO {
     }
 
     void copy(String src, String dst) {
-        src.strip(); dst.strip();
+        src.trim(); dst.trim();
         File dstFolder = new File(dst).getParentFile();
         if (!Objects.requireNonNull(dstFolder).exists()) {
             dstFolder.mkdirs();
@@ -221,8 +221,8 @@ class IO {
                             stack.push(file);
                             continue;
                         }
-                        decompiledFile tmp = new decompiledFile(false);
-                        tmp.setPath(file.toString());
+                        decompiledFile tmp = new decompiledFile(projectPath, false);
+                        tmp.setPath(file.toString().replace(projectPath + File.separator, ""));
                         synchronized (lock) {
                             ProcessRule.smaliList.add(tmp);
                         }
@@ -243,7 +243,7 @@ class IO {
             System.exit(1);
         }
 
-        decompiledFile manifest = new decompiledFile(true);
+        decompiledFile manifest = new decompiledFile(projectPath, true);
         manifest.setPath(projectPath + File.separator + "AndroidManifest.xml");
         ProcessRule.xmlList.add(manifest);
         cdl = new CountDownLatch(resFolders.size());
@@ -256,7 +256,7 @@ class IO {
                         if (file.isDirectory())
                             stack.push(file);
                         else if (file.getName().endsWith(".xml")) {
-                            decompiledFile tmp = new decompiledFile(true);
+                            decompiledFile tmp = new decompiledFile(projectPath, true);
                             tmp.setPath(file.toString());
                             synchronized (lock) {
                                 ProcessRule.xmlList.add(tmp);

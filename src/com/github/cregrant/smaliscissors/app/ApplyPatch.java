@@ -31,9 +31,7 @@ class ApplyPatch {
             Rule rule; new IO().loadRules(patchesDir, zipName, patch);
 
             while ((rule = patch.getNextRule())!=null) {
-                //if (!rule.isXml)
-                    preProcessRule(currentProjectPath, rule, patch);
-                //else out.println("Sorry, xml is not supported yet.\n");
+                preProcessRule(currentProjectPath, rule, patch);
             }
 
             if (Prefs.verbose_level == 0) out.println("Writing..");
@@ -62,6 +60,7 @@ class ApplyPatch {
         try {
             switch (rule.type) {
                 case "MATCH_ASSIGN":
+                    //todo check if targetArr can get here
                     processRule.assign(rule);
                     break;
                 case "MATCH_REPLACE":

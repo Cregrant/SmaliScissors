@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.app;
 
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import static java.lang.System.out;
@@ -93,25 +94,29 @@ class RuleParser {
         }
         rule.match = regex.matchSingleLine(patMatch, patch);
         rule.replacement = regex.matchSingleLine(patReplacement, patch);
-        rule.isRegex = Boolean.parseBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
+        rule.isRegex = Boolean.parseBoolean(regex.matchSingleLine(patRegexEnabled, patch).trim());
+        fixTarget();
     }
 
     void assignRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
+        if (Prefs.arch_device.equals("pc"))
+            rule.target = rule.target.replace("/", "\\\\");
         if (rule.target.endsWith("xml"))
             rule.isXml = true;
         else if (rule.target.endsWith("smali"))
             rule.isSmali = true;
         rule.match = regex.matchSingleLine(patMatch, patch);
-        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
+        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).trim());
         rule.assignments = regex.matchMultiLines(patAssignment, patch, "assign");
+        fixTarget();
     }
 
     void addRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.source = regex.matchSingleLine(patSource, patch);
-        rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).strip());
+        rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).trim());
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
     }
 
@@ -141,12 +146,28 @@ class RuleParser {
     private void matchGotoRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
+        if (Prefs.arch_device.equals("pc"))
+            rule.target = rule.target.replace("/", "\\\\");
         if (rule.target.endsWith("xml"))
             rule.isXml = true;
         else if (rule.target.endsWith("smali"))
             rule.isSmali = true;
         rule.match = regex.matchSingleLine(patMatch, patch);
-        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).strip());
+        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).trim());
         rule.goTo = regex.matchSingleLine(patGoto, patch);
+        fixTarget();
+    }
+
+    private void fixTarget() {
+        if (rule.isXml) {
+            if (rule.targetArr==null)
+                rule.target = rule.target.replace("><", ">(?:\\\\s*?)<");
+            else {
+                ArrayList<String> fixedTargetArr = new ArrayList<>();
+                for (String trg : rule.targetArr)
+                    fixedTargetArr.add(trg.replace("><", ">(?:\\\\s*?)<"));
+                rule.targetArr = fixedTargetArr;
+            }
+        }
     }
 }
