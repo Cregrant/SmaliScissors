@@ -24,6 +24,7 @@ public class Regex {
                     case "":
                         //todo move it to single match?
                         for (String str : textMatched.split("\\R")) {
+                            str = str.replace("*/*", "*");
                             if (Prefs.arch_device.equals("pc"))
                                 str = str.replace("/", "\\\\");
                             matchedArr.add(globToRegex(str));
@@ -56,19 +57,9 @@ public class Regex {
         line = line.trim();
         int strLen = line.length();
         StringBuilder sb = new StringBuilder(strLen);
-        // Remove beginning and ending * globs because they're useless
-        if (line.startsWith("*"))
-        {
-            line = line.substring(1);
-            strLen--;
-        }
-        if (line.endsWith("*"))
-        {
-            line = line.substring(0, strLen-1);
-            strLen--;
-        }
         boolean escaping = false;
-        int inCurlies = 0;
+        int inBraces = 0;
+        char prevChar = 0;
         for (char currentChar : line.toCharArray())
         {
             switch (currentChar)
@@ -77,7 +68,8 @@ public class Regex {
                     if (escaping)
                         sb.append("\\*");
                     else
-                        sb.append(".*");
+                        if (currentChar != prevChar)
+                            sb.append(".*");
                     escaping = false;
                     break;
                 case '?':
@@ -87,7 +79,7 @@ public class Regex {
                         sb.append('.');
                     escaping = false;
                     break;
-                case '.':
+                //case '.':
                 case '(':
                 case ')':
                 case '+':
@@ -117,15 +109,15 @@ public class Regex {
                     else
                     {
                         sb.append('(');
-                        inCurlies++;
+                        inBraces++;
                     }
                     escaping = false;
                     break;
                 case '}':
-                    if (inCurlies > 0 && !escaping)
+                    if (inBraces > 0 && !escaping)
                     {
                         sb.append(')');
-                        inCurlies--;
+                        inBraces--;
                     }
                     else if (escaping)
                         sb.append("\\}");
@@ -134,7 +126,7 @@ public class Regex {
                     escaping = false;
                     break;
                 case ',':
-                    if (inCurlies > 0 && !escaping)
+                    if (inBraces > 0 && !escaping)
                     {
                         sb.append('|');
                     }
@@ -147,6 +139,7 @@ public class Regex {
                     escaping = false;
                     sb.append(currentChar);
             }
+            prevChar = currentChar;
         }
         return sb.toString();
     }

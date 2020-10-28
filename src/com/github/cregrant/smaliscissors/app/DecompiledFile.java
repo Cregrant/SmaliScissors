@@ -2,14 +2,14 @@ package com.github.cregrant.smaliscissors.app;
 
 import java.io.File;
 
-public class decompiledFile {
-    private String projectPath;
+public class DecompiledFile {
+    private final String projectPath;
     private String path;
     private String body;
     private boolean isModified = false;
-    private boolean isXML;
+    private final boolean isXML;
 
-    decompiledFile(String currentProjectPath, boolean isXmlFile) {
+    DecompiledFile(String currentProjectPath, boolean isXmlFile) {
         projectPath = currentProjectPath;
         isXML = isXmlFile;
     }
@@ -48,8 +48,8 @@ public class decompiledFile {
         if (this == anObject) {
             return true;
         }
-        if (anObject instanceof decompiledFile) {
-            return this.path.equals(((decompiledFile)anObject).getPath()) && this.isModified == ((decompiledFile)anObject).isModified && this.body.equals(((decompiledFile)anObject).getBody());
+        if (anObject instanceof DecompiledFile) {
+            return this.path.equals(((DecompiledFile)anObject).getPath()) && this.isModified == ((DecompiledFile)anObject).isModified && this.body.equals(((DecompiledFile)anObject).getBody());
         }
         return false;
     }

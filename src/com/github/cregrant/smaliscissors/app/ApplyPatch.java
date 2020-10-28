@@ -84,6 +84,7 @@ class ApplyPatch {
             }
             out.println();
         } catch (Exception e) {
+            out.println("ERROR:");
             out.println(e.getMessage());
         }
     }

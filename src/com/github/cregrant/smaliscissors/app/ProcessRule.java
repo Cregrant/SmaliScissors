@@ -15,8 +15,8 @@ import java.util.regex.Pattern;
 import static java.lang.System.out;
 
 class ProcessRule {
-    static ArrayList<decompiledFile> smaliList = new ArrayList<>();
-    static ArrayList<decompiledFile> xmlList = new ArrayList<>();
+    static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
+    static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
     static int patchedFilesNum = 0;
     static HashMap<String, String> assignMap = new HashMap<>();
 
@@ -32,17 +32,17 @@ class ProcessRule {
         AtomicInteger currentNum = new AtomicInteger(0);
         int thrNum = Prefs.max_thread_num;
         int totalNum;
+        if (rule.isXml)
+            totalNum = xmlList.size();
+        else
+            totalNum = smaliList.size();
+
         for (int cycle = 1; cycle <= thrNum; ++cycle) {
-            if (rule.isXml)
-                totalNum = xmlList.size();
-            else
-                totalNum = smaliList.size();
-            int finalTotalNum = totalNum;
             new Thread(() -> {
                 try {
                     int num;
-                    decompiledFile dFile;
-                    while ((num = currentNum.getAndIncrement()) < finalTotalNum) {
+                    DecompiledFile dFile;
+                    while ((num = currentNum.getAndIncrement()) < totalNum) {
 
                         if (rule.isXml)
                             dFile = xmlList.get(num);
@@ -52,10 +52,7 @@ class ProcessRule {
 
                         if (dFile.isNotModified()) continue;
                         if (Prefs.verbose_level == 0) {
-                            if (rule.isSmali)
-                                out.println(dFile.getPath().replace("/smali", "smali") + " patched.");
-                            else
-                                out.println(dFile.getPath().replace("/res", "") + " patched.");
+                            out.println(dFile.getPath() + " patched.");
                         }
                         synchronized (lock) {
                             ++patchedFilesNum;
@@ -88,7 +85,7 @@ class ProcessRule {
         patchedFilesNum = 0;
     }
 
-    private void replace(decompiledFile dFile, Rule rule) {
+    private void replace(DecompiledFile dFile, Rule rule) {
         if (dFile.getPath().matches(rule.target)) {
             String smaliBody = dFile.getBody();
             String smaliBodyNew;
@@ -105,7 +102,7 @@ class ProcessRule {
 
     void assign(Rule rule) {
         ArrayList<String> assignArr = new ArrayList<>();
-        decompiledFile dFile;
+        DecompiledFile dFile;
         int end;
         if (rule.isXml)
             end = xmlList.size();
@@ -124,7 +121,7 @@ class ProcessRule {
             ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), "replace");
             for (int j = 0; j < valuesArr.size(); ++j) {
                 if (Prefs.verbose_level <= 1) {
-                    out.println("assigned " + valuesArr.get(j) + " to \"" + assignArr.get(j) + "\"");
+                    out.println("assigned \"" + valuesArr.get(j) + "\" to \"" + assignArr.get(j) + "\"");
                 }
                 assignMap.put(assignArr.get(j), valuesArr.get(j));
             }
@@ -137,42 +134,16 @@ class ProcessRule {
     void add(String projectPath, Rule rule) {
         String src = new CompatibilityData().getTempDir() + File.separator + rule.source;
         String dst = projectPath + File.separator + rule.target;
-        File file = new File(dst);
-        if (file.exists()) {
-            new IO().deleteAll(file);
-        }
-        if (rule.extract) new IO().zipExtract(src, dst);
-        else new IO().copy(src, dst);
-        if (rule.source.contains(".smali")) {
-            if (Prefs.verbose_level <= 1) {
-                out.println("Added.");
-            }
-            decompiledFile newSmali = new decompiledFile(projectPath, false);
-            newSmali.setPath(rule.target.replace('/', File.separatorChar));
-            newSmali.setBody(new IO().read(projectPath + File.separator + rule.target));
-            for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
-                decompiledFile sm = smaliList.get(i);
-                if (sm.getPath().equals(newSmali.getPath())) {
-                    smaliList.remove(i);
-                    i--;
-                }
-            }
-            smaliList.add(newSmali);
-        }
+        IO io = new IO();
+        if (rule.extract) io.zipExtract(src, dst);
+        else io.copy(src, dst);
+        io.scanFolder(projectPath, rule.target);
     }
 
     void remove(String projectPath, Rule rule) {
-        new IO().deleteAll(new File(projectPath + File.separator + rule.target));
-        for (int i = 0, smaliListSize = smaliList.size(); i < smaliListSize; i++) {
-            decompiledFile sm = smaliList.get(i);
-            if (sm.getPath().equals(rule.target)) {
-                smaliList.remove(i);
-                i--;
-            }
-        }
-        if (Prefs.verbose_level <= 1) {
-            out.println("Removed.");
-        }
+        IO io = new IO();
+        io.deleteAll(new File(projectPath + File.separator + rule.target));
+        io.removeLoadedFile(rule.target);
     }
 
     void matchGoto(Rule rule, Patch patch) {
@@ -193,7 +164,7 @@ class ProcessRule {
             int finalTotalNum = totalNum;
             new Thread(() -> {
                 int num;
-                decompiledFile dFile;
+                DecompiledFile dFile;
                 while ((num = currentNum.getAndIncrement()) < finalTotalNum && running.get()) {
                     if (rule.isXml)
                         dFile = xmlList.get(num);
@@ -219,16 +190,20 @@ class ProcessRule {
         if (!assignMap.isEmpty()) {
             Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
             if (Prefs.verbose_level == 0) {
-                out.println("Replacing variables to text...\n" + set);
+                out.println("Replacing variables to text:\n" + set);
             }
             for (Map.Entry<String, String> entry : set) {
                 String key = "${" + entry.getKey() + "}";
-                if (!rule.match.contains(key)) continue;
+                boolean foundInMatch = rule.match.contains(key);
+                boolean foundInReplacement = rule.replacement.contains(key);
+                if (!foundInMatch && !foundInReplacement) continue;
                 String value = entry.getValue();
                 if (Prefs.verbose_level == 0) {
                     out.println(key + " -> " + value);
                 }
-                rule.match = rule.match.replace(key, value);
+                if (foundInMatch)
+                    rule.match = rule.match.replace(key, value);
+                else rule.replacement = rule.replacement.replace(key, value);
             }
         }
     }

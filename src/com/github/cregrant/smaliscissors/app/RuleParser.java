@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import static java.lang.System.out;
 
 class RuleParser {
+    //todo replace (?:\s{4})? to trim()       leave name as is (can return null)
     private final Pattern patSource = Pattern.compile("SOURCE:\\n(?:\\s{4})?(.+)");
     private final Pattern patExtract = Pattern.compile("EXTRACT:\\R(?:\\s{4})?(.+)");
     private final Pattern patAssignment = Pattern.compile("\\R(?:\\s{4})?(.+?=\\$\\{GROUP\\d})");
@@ -13,7 +14,7 @@ class RuleParser {
     private final Pattern patTarget = Pattern.compile("TARGET:\\R(?:\\s{4})?([\\s\\S]*?)\\R(?:(?:MATCH|EXTRACT):|\\[/)");
     private final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
     private final Pattern patName = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
-    private final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(?:\\s{4})?(.+)");
+    private final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(.+)");
     private final Pattern patScript = Pattern.compile("SCRIPT:\\R(?:\\s{4})?(.+)");
     private final Pattern patIsSmaliNeeded = Pattern.compile("SMALI_NEEDED:\\R(?:\\s{4})?(.+)");
     private final Pattern patMainClass = Pattern.compile("MAIN_CLASS:\\R(?:\\s{4})?(.+)");
@@ -108,7 +109,7 @@ class RuleParser {
         else if (rule.target.endsWith("smali"))
             rule.isSmali = true;
         rule.match = regex.matchSingleLine(patMatch, patch);
-        rule.isRegex = Boolean.getBoolean(regex.matchSingleLine(patRegexEnabled, patch).trim());
+        rule.isRegex = regex.matchSingleLine(patRegexEnabled, patch).trim().equals("true");
         rule.assignments = regex.matchMultiLines(patAssignment, patch, "assign");
         fixTarget();
     }
@@ -116,13 +117,19 @@ class RuleParser {
     void addRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.source = regex.matchSingleLine(patSource, patch);
-        rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).trim());
+        try {
+            rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).trim());
+        } catch (NullPointerException ignored) {}
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
+        if (Prefs.arch_device.equals("pc"))
+            rule.target = rule.target.replace("/", "\\");
     }
 
     private void removeRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
+        if (Prefs.arch_device.equals("pc"))
+            rule.target = rule.target.replace("/", "\\");
     }
 
     private void dummyRule() {
