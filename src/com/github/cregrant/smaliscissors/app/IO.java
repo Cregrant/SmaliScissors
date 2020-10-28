@@ -3,10 +3,7 @@ package com.github.cregrant.smaliscissors.app;
 import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -116,11 +113,27 @@ class IO {
         }
     }
 
-    void zipExtract(String src, String dst){
+    ArrayList<String> getNamesFromZip(String src, String dst) {
+        ArrayList<String> outArr = new ArrayList<>();
         try (ZipInputStream zip = new ZipInputStream(new FileInputStream(src))) {
             ZipEntry zipEntry;
             while ((zipEntry = zip.getNextEntry()) != null) {
-                File filePath = mergePath(dst, zipEntry.getName().replace('/', '\\'));  //fix path with merge
+                File filePath = mergePath(dst, zipEntry.getName());  //fix path with merge
+                if (!zipEntry.isDirectory())
+                    outArr.add(filePath.toString());
+                zip.closeEntry();
+            }
+        } catch (IOException e) {
+            out.println("Error during extracting names from zip file.");
+        }
+        return outArr;
+    }
+
+    void zipExtract(String src, String dst) {
+        try (ZipInputStream zip = new ZipInputStream(new FileInputStream(src))) {
+            ZipEntry zipEntry;
+            while ((zipEntry = zip.getNextEntry()) != null) {
+                File filePath = mergePath(dst, zipEntry.getName());  //fix path with merge
                 if (!zipEntry.isDirectory()) {
                     new File(filePath.getParent()).mkdirs();
                     FileOutputStream fout = new FileOutputStream(filePath);
@@ -144,29 +157,28 @@ class IO {
     }
 
     File mergePath(String dstFolder, String toMerge) {
-        ArrayList<String> pathTree = new ArrayList<>();
-        File resultFile = new File(dstFolder + File.separator + toMerge);
-        File parent;
+        String[] dstTree;
+        String[] srcTree;
+        if (dstFolder.contains("/"))
+            dstTree = dstFolder.split("/");
+        else
+            dstTree = dstFolder.split("\\\\");
+        if (toMerge.contains("/"))
+            srcTree = toMerge.split("/");
+        else
+            srcTree = toMerge.split("\\\\");
+        List<String> fullTree = new ArrayList<>();
+        fullTree.addAll(Arrays.asList(dstTree));
+        fullTree.addAll(Arrays.asList(srcTree));
         StringBuilder sb = new StringBuilder();
-        Regex tmp = new Regex();
-        String dstEnd = tmp.getEndOfPath(dstFolder);
-        pathTree.add(tmp.getEndOfPath(toMerge));
-        File fileToMerge = new File(toMerge);
-        while ((parent = fileToMerge.getParentFile()) != null) {   //get rid of wrong paths
-            if (parent.getName().equals(dstEnd)) {
-                sb.append(dstFolder);
-                for (int k=pathTree.size(); k>0;) {
-                    k--;
-                    sb.append(File.separator).append(pathTree.get(k));
-                }
-                resultFile = new File(sb.toString());
-                break;
-            } else {
-                pathTree.add(tmp.getEndOfPath(parent.toString()));
-                fileToMerge = parent;
-            }
+        String prevStr = "";
+        for (String str : fullTree) {
+            if (str.equals(prevStr) | str.startsWith("smali") | str.equals("res"))
+                continue;
+            prevStr = str;
+            sb.append(str).append(File.separator);
         }
-        return resultFile;
+        return new File(sb.toString());
     }
 
     void deleteAll(File file) {
@@ -207,8 +219,7 @@ class IO {
             smFolders.add(i);
         }
         if (smFolders.isEmpty()) {
-            out.println("No smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
-            System.exit(1);
+            out.println("WARNING: no smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
         }
         cdl = new CountDownLatch(smFolders.size());
         for (String folder : smFolders) {
@@ -239,12 +250,11 @@ class IO {
         }
         ArrayList<String> resFolders = new ArrayList<>(Arrays.asList(Objects.requireNonNull(new File(projectPath + File.separator + "res").list())));
         if (resFolders.isEmpty()) {
-            out.println("No resources found inside the res folder.");
-            System.exit(1);
+            out.println("WARNING: no resources found inside the res folder.");
         }
 
         decompiledFile manifest = new decompiledFile(projectPath, true);
-        manifest.setPath(projectPath + File.separator + "AndroidManifest.xml");
+        manifest.setPath("AndroidManifest.xml");
         ProcessRule.xmlList.add(manifest);
         cdl = new CountDownLatch(resFolders.size());
         for (String folder : resFolders) {
@@ -257,7 +267,7 @@ class IO {
                             stack.push(file);
                         else if (file.getName().endsWith(".xml")) {
                             decompiledFile tmp = new decompiledFile(projectPath, true);
-                            tmp.setPath(file.toString());
+                            tmp.setPath(file.toString().replace(projectPath + File.separator, ""));
                             synchronized (lock) {
                                 ProcessRule.xmlList.add(tmp);
                             }

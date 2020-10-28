@@ -3,11 +3,11 @@ package com.github.cregrant.smaliscissors.app;
 import java.io.File;
 
 public class decompiledFile {
-    private String projectPath;
+    private final String projectPath;
     private String path;
     private String body;
     private boolean isModified = false;
-    private boolean isXML;
+    private final boolean isXML;
 
     decompiledFile(String currentProjectPath, boolean isXmlFile) {
         projectPath = currentProjectPath;
