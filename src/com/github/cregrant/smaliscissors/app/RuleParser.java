@@ -6,8 +6,7 @@ import java.util.regex.Pattern;
 import static java.lang.System.out;
 
 class RuleParser {
-    //todo replace (?:\s{4})? to trim()       leave name as is (can return null)
-    private final Pattern patSource = Pattern.compile("SOURCE:\\n(?:\\s{4})?(.+)");
+    private final Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
     private final Pattern patExtract = Pattern.compile("EXTRACT:\\R(?:\\s{4})?(.+)");
     private final Pattern patAssignment = Pattern.compile("\\R(?:\\s{4})?(.+?=\\$\\{GROUP\\d})");
     private final Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
@@ -15,11 +14,11 @@ class RuleParser {
     private final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
     private final Pattern patName = Pattern.compile("NAME:\\R(?:\\s{4})?(.+)");
     private final Pattern patRegexEnabled = Pattern.compile("REGEX:\\R(.+)");
-    private final Pattern patScript = Pattern.compile("SCRIPT:\\R(?:\\s{4})?(.+)");
-    private final Pattern patIsSmaliNeeded = Pattern.compile("SMALI_NEEDED:\\R(?:\\s{4})?(.+)");
-    private final Pattern patMainClass = Pattern.compile("MAIN_CLASS:\\R(?:\\s{4})?(.+)");
-    private final Pattern patEntrance = Pattern.compile("ENTRANCE:\\R(?:\\s{4})?(.+)");
-    private final Pattern patParam = Pattern.compile("PARAM:\\R(?:\\s{4})?(.+)");
+    private final Pattern patScript = Pattern.compile("SCRIPT:\\R(.+)");
+    private final Pattern patIsSmaliNeeded = Pattern.compile("SMALI_NEEDED:\\R(.+)");
+    private final Pattern patMainClass = Pattern.compile("MAIN_CLASS:\\R(.+)");
+    private final Pattern patEntrance = Pattern.compile("ENTRANCE:\\R(.+)");
+    private final Pattern patParam = Pattern.compile("PARAM:\\R(.+)");
     private final Pattern patGoto = Pattern.compile("GOTO:\\R(?:\\s{4})?(.+)");
     private Rule rule;
     private String patch;
@@ -138,11 +137,11 @@ class RuleParser {
 
     private void dexRule() {
         rule.name = regex.matchSingleLine(patName, patch);
-        rule.script = regex.matchSingleLine(patScript, patch);
-        rule.isSmali = Boolean.getBoolean(regex.matchSingleLine(patIsSmaliNeeded, patch));
-        rule.mainClass = regex.matchSingleLine(patMainClass, patch);
-        rule.entrance = regex.matchSingleLine(patEntrance, patch);
-        rule.param = regex.matchSingleLine(patParam, patch);
+        rule.script = regex.matchSingleLine(patScript, patch).trim();
+        rule.isSmali = Boolean.getBoolean(regex.matchSingleLine(patIsSmaliNeeded, patch).trim());
+        rule.mainClass = regex.matchSingleLine(patMainClass, patch).trim();
+        rule.entrance = regex.matchSingleLine(patEntrance, patch).trim();
+        rule.param = regex.matchSingleLine(patParam, patch).trim();
     }
 
     private void gotoRule() {

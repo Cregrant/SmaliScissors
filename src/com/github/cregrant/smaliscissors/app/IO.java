@@ -387,7 +387,7 @@ class IO {
             size = ProcessRule.xmlList.size();
         else
             size = ProcessRule.smaliList.size();
-        //todo probably broken
+
         for (int i = 0; i < size; i++) {
             if (isXml && ProcessRule.xmlList.get(i).getPath().equals(shortPath)) {
                 ProcessRule.xmlList.remove(i);

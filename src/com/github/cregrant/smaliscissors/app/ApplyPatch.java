@@ -60,7 +60,6 @@ class ApplyPatch {
         try {
             switch (rule.type) {
                 case "MATCH_ASSIGN":
-                    //todo check if targetArr can get here
                     processRule.assign(rule);
                     break;
                 case "MATCH_REPLACE":
