@@ -18,6 +18,10 @@ public class DecompiledFile {
         return this.path;
     }
 
+    public String getProjectPath() {
+        return this.projectPath;
+    }
+
     public void setModified(boolean state) {
         this.isModified = state;
     }

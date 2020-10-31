@@ -3,13 +3,9 @@ package com.github.cregrant.smaliscissors.app;
 import com.github.cregrant.smaliscissors.misc.CompatibilityData;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
+import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import static java.lang.System.out;
@@ -25,56 +21,43 @@ class ProcessRule {
         applyAssign(rule);
         //important escape for android
         rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
-        CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
-
         Object lock = new Object();
-        AtomicBoolean error = new AtomicBoolean(false);
-        AtomicInteger currentNum = new AtomicInteger(0);
-        int thrNum = Prefs.max_thread_num;
+
         int totalNum;
         if (rule.isXml)
             totalNum = xmlList.size();
         else
             totalNum = smaliList.size();
+        List<Callable<Boolean>> tasks = new ArrayList<>(totalNum);
+        for (int num=0; num<totalNum; num++) {
+            int finalNum = num;
+            Callable<Boolean> r = () -> {
+                DecompiledFile dFile;
+                if (rule.isXml)
+                    dFile = xmlList.get(finalNum);
+                else
+                    dFile = smaliList.get(finalNum);
+                replace(dFile, rule);
 
-        for (int cycle = 1; cycle <= thrNum; ++cycle) {
-            new Thread(() -> {
-                try {
-                    int num;
-                    DecompiledFile dFile;
-                    while ((num = currentNum.getAndIncrement()) < totalNum) {
-
-                        if (rule.isXml)
-                            dFile = xmlList.get(num);
-                        else
-                            dFile = smaliList.get(num);
-                        replace(dFile, rule);
-
-                        if (dFile.isNotModified()) continue;
-                        if (Prefs.verbose_level == 0) {
-                            out.println(dFile.getPath() + " patched.");
-                        }
-                        synchronized (lock) {
-                            ++patchedFilesNum;
-                        }
+                if (!dFile.isNotModified()) {
+                    if (Prefs.verbose_level == 0) {
+                        out.println(dFile.getPath() + " patched.");
                     }
-                    cdl.countDown();
-                } catch (Exception e) {
-                    if (!error.get()) {
-                        error.set(true);
-                        out.println(e.getMessage());
-                        patchedFilesNum = 0;
+                    synchronized (lock) {
+                        ++patchedFilesNum;
                     }
-                    System.exit(1);
                 }
-            }).start();
+                return null;
+            };
+            tasks.add(r);
         }
         try {
-            cdl.await();
+            BackgroundWorker.executor.invokeAll(tasks);
+        } catch (Exception e) {
+            out.println(e.getMessage());
+            System.exit(1);
         }
-        catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
 
         if (Prefs.verbose_level <= 2) {
             if (rule.isSmali)
@@ -148,41 +131,39 @@ class ProcessRule {
 
     void matchGoto(Rule rule, Patch patch) {
         applyAssign(rule);
-        CountDownLatch cdl = new CountDownLatch(Prefs.max_thread_num);
-        AtomicInteger currentNum = new AtomicInteger(0);
-        int thrNum = Prefs.max_thread_num;
-        int totalNum;
         AtomicBoolean running = new AtomicBoolean(true);
         Regex regex = new Regex();
         Pattern pattern = Pattern.compile(rule.match);
 
-        for (int cycle = 1; cycle <= thrNum; ++cycle) {
-            if (rule.isXml)
-                totalNum = xmlList.size();
-            else
-                totalNum = smaliList.size();
-            int finalTotalNum = totalNum;
-            new Thread(() -> {
-                int num;
-                DecompiledFile dFile;
-                while ((num = currentNum.getAndIncrement()) < finalTotalNum && running.get()) {
-                    if (rule.isXml)
-                        dFile = xmlList.get(num);
-                    else
-                        dFile = smaliList.get(num);
-                    if (regex.matchSingleLine(pattern, dFile.getBody())!=null) {
-                        patch.setRuleName(rule.goTo);
-                        running.set(false);
-                    }
-                }
-                cdl.countDown();
-            }).start();
-        }
+        int totalNum;
+        if (rule.isXml)
+            totalNum = xmlList.size();
+        else
+            totalNum = smaliList.size();
         try {
-            cdl.await();
-        }
-        catch (InterruptedException e) {
-            e.printStackTrace();
+            List<Callable<Boolean>> tasks = new ArrayList<>(totalNum);
+            for (int num=0; num<totalNum; num++) {
+                int finalNum = num;
+                Callable<Boolean> r = () -> {
+                    if (running.get()) {
+                        DecompiledFile dFile;
+                        if (rule.isXml)
+                            dFile = xmlList.get(finalNum);
+                        else
+                            dFile = smaliList.get(finalNum);
+                        if (regex.matchSingleLine(pattern, dFile.getBody()) != null) {
+                            patch.setRuleName(rule.goTo);
+                            running.set(false);
+                        }
+                    }
+                    return null;
+                };
+                tasks.add(r);
+            }
+            BackgroundWorker.executor.invokeAll(tasks);
+        } catch (Exception e) {
+            out.println(e.getMessage());
+            System.exit(1);
         }
     }
 
