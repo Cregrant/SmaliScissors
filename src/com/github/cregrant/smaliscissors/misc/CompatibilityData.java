@@ -20,7 +20,7 @@ public class CompatibilityData {
         else System.out.println("Unknown device? Contact aliens.");
         return mainDirPath;
     }
-
+    //todo add dir path outside
     public String getPatchesDir() {
         String dir;
         if (Prefs.arch_device.equals("pc")) dir = System.getProperty("user.dir")+File.separator+"patches";

@@ -11,7 +11,7 @@ import static java.lang.System.out;
 
 class ApplyPatch {
 
-    String doPatch(String currentProjectPath) {
+    String doPatch(String currentProjectPath, ArrayList<String> zipArr) {
         File patchesDir = new File(new CompatibilityData().getPatchesDir());
         ArrayList<String> zipFilesArr = new ArrayList<>();
         for (File zip : Objects.requireNonNull(patchesDir.listFiles())) {
@@ -20,7 +20,8 @@ class ApplyPatch {
         }
         new IO().checkIfScanned(currentProjectPath);
 
-        ArrayList<String> zipArr = new Select().select(zipFilesArr, "\nNow select patch:", "No patches detected");
+        if (zipArr.isEmpty())
+            zipArr = new Select().select(zipFilesArr, "\nNow select patch:", "No patches detected");
         long startTime = currentTimeMillis();
         for (String zipName : zipArr) {
             if (zipName.equals("cancel")) {

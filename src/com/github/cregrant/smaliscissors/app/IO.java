@@ -215,8 +215,7 @@ class IO {
         File resFolder = new File(projectPath + File.separator + "res");
         if (!resFolder.exists() || Objects.requireNonNull(resFolder.list()).length == 0) {
             out.println("WARNING: no resources found inside the res folder.");
-        }
-        else folders.add(resFolder);
+        } else folders.add(resFolder);
 
         List<Callable<Boolean>> tasks = new ArrayList<>();
         for (File folder : folders) {                   //scan res & smali folders
@@ -292,31 +291,31 @@ class IO {
                 System.exit(0);
             }
 
-            if (Prefs.bigMemoryDevice) {
-                int totalSmaliNum = ProcessRule.smaliList.size() - 1;
-                ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
-                ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
-                for (int i = 0; i < totalSmaliNum; ++i) {
-                    int len = ProcessRule.smaliList.get(i).getBody().length();
-                    boolean isAdded = false;
-                    for (int k = 0; k < positionArr.size(); ++k) {
-                        if (len <= lengthArr.get(k)) continue;
-                        lengthArr.add(k, len);
-                        positionArr.add(k, i);
-                        isAdded = true;
-                        break;
-                    }
-                    if (isAdded) continue;
-                    lengthArr.add(len);
-                    positionArr.add(i);
+            //if (Prefs.bigMemoryDevice) {
+            int totalSmaliNum = ProcessRule.smaliList.size() - 1;
+            ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
+            ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
+            for (int i = 0; i < totalSmaliNum; ++i) {
+                int len = ProcessRule.smaliList.get(i).getBody().length();
+                boolean isAdded = false;
+                for (int k = 0; k < positionArr.size(); ++k) {
+                    if (len <= lengthArr.get(k)) continue;
+                    lengthArr.add(k, len);
+                    positionArr.add(k, i);
+                    isAdded = true;
+                    break;
                 }
-                ArrayList<DecompiledFile> optimizedSmaliList = new ArrayList<>(totalSmaliNum + 20); //+20 backup for [ADD_FILES] rules
-                for (int k = 0; k < totalSmaliNum; ++k) {
-                    optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
-                }
-                ProcessRule.smaliList = optimizedSmaliList;
+                if (isAdded) continue;
+                lengthArr.add(len);
+                positionArr.add(i);
             }
+            ArrayList<DecompiledFile> optimizedSmaliList = new ArrayList<>(totalSmaliNum + 20); //+20 backup for [ADD_FILES] rules
+            for (int k = 0; k < totalSmaliNum; ++k) {
+                optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
+            }
+            ProcessRule.smaliList = optimizedSmaliList;
         }
+    //}
         out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
     }
 

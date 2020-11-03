@@ -10,11 +10,10 @@ import static java.lang.System.out;
 public class Prefs {
     public static String arch_device = "";
     static boolean bigMemoryDevice = false;
-    private static String versionType = "s";
+    //private static String versionType = "s";
     private static double versionConf = 0.01;
     static boolean rules_AEmode = true;
     static int verbose_level = 1;
-    static final int max_thread_num = Runtime.getRuntime().availableProcessors();
     static boolean keepSmaliFilesInRAM = false;
     static boolean keepXmlFilesInRAM = false;
 
