@@ -9,8 +9,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static java.lang.System.out;
-
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class IO {
 
@@ -19,16 +17,16 @@ class IO {
     void loadRules(File patchesDir, String zipFile, Patch patch) {
         Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
         if (!Prefs.rules_AEmode) {
-            out.println("TruePatcher mode on.");
+            OutStream.println("TruePatcher mode on.");
         }
-        out.println("Loading rules...");
+        OutStream.println("Loading rules...");
         File tempFolder = new File(patchesDir + File.separator + "temp");
         new IO().deleteAll(tempFolder);
         tempFolder.mkdirs();
         String txtFile = tempFolder + File.separator + "patch.txt";
         zipExtract(zipFile, tempFolder.toString());
         if (!new File(txtFile).exists()) {
-            out.println("No patch.txt file in patch!");
+            OutStream.println("No patch.txt file in patch!");
             System.exit(1);
         }
 
@@ -36,7 +34,7 @@ class IO {
         RuleParser parser = new RuleParser();
         for (String rule : rulesListArr) patch.addRule(parser.parseRule(rule));
 
-        out.println(rulesListArr.size() + " rules found\n");
+        OutStream.println(rulesListArr.size() + " rules found\n");
     }
 
     String read(String path) {
@@ -53,7 +51,7 @@ class IO {
             is.close();
         } catch (IOException e) {
             e.printStackTrace();
-            out.println("Exiting to prevent file corruption");
+            OutStream.println("Exiting to prevent file corruption");
             System.exit(1);
         }
         return resultString;
@@ -106,7 +104,7 @@ class IO {
         }
         catch (IOException e) {
             e.printStackTrace();
-            out.println("Hmm.. error during copying file...");
+            OutStream.println("Hmm.. error during copying file...");
         }
     }
 
@@ -128,11 +126,11 @@ class IO {
                 zip.closeEntry();
             }
         }catch (FileNotFoundException e) {
-            out.println("File not found!");
+            OutStream.println("File not found!");
             if (Prefs.verbose_level == 0) e.printStackTrace();
         }
         catch (IOException e) {
-            out.println("Error during extracting zip file.");
+            OutStream.println("Error during extracting zip file.");
             if (Prefs.verbose_level == 0) e.printStackTrace();
         }
     }
@@ -191,7 +189,7 @@ class IO {
     private void scanProject(String projectPath) {
         long startTime = System.currentTimeMillis();
         List<File> folders = new ArrayList<>();
-        out.println("\nScanning " + projectPath);
+        OutStream.println("\nScanning " + projectPath);
 
         for (File i : Objects.requireNonNull(new File(projectPath).listFiles())) {
             String str = i.toString().replace(projectPath + File.separator, "");
@@ -199,7 +197,7 @@ class IO {
                 folders.add(i);
         }
         if (folders.isEmpty()) {
-            out.println("WARNING: no smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
+            OutStream.println("WARNING: no smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
         }
 
         if (new File(projectPath + File.separator + "AndroidManifest.xml").exists()) {
@@ -210,7 +208,7 @@ class IO {
 
         File resFolder = new File(projectPath + File.separator + "res");
         if (!resFolder.exists() || Objects.requireNonNull(resFolder.list()).length == 0) {
-            out.println("WARNING: no resources found inside the res folder.");
+            OutStream.println("WARNING: no resources found inside the res folder.");
         } else folders.add(resFolder);
 
         List<Callable<Boolean>> tasks = new ArrayList<>();
@@ -312,7 +310,7 @@ class IO {
             ProcessRule.smaliList = optimizedSmaliList;
         }
     //}
-        out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
+        OutStream.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
     }
 
     void scanFolder(String projectPath, String folder) {
@@ -348,14 +346,14 @@ class IO {
             else
                 ProcessRule.smaliList.add(addedFile);
             if (Prefs.verbose_level == 0) {
-                out.println(shortPath + " added.");
+                OutStream.println(shortPath + " added.");
             }
         }
     }
 
     void removeLoadedFile(String shortPath) {
         if (Prefs.verbose_level == 0) {
-            out.println(shortPath + " removed.");
+            OutStream.println(shortPath + " removed.");
         }
         boolean isXml = shortPath.endsWith("xml");
         int size;

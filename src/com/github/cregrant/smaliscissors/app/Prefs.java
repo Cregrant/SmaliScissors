@@ -5,8 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
-import static java.lang.System.out;
-
 public class Prefs {
     public static String run_type = "";
     public static String projectPath = "";
@@ -20,12 +18,12 @@ public class Prefs {
     static boolean keepXmlFilesInRAM = false;
 
     void loadConf() {
-        if (Runtime.getRuntime().maxMemory() > 200000000L) {
-            //bigMemoryDevice = true;
-            out.println("Big RAM device. Nice!");
+/*        if (Runtime.getRuntime().maxMemory() > 200000000L) {
+            bigMemoryDevice = true;
+            OutStream.println("Big RAM device. Nice!");
         } else {
-            out.println("Low RAM device. Trying to survive...");
-        }
+            OutStream.println("Low RAM device. Trying to survive...");
+        }*/
         Properties props = new Properties();
         String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
         try {
@@ -34,12 +32,12 @@ public class Prefs {
             input.close();
         }
         catch (Exception e) {
-            out.println("Error loading conf!");
+            OutStream.println("Error loading conf!");
         }
         try {
             if (props.size() == 0) {
                 saveConf();
-                out.println("Config file broken or unreachable. Using default one.");
+                OutStream.println("Config file broken or unreachable. Using default one.");
             }
             verbose_level = Integer.parseInt(props.getProperty("Verbose_level"));
             versionConf = Float.parseFloat(props.getProperty("Version"));
@@ -48,7 +46,7 @@ public class Prefs {
             keepXmlFilesInRAM = Boolean.parseBoolean(props.getProperty("Keep_xml_files_in_RAM"));
         }
         catch (Exception e) {
-            out.println("Error reading conf!");
+            OutStream.println("Error reading conf!");
         }
         if (Main.version - versionConf > 0.001) {
             new Prefs().upgradeConf();
@@ -68,15 +66,15 @@ public class Prefs {
             output.close();
         }
         catch (Exception e) {
-            out.println("Error writing conf: " + e.getMessage());
+            OutStream.println("Error writing conf: " + e.getMessage());
         }
     }
 
     private void upgradeConf() {
-        out.println("Upgrading config file...");
-        out.println(versionConf + " --> 0.01");
+        OutStream.println("Upgrading config file...");
+        OutStream.println(versionConf + " --> 0.01");
         versionConf = 0.01f;
         this.saveConf();
-        out.println("Upgraded.");
+        OutStream.println("Upgraded.");
     }
 }

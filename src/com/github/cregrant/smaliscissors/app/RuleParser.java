@@ -3,8 +3,6 @@ package com.github.cregrant.smaliscissors.app;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
-import static java.lang.System.out;
-
 class RuleParser {
     private final Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
     private final Pattern patExtract = Pattern.compile("EXTRACT:\\R(?:\\s{4})?(.+)");
@@ -27,7 +25,7 @@ class RuleParser {
 
     Rule parseRule(String patchStr) {
         if (!Prefs.rules_AEmode) {
-            out.println("TruePatcher mode on.");
+            OutStream.println("TruePatcher mode on.");
         }
         rule = new Rule();
         patch = patchStr;

@@ -4,8 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import static java.lang.System.out;
-
 public class Main {
     static final double version = 0.01;
 
@@ -13,7 +11,7 @@ public class Main {
         ArrayList<String> zipArr = new ArrayList<>();
         ArrayList<String> projectsList = new ArrayList<>();
         if (args.length==1 && (args[0].equalsIgnoreCase("help") || args[0].contains("?")))
-                out.println("Usage as module: add String(s) with full path to project and String(s) with full path to zip patches\n" +
+                OutStream.println("Usage as module: add String(s) with full path to project and String(s) with full path to zip patches\n" +
                         "Append keepSmaliFilesInRAM or keepXmlFilesInRAM if you want to keep these files in RAM.\n" +
                         "Example ...main(sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip, keepSmaliFilesInRAM");
         if (args.length!=0) {
@@ -43,7 +41,7 @@ public class Main {
         new Prefs().loadConf();
         File projectPathFile = new File(Prefs.projectPath);
         if (!projectPathFile.isDirectory()) {
-            out.println("Error loading projects folder\n" + projectPathFile);
+            OutStream.println("Error loading projects folder\n" + projectPathFile);
             System.exit(1);
         }
         for (String MainDirFolder : Objects.requireNonNull(projectPathFile.list())) {
@@ -61,8 +59,8 @@ public class Main {
                 if (currentProjectPath.equals("cancel")) break;
                 patchResult = new ApplyPatch().doPatch(projectPathFile + File.separator + currentProjectPath, new ArrayList<>());
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(Prefs.patchesDir + File.separator + "temp"));
-                    out.println("ApplyPatch error occurred");
+                    new IO().deleteAll(new File(Prefs.tempDir));
+                    OutStream.println("ApplyPatch error occurred");
                 }
                 if (!patchResult.equals("cancel")) continue;
                 projectsToPatch.set(0, "cancel");
@@ -70,14 +68,14 @@ public class Main {
             if (projectsToPatch.get(0).equals("cancel")) break;
             projectsToPatch = new Select().select(projectsList, msg, "No decompiled projects found");
         }
-        out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
+        OutStream.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
         new Prefs().saveConf();
-        out.println("Good bye Sir.");
+        OutStream.println("Good bye Sir.");
     }
 
     static void runAsModule(ArrayList<String> projectsList, ArrayList<String> zipArr) {
         if (projectsList.isEmpty() || zipArr.isEmpty()) {
-            out.println("Empty project or patch list");
+            OutStream.println("Empty project or patch list");
             throw new IndexOutOfBoundsException();
         }
 
@@ -86,11 +84,11 @@ public class Main {
             for (String currentProjectPath : projectsList) {
                 patchResult = new ApplyPatch().doPatch(currentProjectPath, zipArr);
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(Prefs.patchesDir + File.separator + "temp"));
-                    out.println("ApplyPatch error occurred");
+                    new IO().deleteAll(new File(Prefs.tempDir));
+                    OutStream.println("ApplyPatch error occurred");
                 }
             }
-        out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
-        out.println("Good bye Sir.");
+        OutStream.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
+        OutStream.println("Good bye Sir.");
     }
 }

@@ -6,8 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
-import static java.lang.System.out;
-
 class ProcessRule {
     static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
     static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
@@ -39,7 +37,7 @@ class ProcessRule {
 
                 if (!dFile.isNotModified()) {
                     if (Prefs.verbose_level == 0) {
-                        out.println(dFile.getPath() + " patched.");
+                        OutStream.println(dFile.getPath() + " patched.");
                     }
                     synchronized (lock) {
                         ++patchedFilesNum;
@@ -52,16 +50,16 @@ class ProcessRule {
         try {
             BackgroundWorker.executor.invokeAll(tasks);
         } catch (Exception e) {
-            out.println(e.getMessage());
+            OutStream.println(e.getMessage());
             System.exit(1);
         }
 
 
         if (Prefs.verbose_level <= 2) {
             if (rule.isSmali)
-                out.println(patchedFilesNum + " smali files patched.");
+                OutStream.println(patchedFilesNum + " smali files patched.");
             else
-                out.println(patchedFilesNum + " xml files patched.");
+                OutStream.println(patchedFilesNum + " xml files patched.");
         }
         patchedFilesNum = 0;
     }
@@ -102,13 +100,13 @@ class ProcessRule {
             ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), "replace");
             for (int j = 0; j < valuesArr.size(); ++j) {
                 if (Prefs.verbose_level <= 1) {
-                    out.println("assigned \"" + valuesArr.get(j) + "\" to \"" + assignArr.get(j) + "\"");
+                    OutStream.println("assigned \"" + valuesArr.get(j) + "\" to \"" + assignArr.get(j) + "\"");
                 }
                 assignMap.put(assignArr.get(j), valuesArr.get(j));
             }
         }
         if (assignMap.isEmpty()) {
-            out.println("Nothing found in assign rule??");
+            OutStream.println("Nothing found in assign rule??");
         }
     }
 
@@ -160,7 +158,7 @@ class ProcessRule {
             }
             BackgroundWorker.executor.invokeAll(tasks);
         } catch (Exception e) {
-            out.println(e.getMessage());
+            OutStream.println(e.getMessage());
             System.exit(1);
         }
     }
@@ -169,7 +167,7 @@ class ProcessRule {
         if (!assignMap.isEmpty()) {
             Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
             if (Prefs.verbose_level == 0) {
-                out.println("Replacing variables to text:\n" + set);
+                OutStream.println("Replacing variables to text:\n" + set);
             }
             for (Map.Entry<String, String> entry : set) {
                 String key = "${" + entry.getKey() + "}";
@@ -178,7 +176,7 @@ class ProcessRule {
                 if (!foundInMatch && !foundInReplacement) continue;
                 String value = entry.getValue();
                 if (Prefs.verbose_level == 0) {
-                    out.println(key + " -> " + value);
+                    OutStream.println(key + " -> " + value);
                 }
                 if (foundInMatch)
                     rule.match = rule.match.replace(key, value);
@@ -188,6 +186,6 @@ class ProcessRule {
     }
 
     public void dex() {
-        out.println("HAHa very fun");
+        OutStream.println("HAHa very fun");
     }
 }

@@ -5,19 +5,17 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.out;
 
 class ApplyPatch {
 
     String doPatch(String currentProjectPath, ArrayList<String> zipArr) {
         new IO().checkIfScanned(currentProjectPath);
-        File patchesDir = Prefs.patchesDir.getParentFile();
         Regex regex = new Regex();
         if (zipArr.isEmpty()) {
             ArrayList<String> zipFilesArr = new ArrayList<>();
-            for (File zip : Objects.requireNonNull(Objects.requireNonNull(patchesDir).listFiles())) {
-                if (!zip.toString().endsWith(".zip")) continue;
-                zipFilesArr.add(zip.getName());
+            for (File zip : Objects.requireNonNull(Prefs.patchesDir.listFiles())) {
+                if (zip.toString().endsWith(".zip"))
+                    zipFilesArr.add(zip.getName());
             }
             zipArr = new Select().select(zipFilesArr, "\nNow select patch:", "No patches detected");
         }
@@ -27,33 +25,33 @@ class ApplyPatch {
             if (zipFile.equals("cancel")) {
                 return "cancel";
             }
-            out.println("\nApplyPatch - " + regex.getEndOfPath(zipFile));
+            OutStream.println("\nApplyPatch - " + regex.getEndOfPath(zipFile));
             Patch patch = new Patch();
-            Rule rule; new IO().loadRules(patchesDir, zipFile, patch);
+            Rule rule; new IO().loadRules(Prefs.patchesDir, zipFile, patch);
 
             while ((rule = patch.getNextRule())!=null) {
                 preProcessRule(currentProjectPath, rule, patch);
             }
 
-            if (Prefs.verbose_level == 0) out.println("Writing..");
+            if (Prefs.verbose_level == 0) OutStream.println("Writing..");
             new IO().writeChanges();
-            new IO().deleteAll(new File(patchesDir + File.separator + "temp"));
+            new IO().deleteAll(new File(Prefs.tempDir));
         }
-        out.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
+        OutStream.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
         return "ok";
     }
 
     private void preProcessRule(String projectPath, Rule rule, Patch patch) {
         if (Prefs.verbose_level == 0)
-            out.println(rule.toString());
+            OutStream.println(rule.toString());
 
         else if (Prefs.verbose_level == 1) {
-            out.println("Type - " + rule.type);
+            OutStream.println("Type - " + rule.type);
             if (rule.target != null)
-                out.println("Target - " + rule.target);
+                OutStream.println("Target - " + rule.target);
             else {
-                out.println("Targets:");
-                for (String target : rule.targetArr) out.println("\n    " + target);
+                OutStream.println("Targets:");
+                for (String target : rule.targetArr) OutStream.println("\n    " + target);
             }
         }
         ProcessRule processRule = new ProcessRule();
@@ -82,10 +80,10 @@ class ApplyPatch {
                     processRule.matchGoto(rule, patch);
                     break;
             }
-            out.println();
+            OutStream.println("");
         } catch (Exception e) {
-            out.println("ERROR:");
-            out.println(e.getMessage());
+            OutStream.println("ERROR:");
+            OutStream.println(e.getMessage());
         }
     }
 }

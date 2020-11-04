@@ -8,15 +8,15 @@ class Select {
     }
 
     ArrayList<String> select(ArrayList<String> stringsList, String msg, String msgError) {
-        System.out.println(msg);
+        OutStream.println(msg);
         if (stringsList.size() == 0) {
-            System.out.println(msgError);
+            OutStream.println(msgError);
             System.exit(1);
         } else if (stringsList.size() == 1) {
             return stringsList;
         }
         for (String i : stringsList) {
-            System.out.println(stringsList.indexOf(i) + " - " + i);
+            OutStream.println(stringsList.indexOf(i) + " - " + i);
         }
         ArrayList<String> outArr = new ArrayList<>();
         while (outArr.isEmpty()) {
@@ -42,7 +42,7 @@ class Select {
                     outArr.add(stringsList.get(Integer.parseInt(o)));
                 }
                 catch (IndexOutOfBoundsException | NumberFormatException ignored) {
-                    System.out.println("Nope... Try again:");
+                    OutStream.println("Nope... Try again:");
                 }
             }
         }
