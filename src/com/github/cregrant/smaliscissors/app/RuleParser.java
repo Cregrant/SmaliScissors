@@ -8,7 +8,7 @@ import static java.lang.System.out;
 class RuleParser {
     private final Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
     private final Pattern patExtract = Pattern.compile("EXTRACT:\\R(?:\\s{4})?(.+)");
-    private final Pattern patAssignment = Pattern.compile("\\R(?:\\s{4})?(.+?=\\$\\{GROUP\\d})");
+    private final Pattern patAssignment = Pattern.compile("\\R(?:\\s{4})?(.+?=\\$\\{GROUP\\d\\})");
     private final Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
     private final Pattern patTarget = Pattern.compile("TARGET:\\R(?:\\s{4})?([\\s\\S]*?)\\R(?:(?:MATCH|EXTRACT):|\\[/)");
     private final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
@@ -101,7 +101,7 @@ class RuleParser {
     void assignRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
-        if (Prefs.arch_device.equals("pc"))
+        if (Prefs.run_type.equals("pc"))
             rule.target = rule.target.replace("/", "\\\\");
         if (rule.target.endsWith("xml"))
             rule.isXml = true;
@@ -120,14 +120,14 @@ class RuleParser {
             rule.extract = Boolean.parseBoolean(regex.matchSingleLine(patExtract, patch).trim());
         } catch (NullPointerException ignored) {}
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
-        if (Prefs.arch_device.equals("pc"))
+        if (Prefs.run_type.equals("pc"))
             rule.target = rule.target.replace("/", "\\");
     }
 
     private void removeRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
-        if (Prefs.arch_device.equals("pc"))
+        if (Prefs.run_type.equals("pc"))
             rule.target = rule.target.replace("/", "\\");
     }
 
@@ -152,7 +152,7 @@ class RuleParser {
     private void matchGotoRule() {
         rule.name = regex.matchSingleLine(patName, patch);
         rule.target = regex.globToRegex(regex.matchSingleLine(patTarget, patch));
-        if (Prefs.arch_device.equals("pc"))
+        if (Prefs.run_type.equals("pc"))
             rule.target = rule.target.replace("/", "\\\\");
         if (rule.target.endsWith("xml"))
             rule.isXml = true;

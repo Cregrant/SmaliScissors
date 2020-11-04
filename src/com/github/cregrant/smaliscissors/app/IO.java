@@ -1,7 +1,5 @@
 package com.github.cregrant.smaliscissors.app;
 
-import com.github.cregrant.smaliscissors.misc.CompatibilityData;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -18,19 +16,17 @@ class IO {
 
     static String currentProjectPathCached = "";
 
-    void loadRules(File patchesDir, String zipName, Patch patch) {
+    void loadRules(File patchesDir, String zipFile, Patch patch) {
         Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
         if (!Prefs.rules_AEmode) {
             out.println("TruePatcher mode on.");
         }
         out.println("Loading rules...");
-        new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
         File tempFolder = new File(patchesDir + File.separator + "temp");
-        if (!tempFolder.exists()) {
-            tempFolder.mkdir();
-        }
+        new IO().deleteAll(tempFolder);
+        tempFolder.mkdirs();
         String txtFile = tempFolder + File.separator + "patch.txt";
-        zipExtract(patchesDir + File.separator + zipName, tempFolder.toString());
+        zipExtract(zipFile, tempFolder.toString());
         if (!new File(txtFile).exists()) {
             out.println("No patch.txt file in patch!");
             System.exit(1);

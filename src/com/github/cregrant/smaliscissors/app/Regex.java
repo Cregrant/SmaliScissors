@@ -25,7 +25,7 @@ public class Regex {
                         //todo move it to single match?
                         for (String str : textMatched.split("\\R")) {
                             str = str.replace("*/*", "*");
-                            if (Prefs.arch_device.equals("pc"))
+                            if (Prefs.run_type.equals("pc"))
                                 str = str.replace("/", "\\\\");
                             matchedArr.add(globToRegex(str));
                         }

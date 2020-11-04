@@ -1,7 +1,5 @@
 package com.github.cregrant.smaliscissors.app;
 
-import com.github.cregrant.smaliscissors.misc.CompatibilityData;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -25,9 +23,17 @@ public class Main {
                 else if (str.equalsIgnoreCase("keepXmlFilesInRAM")) Prefs.keepXmlFilesInRAM = true;
                 else projectsList.add(str);
             }
+            Prefs.run_type = "module";
+            Prefs.patchesDir = new File(zipArr.get(0)).getParentFile();
+            Prefs.projectPath = projectsList.get(0);
+            Prefs.tempDir = Prefs.patchesDir + File.separator + "temp";
             runAsModule(projectsList, zipArr);
         }
         else {
+            Prefs.run_type = "pc";
+            Prefs.patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
+            Prefs.projectPath = "C:\\BAT\\_INPUT_APK";
+            Prefs.tempDir = Prefs.patchesDir + File.separator + "temp";
             runOnPC();
         }
     }
@@ -35,14 +41,13 @@ public class Main {
     static void runOnPC() {
         ArrayList<String> projectsList = new ArrayList<>();
         new Prefs().loadConf();
-        String mainDir = new CompatibilityData().getHomeDir();
-        File mainDirFile = new File(mainDir);
-        if (!mainDirFile.isDirectory()) {
-            out.println("Error loading projects folder\n" + mainDir);
+        File projectPathFile = new File(Prefs.projectPath);
+        if (!projectPathFile.isDirectory()) {
+            out.println("Error loading projects folder\n" + projectPathFile);
             System.exit(1);
         }
-        for (String MainDirFolder : Objects.requireNonNull(mainDirFile.list())) {
-            File f = new File(mainDir + File.separator + MainDirFolder);
+        for (String MainDirFolder : Objects.requireNonNull(projectPathFile.list())) {
+            File f = new File(projectPathFile + File.separator + MainDirFolder);
             if (!f.isDirectory()) continue;
             projectsList.add(MainDirFolder);
         }
@@ -54,9 +59,9 @@ public class Main {
         while (true) {
             for (String currentProjectPath : projectsToPatch) {
                 if (currentProjectPath.equals("cancel")) break;
-                patchResult = new ApplyPatch().doPatch(mainDir + File.separator + currentProjectPath, new ArrayList<>());
+                patchResult = new ApplyPatch().doPatch(projectPathFile + File.separator + currentProjectPath, new ArrayList<>());
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
+                    new IO().deleteAll(new File(Prefs.patchesDir + File.separator + "temp"));
                     out.println("ApplyPatch error occurred");
                 }
                 if (!patchResult.equals("cancel")) continue;
@@ -81,7 +86,7 @@ public class Main {
             for (String currentProjectPath : projectsList) {
                 patchResult = new ApplyPatch().doPatch(currentProjectPath, zipArr);
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(new CompatibilityData().getPatchesDir() + File.separator + "temp"));
+                    new IO().deleteAll(new File(Prefs.patchesDir + File.separator + "temp"));
                     out.println("ApplyPatch error occurred");
                 }
             }

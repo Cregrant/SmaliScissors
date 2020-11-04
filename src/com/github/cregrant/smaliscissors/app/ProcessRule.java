@@ -1,7 +1,5 @@
 package com.github.cregrant.smaliscissors.app;
 
-import com.github.cregrant.smaliscissors.misc.CompatibilityData;
-
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -115,7 +113,7 @@ class ProcessRule {
     }
 
     void add(String projectPath, Rule rule) {
-        String src = new CompatibilityData().getTempDir() + File.separator + rule.source;
+        String src = Prefs.tempDir + File.separator + rule.source;
         String dst = projectPath + File.separator + rule.target;
         IO io = new IO();
         if (rule.extract) io.zipExtract(src, dst);

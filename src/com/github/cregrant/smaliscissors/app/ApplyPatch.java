@@ -1,7 +1,5 @@
 package com.github.cregrant.smaliscissors.app;
 
-import com.github.cregrant.smaliscissors.misc.CompatibilityData;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -12,24 +10,26 @@ import static java.lang.System.out;
 class ApplyPatch {
 
     String doPatch(String currentProjectPath, ArrayList<String> zipArr) {
-        File patchesDir = new File(new CompatibilityData().getPatchesDir());
-        ArrayList<String> zipFilesArr = new ArrayList<>();
-        for (File zip : Objects.requireNonNull(patchesDir.listFiles())) {
-            if (!zip.toString().endsWith(".zip")) continue;
-            zipFilesArr.add(zip.getName());
-        }
         new IO().checkIfScanned(currentProjectPath);
-
-        if (zipArr.isEmpty())
+        File patchesDir = Prefs.patchesDir.getParentFile();
+        Regex regex = new Regex();
+        if (zipArr.isEmpty()) {
+            ArrayList<String> zipFilesArr = new ArrayList<>();
+            for (File zip : Objects.requireNonNull(Objects.requireNonNull(patchesDir).listFiles())) {
+                if (!zip.toString().endsWith(".zip")) continue;
+                zipFilesArr.add(zip.getName());
+            }
             zipArr = new Select().select(zipFilesArr, "\nNow select patch:", "No patches detected");
+        }
+
         long startTime = currentTimeMillis();
-        for (String zipName : zipArr) {
-            if (zipName.equals("cancel")) {
+        for (String zipFile : zipArr) {
+            if (zipFile.equals("cancel")) {
                 return "cancel";
             }
-            out.println("\nApplyPatch - " + zipName);
+            out.println("\nApplyPatch - " + regex.getEndOfPath(zipFile));
             Patch patch = new Patch();
-            Rule rule; new IO().loadRules(patchesDir, zipName, patch);
+            Rule rule; new IO().loadRules(patchesDir, zipFile, patch);
 
             while ((rule = patch.getNextRule())!=null) {
                 preProcessRule(currentProjectPath, rule, patch);

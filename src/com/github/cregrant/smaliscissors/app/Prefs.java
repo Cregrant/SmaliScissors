@@ -8,9 +8,11 @@ import java.util.Properties;
 import static java.lang.System.out;
 
 public class Prefs {
-    public static String arch_device = "";
-    static boolean bigMemoryDevice = false;
-    //private static String versionType = "s";
+    public static String run_type = "";
+    public static String projectPath = "";
+    public static File patchesDir;
+    public static String tempDir;
+    //static boolean bigMemoryDevice = false;
     private static double versionConf = 0.01;
     static boolean rules_AEmode = true;
     static int verbose_level = 1;
@@ -19,7 +21,7 @@ public class Prefs {
 
     void loadConf() {
         if (Runtime.getRuntime().maxMemory() > 200000000L) {
-            bigMemoryDevice = true;
+            //bigMemoryDevice = true;
             out.println("Big RAM device. Nice!");
         } else {
             out.println("Low RAM device. Trying to survive...");
@@ -41,10 +43,6 @@ public class Prefs {
             }
             verbose_level = Integer.parseInt(props.getProperty("Verbose_level"));
             versionConf = Float.parseFloat(props.getProperty("Version"));
-//            versionType = props.getProperty("Version_type");
-//            if (versionType.equals("a")) {
-//                out.print("Unstable version. Prepare uranus");
-//            }
             rules_AEmode = Boolean.parseBoolean(props.getProperty("Rules_AEmode"));
             keepSmaliFilesInRAM = Boolean.parseBoolean(props.getProperty("Keep_smali_files_in_RAM"));
             keepXmlFilesInRAM = Boolean.parseBoolean(props.getProperty("Keep_xml_files_in_RAM"));
@@ -62,7 +60,6 @@ public class Prefs {
             FileOutputStream output = new FileOutputStream(System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt");
             Properties props = new Properties();
             props.put("Version", String.format("%.2f", versionConf).replace(',', '.'));
-            //props.put("Version_type", String.valueOf(versionType));
             props.put("Verbose_level", String.valueOf(verbose_level));
             props.put("Rules_AEmode", ((Boolean) rules_AEmode).toString());
             props.put("Keep_smali_files_in_RAM", ((Boolean) keepSmaliFilesInRAM).toString());
