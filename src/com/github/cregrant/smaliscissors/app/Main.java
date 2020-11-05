@@ -24,14 +24,14 @@ public class Main {
             Prefs.run_type = "module";
             Prefs.patchesDir = new File(zipArr.get(0)).getParentFile();
             Prefs.projectPath = projectsList.get(0);
-            Prefs.tempDir = Prefs.patchesDir + File.separator + "temp";
+            Prefs.tempDir = new File(Prefs.patchesDir + File.separator + "temp");
             runAsModule(projectsList, zipArr);
         }
         else {
             Prefs.run_type = "pc";
             Prefs.patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
             Prefs.projectPath = "C:\\BAT\\_INPUT_APK";
-            Prefs.tempDir = Prefs.patchesDir + File.separator + "temp";
+            Prefs.tempDir = new File(Prefs.patchesDir + File.separator + "temp");
             runOnPC();
         }
     }
@@ -59,7 +59,7 @@ public class Main {
                 if (currentProjectPath.equals("cancel")) break;
                 patchResult = new ApplyPatch().doPatch(projectPathFile + File.separator + currentProjectPath, new ArrayList<>());
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(Prefs.tempDir));
+                    new IO().deleteAll(Prefs.tempDir);
                     OutStream.println("ApplyPatch error occurred");
                 }
                 if (!patchResult.equals("cancel")) continue;
@@ -84,7 +84,7 @@ public class Main {
             for (String currentProjectPath : projectsList) {
                 patchResult = new ApplyPatch().doPatch(currentProjectPath, zipArr);
                 if (patchResult.equals("error")) {
-                    new IO().deleteAll(new File(Prefs.tempDir));
+                    new IO().deleteAll(Prefs.tempDir);
                     OutStream.println("ApplyPatch error occurred");
                 }
             }

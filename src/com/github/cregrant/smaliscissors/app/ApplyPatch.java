@@ -25,9 +25,9 @@ class ApplyPatch {
             if (zipFile.equals("cancel")) {
                 return "cancel";
             }
-            OutStream.println("\nApplyPatch - " + regex.getEndOfPath(zipFile));
+            OutStream.println("\nApplyPatch - " + zipFile);
             Patch patch = new Patch();
-            Rule rule; new IO().loadRules(Prefs.patchesDir, zipFile, patch);
+            Rule rule; new IO().loadRules(Prefs.patchesDir + File.separator + zipFile, patch);
 
             while ((rule = patch.getNextRule())!=null) {
                 preProcessRule(currentProjectPath, rule, patch);
@@ -35,7 +35,7 @@ class ApplyPatch {
 
             if (Prefs.verbose_level == 0) OutStream.println("Writing..");
             new IO().writeChanges();
-            new IO().deleteAll(new File(Prefs.tempDir));
+            new IO().deleteAll(Prefs.tempDir);
         }
         OutStream.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
         return "ok";

@@ -14,17 +14,15 @@ class IO {
 
     static String currentProjectPathCached = "";
 
-    void loadRules(File patchesDir, String zipFile, Patch patch) {
+    void loadRules(String zipFile, Patch patch) {
         Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
         if (!Prefs.rules_AEmode) {
             OutStream.println("TruePatcher mode on.");
         }
-        OutStream.println("Loading rules...");
-        File tempFolder = new File(patchesDir + File.separator + "temp");
-        new IO().deleteAll(tempFolder);
-        tempFolder.mkdirs();
-        String txtFile = tempFolder + File.separator + "patch.txt";
-        zipExtract(zipFile, tempFolder.toString());
+        new IO().deleteAll(Prefs.tempDir);
+        Prefs.tempDir.mkdirs();
+        String txtFile = Prefs.tempDir + File.separator + "patch.txt";
+        zipExtract(zipFile, Prefs.tempDir.toString());
         if (!new File(txtFile).exists()) {
             OutStream.println("No patch.txt file in patch!");
             System.exit(1);
@@ -92,9 +90,7 @@ class IO {
     void copy(String src, String dst) {
         src.trim(); dst.trim();
         File dstFolder = new File(dst).getParentFile();
-        if (!Objects.requireNonNull(dstFolder).exists()) {
-            dstFolder.mkdirs();
-        }
+        dstFolder.mkdirs();
         try (FileInputStream is = new FileInputStream(src);
              FileOutputStream os = new FileOutputStream(dst)){
             byte[] buffer = new byte[is.available()];
@@ -104,7 +100,7 @@ class IO {
         }
         catch (IOException e) {
             e.printStackTrace();
-            OutStream.println("Hmm.. error during copying file...");
+            OutStream.println("Error during copying file...");
         }
     }
 
@@ -114,7 +110,7 @@ class IO {
             while ((zipEntry = zip.getNextEntry()) != null) {
                 File filePath = mergePath(dst, zipEntry.getName());  //fix path with merge
                 if (!zipEntry.isDirectory()) {
-                    new File(filePath.getParent()).mkdirs();
+                    filePath.getParentFile().mkdirs();
                     FileOutputStream fout = new FileOutputStream(filePath);
                     int len;
                     byte[] buffer = new byte[65536];
@@ -152,7 +148,7 @@ class IO {
         StringBuilder sb = new StringBuilder();
         String prevStr = "";
         for (String str : fullTree) {
-            if (str.equals(prevStr) | str.startsWith("smali") | str.equals("res"))
+            if (str.equals(prevStr) || str.startsWith("smali") || str.equals("res"))
                 continue;
             prevStr = str;
             sb.append(str).append(File.separator);
@@ -164,17 +160,17 @@ class IO {
         if (file.isDirectory()) {
             if (Objects.requireNonNull(file.list()).length == 0) {
                 file.delete();
-            } else {
-                for (String child : Objects.requireNonNull(file.list())) {
-                    deleteAll(new File(file, child));
-                }
-                if (Objects.requireNonNull(file.list()).length == 0) {
-                    file.delete();
-                }
             }
-        } else {
-            file.delete();
+            else {
+                for (File child : Objects.requireNonNull(file.listFiles())) {
+                    deleteAll(child);
+                }
+                if (Objects.requireNonNull(file.list()).length == 0)
+                    file.delete();
+            }
         }
+        else
+            file.delete();
     }
 
     void checkIfScanned(String currentProjectPath) {
@@ -189,7 +185,6 @@ class IO {
     private void scanProject(String projectPath) {
         long startTime = System.currentTimeMillis();
         List<File> folders = new ArrayList<>();
-        OutStream.println("\nScanning " + projectPath);
 
         for (File i : Objects.requireNonNull(new File(projectPath).listFiles())) {
             String str = i.toString().replace(projectPath + File.separator, "");
@@ -212,6 +207,8 @@ class IO {
         } else folders.add(resFolder);
 
         List<Callable<Boolean>> tasks = new ArrayList<>();
+        ArrayList<DecompiledFile> bigSmaliList = new ArrayList<>();
+        ArrayList<DecompiledFile> bigXmlList = new ArrayList<>();
         for (File folder : folders) {                   //scan res & smali folders
             Callable<Boolean> r = () -> {
                 Stack<File> stack = new Stack<>();
@@ -230,11 +227,20 @@ class IO {
                                 else
                                     tmp = new DecompiledFile(projectPath, true);
                                 tmp.setPath(path);
+                                boolean isBigSize = file.length() > 100000;
                                 synchronized (projectPath) {
-                                    if (isSmali)
-                                        ProcessRule.smaliList.add(tmp);
-                                    else
-                                        ProcessRule.xmlList.add(tmp);
+                                    if (isSmali) {
+                                        if (isBigSize)
+                                            bigSmaliList.add(tmp);
+                                        else
+                                            ProcessRule.smaliList.add(tmp);
+                                    }
+                                    else {
+                                        if (isBigSize)
+                                            bigXmlList.add(tmp);
+                                        else
+                                            ProcessRule.xmlList.add(tmp);
+                                    }
                                 }
                             }
                         }
@@ -249,6 +255,11 @@ class IO {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        //moving big files to the start to load more cores at the end
+        bigXmlList.addAll(ProcessRule.xmlList);
+        bigSmaliList.addAll(ProcessRule.smaliList);
+        ProcessRule.smaliList = bigSmaliList;
+        ProcessRule.xmlList = bigXmlList;
 
         if (Prefs.keepSmaliFilesInRAM) {
             int totalNum = ProcessRule.smaliList.size();
@@ -279,37 +290,12 @@ class IO {
 
             BackgroundWorker.executor.shutdown();
             try {
-                BackgroundWorker.executor.awaitTermination(1, TimeUnit.MINUTES);
+                BackgroundWorker.executor.awaitTermination(20, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 System.exit(0);
             }
-
-            //if (Prefs.bigMemoryDevice) {
-            int totalSmaliNum = ProcessRule.smaliList.size() - 1;
-            ArrayList<Integer> positionArr = new ArrayList<>(totalSmaliNum);
-            ArrayList<Integer> lengthArr = new ArrayList<>(totalSmaliNum);
-            for (int i = 0; i < totalSmaliNum; ++i) {
-                int len = ProcessRule.smaliList.get(i).getBody().length();
-                boolean isAdded = false;
-                for (int k = 0; k < positionArr.size(); ++k) {
-                    if (len <= lengthArr.get(k)) continue;
-                    lengthArr.add(k, len);
-                    positionArr.add(k, i);
-                    isAdded = true;
-                    break;
-                }
-                if (isAdded) continue;
-                lengthArr.add(len);
-                positionArr.add(i);
-            }
-            ArrayList<DecompiledFile> optimizedSmaliList = new ArrayList<>(totalSmaliNum + 20); //+20 backup for [ADD_FILES] rules
-            for (int k = 0; k < totalSmaliNum; ++k) {
-                optimizedSmaliList.add(ProcessRule.smaliList.get(positionArr.get(k)));
-            }
-            ProcessRule.smaliList = optimizedSmaliList;
         }
-    //}
         OutStream.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
     }
 

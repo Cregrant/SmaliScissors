@@ -9,7 +9,7 @@ public class Prefs {
     public static String run_type = "";
     public static String projectPath = "";
     public static File patchesDir;
-    public static String tempDir;
+    public static File tempDir;
     //static boolean bigMemoryDevice = false;
     private static double versionConf = 0.01;
     static boolean rules_AEmode = true;
