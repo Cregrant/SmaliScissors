@@ -8,9 +8,8 @@ import static java.lang.System.currentTimeMillis;
 
 class ApplyPatch {
 
-    String doPatch(String currentProjectPath, ArrayList<String> zipArr) {
-        new IO().checkIfScanned(currentProjectPath);
-        Regex regex = new Regex();
+    String doPatch(ArrayList<String> zipArr) {
+        new IO().checkIfScanned();
         if (zipArr.isEmpty()) {
             ArrayList<String> zipFilesArr = new ArrayList<>();
             for (File zip : Objects.requireNonNull(Prefs.patchesDir.listFiles())) {
@@ -30,18 +29,18 @@ class ApplyPatch {
             Rule rule; new IO().loadRules(Prefs.patchesDir + File.separator + zipFile, patch);
 
             while ((rule = patch.getNextRule())!=null) {
-                preProcessRule(currentProjectPath, rule, patch);
+                preProcessRule(rule, patch);
             }
 
             if (Prefs.verbose_level == 0) OutStream.println("Writing..");
             new IO().writeChanges();
             new IO().deleteAll(Prefs.tempDir);
         }
-        OutStream.println("------------------\n" + currentProjectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
+        OutStream.println("------------------\n" + Prefs.projectPath + " patched in " + (currentTimeMillis() - startTime) + "ms.");
         return "ok";
     }
 
-    private void preProcessRule(String projectPath, Rule rule, Patch patch) {
+    private void preProcessRule(Rule rule, Patch patch) {
         if (Prefs.verbose_level == 0)
             OutStream.println(rule.toString());
 
@@ -65,10 +64,10 @@ class ApplyPatch {
                     processRule.matchReplace(rule);
                     break;
                 case "ADD_FILES":
-                    processRule.add(projectPath, rule);
+                    processRule.add(rule);
                     break;
                 case "REMOVE_FILES":
-                    processRule.remove(projectPath, rule);
+                    processRule.remove(rule);
                     break;
                 case "EXECUTE_DEX":
                     processRule.dex();

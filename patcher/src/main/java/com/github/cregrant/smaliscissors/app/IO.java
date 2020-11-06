@@ -74,7 +74,7 @@ class IO {
                 DecompiledFile tmpSmali = ProcessRule.smaliList.get(j);
                 if (tmpSmali.isNotModified()) continue;
                 tmpSmali.setModified(false);
-                write(tmpSmali.getProjectPath() + File.separator + tmpSmali.getPath(), tmpSmali.getBody());
+                write(Prefs.projectPath + File.separator + tmpSmali.getPath(), tmpSmali.getBody());
             }
         }
         if (Prefs.keepXmlFilesInRAM) {
@@ -82,7 +82,7 @@ class IO {
                 DecompiledFile dFile = ProcessRule.xmlList.get(j);
                 if (dFile.isNotModified()) continue;
                 dFile.setModified(false);
-                write(dFile.getProjectPath() + File.separator + dFile.getPath(), dFile.getBody());
+                write(Prefs.projectPath + File.separator + dFile.getPath(), dFile.getBody());
             }
         }
     }
@@ -173,35 +173,35 @@ class IO {
             file.delete();
     }
 
-    void checkIfScanned(String currentProjectPath) {
-        if (!currentProjectPath.equals(currentProjectPathCached)) {
+    void checkIfScanned() {
+        if (!Prefs.projectPath.equals(currentProjectPathCached)) {
             ProcessRule.smaliList.clear();
             ProcessRule.xmlList.clear();
-            scanProject(currentProjectPath);
-            currentProjectPathCached = currentProjectPath;
+            scanProject();
+            currentProjectPathCached = Prefs.projectPath;
         }
     }
 
-    private void scanProject(String projectPath) {
+    private void scanProject() {
         long startTime = System.currentTimeMillis();
         List<File> folders = new ArrayList<>();
 
-        for (File i : Objects.requireNonNull(new File(projectPath).listFiles())) {
-            String str = i.toString().replace(projectPath + File.separator, "");
+        for (File i : Objects.requireNonNull(new File(Prefs.projectPath).listFiles())) {
+            String str = i.toString().replace(Prefs.projectPath + File.separator, "");
             if (str.startsWith("smali"))
                 folders.add(i);
         }
         if (folders.isEmpty()) {
-            OutStream.println("WARNING: no smali folders found inside the project folder \"" + new Regex().getEndOfPath(projectPath) + '\"');
+            OutStream.println("WARNING: no smali folders found inside the project folder \"" + new Regex().getEndOfPath(Prefs.projectPath) + '\"');
         }
 
-        if (new File(projectPath + File.separator + "AndroidManifest.xml").exists()) {
-            DecompiledFile manifest = new DecompiledFile(projectPath, true);  //add AndroidManifest.xml
+        if (new File(Prefs.projectPath + File.separator + "AndroidManifest.xml").exists()) {
+            DecompiledFile manifest = new DecompiledFile(true);  //add AndroidManifest.xml
             manifest.setPath("AndroidManifest.xml");
             ProcessRule.xmlList.add(manifest);
         }
 
-        File resFolder = new File(projectPath + File.separator + "res");
+        File resFolder = new File(Prefs.projectPath + File.separator + "res");
         if (!resFolder.exists() || Objects.requireNonNull(resFolder.list()).length == 0) {
             OutStream.println("WARNING: no resources found inside the res folder.");
         } else folders.add(resFolder);
@@ -218,17 +218,18 @@ class IO {
                         if (file.isDirectory())
                             stack.push(file);
                         else {
-                            String path = file.toString().replace(projectPath + File.separator, "");
+                            String path = file.toString().replace(Prefs.projectPath + File.separator, "");
                             DecompiledFile tmp;
                             boolean isSmali = path.endsWith(".smali");
+                            path.endsWith(".xml");
                             if (isSmali || path.endsWith(".xml")) {
                                 if (isSmali)
-                                    tmp = new DecompiledFile(projectPath, false);
+                                    tmp = new DecompiledFile(false);
                                 else
-                                    tmp = new DecompiledFile(projectPath, true);
+                                    tmp = new DecompiledFile(true);
                                 tmp.setPath(path);
                                 boolean isBigSize = file.length() > 100000;
-                                synchronized (projectPath) {
+                                synchronized (resFolder) {
                                     if (isSmali) {
                                         if (isBigSize)
                                             bigSmaliList.add(tmp);
@@ -269,7 +270,7 @@ class IO {
                 int finalNum = num;
                 Runnable r = () -> {
                     DecompiledFile dFile = ProcessRule.smaliList.get(finalNum);
-                    dFile.setBody(read(projectPath + File.separator + dFile.getPath()));
+                    dFile.setBody(read(Prefs.projectPath + File.separator + dFile.getPath()));
                 };
                 BackgroundWorker.executor.submit(r);
             }
@@ -283,7 +284,7 @@ class IO {
                 int finalNum = num;
                 Runnable r = () -> {
                     DecompiledFile dFile = ProcessRule.xmlList.get(finalNum);
-                    dFile.setBody(read(projectPath + File.separator + dFile.getPath()));
+                    dFile.setBody(read(Prefs.projectPath + File.separator + dFile.getPath()));
                 };
                 BackgroundWorker.executor.submit(r);
             }
@@ -322,7 +323,7 @@ class IO {
         if (fullPath.endsWith(".smali") | fullPath.endsWith(".xml")) {
             String shortPath = fullPath.replace(projectPath + File.separator, "");
             boolean isXml = shortPath.endsWith(".xml");
-            DecompiledFile addedFile = new DecompiledFile(projectPath, isXml);
+            DecompiledFile addedFile = new DecompiledFile(isXml);
             addedFile.setPath(shortPath);
             if ((isXml && Prefs.keepXmlFilesInRAM) || (!isXml && Prefs.keepSmaliFilesInRAM))
                 addedFile.setBody(new IO().read(fullPath));

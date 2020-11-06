@@ -47,7 +47,11 @@ public class Regex {
     }
 
     String getEndOfPath(String path) {
-        int last = path.lastIndexOf('\\')+1;
+        int last;
+        if (Prefs.run_type.equals("pc"))
+            last = path.lastIndexOf('\\')+1;
+        else
+            last = path.lastIndexOf('/')+1;
         if (last == 0) return path;
         return path.substring(last);
     }

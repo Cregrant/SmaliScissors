@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 class Select {
-    Select() {
-    }
 
     ArrayList<String> select(ArrayList<String> stringsList, String msg, String msgError) {
         OutStream.println(msg);

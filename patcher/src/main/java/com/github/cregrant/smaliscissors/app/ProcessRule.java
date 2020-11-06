@@ -110,18 +110,18 @@ class ProcessRule {
         }
     }
 
-    void add(String projectPath, Rule rule) {
+    void add(Rule rule) {
         String src = Prefs.tempDir + File.separator + rule.source;
-        String dst = projectPath + File.separator + rule.target;
+        String dst = Prefs.projectPath + File.separator + rule.target;
         IO io = new IO();
         if (rule.extract) io.zipExtract(src, dst);
         else io.copy(src, dst);
-        io.scanFolder(projectPath, rule.target);
+        io.scanFolder(Prefs.projectPath, rule.target);
     }
 
-    void remove(String projectPath, Rule rule) {
+    void remove(Rule rule) {
         IO io = new IO();
-        io.deleteAll(new File(projectPath + File.separator + rule.target));
+        io.deleteAll(new File(Prefs.projectPath + File.separator + rule.target));
         io.removeLoadedFile(rule.target);
     }
 
