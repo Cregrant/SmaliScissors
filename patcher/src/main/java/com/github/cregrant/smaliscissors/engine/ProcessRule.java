@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.app;
+package com.github.cregrant.smaliscissors.engine;
 
 import java.io.File;
 import java.util.*;
@@ -13,7 +13,7 @@ class ProcessRule {
     static HashMap<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
-    void matchReplace(Rule rule) {
+    static void matchReplace(Rule rule) {
         applyAssign(rule);
         //important escape for android
         rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
@@ -36,9 +36,8 @@ class ProcessRule {
                 replace(dFile, rule);
 
                 if (!dFile.isNotModified()) {
-                    if (Prefs.verbose_level == 0) {
-                        OutStream.println(dFile.getPath() + " patched.");
-                    }
+                    if (Prefs.verbose_level == 0)
+                        Main.out.println(dFile.getPath() + " patched.");
                     synchronized (lock) {
                         ++patchedFilesNum;
                     }
@@ -50,21 +49,21 @@ class ProcessRule {
         try {
             BackgroundWorker.executor.invokeAll(tasks);
         } catch (Exception e) {
-            OutStream.println(e.getMessage());
+            Main.out.println(e.getMessage());
             System.exit(1);
         }
 
 
         if (Prefs.verbose_level <= 2) {
             if (rule.isSmali)
-                OutStream.println(patchedFilesNum + " smali files patched.");
+                Main.out.println(patchedFilesNum + " smali files patched.");
             else
-                OutStream.println(patchedFilesNum + " xml files patched.");
+                Main.out.println(patchedFilesNum + " xml files patched.");
         }
         patchedFilesNum = 0;
     }
 
-    private void replace(DecompiledFile dFile, Rule rule) {
+    private static void replace(DecompiledFile dFile, Rule rule) {
         if (dFile.getPath().matches(rule.target)) {
             String smaliBody = dFile.getBody();
             String smaliBodyNew;
@@ -76,10 +75,11 @@ class ProcessRule {
                 dFile.setBody(smaliBodyNew);
                 dFile.setModified(true);
             }
+            Main.out.println(dFile.getPath() + " done");
         }
     }
 
-    void assign(Rule rule) {
+    static void assign(Rule rule) {
         ArrayList<String> assignArr = new ArrayList<>();
         DecompiledFile dFile;
         int end;
@@ -97,38 +97,36 @@ class ProcessRule {
                     assignArr.add(str);
                 }
             }
-            ArrayList<String> valuesArr = new Regex().matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), "replace");
+            ArrayList<String> valuesArr = Regex.matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), "replace");
             for (int j = 0; j < valuesArr.size(); ++j) {
                 if (Prefs.verbose_level <= 1) {
-                    OutStream.println("assigned \"" + valuesArr.get(j) + "\" to \"" + assignArr.get(j) + "\"");
+                    Main.out.println("assigned \"" + valuesArr.get(j) + "\" to \"" + assignArr.get(j) + "\"");
                 }
                 assignMap.put(assignArr.get(j), valuesArr.get(j));
             }
         }
         if (assignMap.isEmpty()) {
-            OutStream.println("Nothing found in assign rule??");
+            Main.out.println("Nothing found in assign rule??");
         }
     }
 
-    void add(Rule rule) {
+    static void add(Rule rule) {
         String src = Prefs.tempDir + File.separator + rule.source;
         String dst = Prefs.projectPath + File.separator + rule.target;
         IO io = new IO();
-        if (rule.extract) io.zipExtract(src, dst);
+        if (rule.extract) IO.zipExtract(src, dst);
         else io.copy(src, dst);
         io.scanFolder(Prefs.projectPath, rule.target);
     }
 
-    void remove(Rule rule) {
-        IO io = new IO();
-        io.deleteAll(new File(Prefs.projectPath + File.separator + rule.target));
-        io.removeLoadedFile(rule.target);
+    static void remove(Rule rule) {
+        IO.deleteAll(new File(Prefs.projectPath + File.separator + rule.target));
+        IO.removeLoadedFile(rule.target);
     }
 
-    void matchGoto(Rule rule, Patch patch) {
+    static void matchGoto(Rule rule, Patch patch) {
         applyAssign(rule);
         AtomicBoolean running = new AtomicBoolean(true);
-        Regex regex = new Regex();
         Pattern pattern = Pattern.compile(rule.match);
 
         int totalNum;
@@ -147,7 +145,7 @@ class ProcessRule {
                             dFile = xmlList.get(finalNum);
                         else
                             dFile = smaliList.get(finalNum);
-                        if (regex.matchSingleLine(pattern, dFile.getBody()) != null) {
+                        if (Regex.matchSingleLine(pattern, dFile.getBody()) != null) {
                             patch.setRuleName(rule.goTo);
                             running.set(false);
                         }
@@ -158,16 +156,16 @@ class ProcessRule {
             }
             BackgroundWorker.executor.invokeAll(tasks);
         } catch (Exception e) {
-            OutStream.println(e.getMessage());
+            Main.out.println(e.getMessage());
             System.exit(1);
         }
     }
 
-    private void applyAssign(Rule rule) {
+    private static void applyAssign(Rule rule) {        //replacing ${GROUP} to some text
         if (!assignMap.isEmpty()) {
-            Set<Map.Entry<String, String>> set = assignMap.entrySet();      //replace ${GROUP}
+            Set<Map.Entry<String, String>> set = assignMap.entrySet();
             if (Prefs.verbose_level == 0) {
-                OutStream.println("Replacing variables to text:\n" + set);
+                Main.out.println("Replacing variables to text:\n" + set);
             }
             for (Map.Entry<String, String> entry : set) {
                 String key = "${" + entry.getKey() + "}";
@@ -176,16 +174,17 @@ class ProcessRule {
                 if (!foundInMatch && !foundInReplacement) continue;
                 String value = entry.getValue();
                 if (Prefs.verbose_level == 0) {
-                    OutStream.println(key + " -> " + value);
+                    Main.out.println(key + " -> " + value);
                 }
                 if (foundInMatch)
                     rule.match = rule.match.replace(key, value);
-                else rule.replacement = rule.replacement.replace(key, value);
+                else
+                    rule.replacement = rule.replacement.replace(key, value);
             }
         }
     }
 
-    public void dex() {
-        OutStream.println("HAHa very fun");
+    public static void dex() {
+        Main.out.println("HAHa very fun");
     }
 }

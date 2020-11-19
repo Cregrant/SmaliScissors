@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.app;
+package com.github.cregrant.smaliscissors.engine;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,20 +10,14 @@ public class Prefs {
     public static String projectPath = "";
     public static File patchesDir;
     public static File tempDir;
-    //static boolean bigMemoryDevice = false;
     private static double versionConf = 0.01;
     static boolean rules_AEmode = true;
     static int verbose_level = 1;
     static boolean keepSmaliFilesInRAM = false;
     static boolean keepXmlFilesInRAM = false;
+    //todo move to main
 
-    void loadConf() {
-/*        if (Runtime.getRuntime().maxMemory() > 200000000L) {
-            bigMemoryDevice = true;
-            OutStream.println("Big RAM device. Nice!");
-        } else {
-            OutStream.println("Low RAM device. Trying to survive...");
-        }*/
+    public void loadConf() {
         Properties props = new Properties();
         String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
         try {
@@ -32,12 +26,12 @@ public class Prefs {
             input.close();
         }
         catch (Exception e) {
-            OutStream.println("Error loading conf!");
+            Main.out.println("Error loading conf!");
         }
         try {
             if (props.size() == 0) {
                 saveConf();
-                OutStream.println("Config file broken or unreachable. Using default one.");
+                Main.out.println("Config file broken or unreachable. Using default one.");
             }
             verbose_level = Integer.parseInt(props.getProperty("Verbose_level"));
             versionConf = Float.parseFloat(props.getProperty("Version"));
@@ -46,7 +40,7 @@ public class Prefs {
             keepXmlFilesInRAM = Boolean.parseBoolean(props.getProperty("Keep_xml_files_in_RAM"));
         }
         catch (Exception e) {
-            OutStream.println("Error reading conf!");
+            Main.out.println("Error reading conf!");
         }
         if (Main.version - versionConf > 0.001) {
             new Prefs().upgradeConf();
@@ -66,15 +60,15 @@ public class Prefs {
             output.close();
         }
         catch (Exception e) {
-            OutStream.println("Error writing conf: " + e.getMessage());
+            Main.out.println("Error writing conf: " + e.getMessage());
         }
     }
 
     private void upgradeConf() {
-        OutStream.println("Upgrading config file...");
-        OutStream.println(versionConf + " --> 0.01");
+        Main.out.println("Upgrading config file...");
+        Main.out.println(versionConf + " --> 0.01");
         versionConf = 0.01f;
         this.saveConf();
-        OutStream.println("Upgraded.");
+        Main.out.println("Upgraded.");
     }
 }

@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.app;
+package com.github.cregrant.smaliscissors.engine;
 
 import java.util.ArrayList;
 
