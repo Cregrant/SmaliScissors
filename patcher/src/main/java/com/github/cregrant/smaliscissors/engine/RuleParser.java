@@ -25,9 +25,6 @@ class RuleParser {
     private int num = 0;
 
     Rule parseRule(String patchStr) {
-        if (!Prefs.rules_AEmode) {
-            Main.out.println("TruePatcher mode on.");
-        }
         rule = new Rule();
         patch = patchStr;
         rule.num = num;

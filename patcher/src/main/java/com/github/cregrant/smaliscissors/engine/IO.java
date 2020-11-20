@@ -16,9 +16,6 @@ class IO {
 
     static void loadRules(String zipFile, Patch patch) {
         Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
-        if (!Prefs.rules_AEmode) {
-            Main.out.println("TruePatcher mode on.");
-        }
         deleteAll(Prefs.tempDir);
         Prefs.tempDir.mkdirs();
         String txtFile = Prefs.tempDir + File.separator + "patch.txt";
