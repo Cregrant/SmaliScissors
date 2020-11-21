@@ -75,7 +75,6 @@ class ProcessRule {
                 dFile.setBody(smaliBodyNew);
                 dFile.setModified(true);
             }
-            Main.out.println(dFile.getPath() + " done");
         }
     }
 

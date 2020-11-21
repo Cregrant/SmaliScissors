@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.regex.Pattern;
 
 class RuleParser {
-    static private final Pattern patSource = Pattern.compile("SOURCE:\\n(.+)");
+    static private final Pattern patSource = Pattern.compile("SOURCE:\\R(.+)");
     static private final Pattern patExtract = Pattern.compile("EXTRACT:\\R\\s*?(.+)");
     @SuppressWarnings("RegExpRedundantEscape")
-    static private final Pattern patAssignment = Pattern.compile("\\R\\s*?(.+?=\\$\\{GROUP\\d\\})");
+    static private final Pattern patAssignment = Pattern.compile("\\R\\s*?(.+?=\\$\\{GROUP\\d{1,2}\\})");
     static private final Pattern patReplacement = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
     static private final Pattern patTarget = Pattern.compile("TARGET:\\R\\s*?([\\s\\S]*?)\\R(?:(?:MATCH|EXTRACT):|\\[/)");
     static private final Pattern patMatch = Pattern.compile("MATCH:\\R(.+)");
@@ -22,7 +22,7 @@ class RuleParser {
     static private final Pattern patGoto = Pattern.compile("GOTO:\\R\\s*?(.+)");
     private Rule rule;
     private String patch;
-    private int num = 0;
+    static private int num = 0;
 
     Rule parseRule(String patchStr) {
         rule = new Rule();
