@@ -7,9 +7,15 @@ public class DecompiledFile {
     private String body;
     private boolean isModified = false;
     private final boolean isXML;
+    private boolean isBigSize = false;
 
-    DecompiledFile(boolean isXmlFile) {
+    DecompiledFile(boolean isXmlFile, String filePath) {
         isXML = isXmlFile;
+        path = filePath;
+    }
+
+    public boolean isXML() {
+        return this.isXML;
     }
 
     public String getPath() {
@@ -20,7 +26,7 @@ public class DecompiledFile {
         this.isModified = state;
     }
 
-    public boolean isNotModified() {
+    public boolean isModified() {
         return !this.isModified;
     }
 
@@ -40,6 +46,14 @@ public class DecompiledFile {
             this.body = newBody;
         else
             IO.write(Prefs.projectPath + File.separator + path, newBody);
+    }
+
+    public void setBigSize(boolean state) {
+        this.isBigSize = state;
+    }
+
+    public boolean isBigSize() {
+        return !this.isBigSize;
     }
 
     public boolean equals(Object anObject) {
