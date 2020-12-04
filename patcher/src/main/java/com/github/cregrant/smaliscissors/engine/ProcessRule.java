@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
+
 class ProcessRule {
     static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
     static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
@@ -208,7 +209,8 @@ class ProcessRule {
         }
     }
 
-    public static void dex() {
-        Main.out.println("Executing dex is not supported yet");
+    public static void dex(Rule rule) {
+        byte[] dex = IO.readBytes(Prefs.tempDir + File.separator + rule.script);
+
     }
 }

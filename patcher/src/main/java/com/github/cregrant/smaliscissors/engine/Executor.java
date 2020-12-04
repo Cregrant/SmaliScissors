@@ -61,7 +61,7 @@ class Executor {
                     ProcessRule.remove(rule);
                     break;
                 case "EXECUTE_DEX":
-                    ProcessRule.dex();
+                    ProcessRule.dex(rule);
                     break;
                 case "GOTO":
                     patch.setRuleName(rule.goTo);

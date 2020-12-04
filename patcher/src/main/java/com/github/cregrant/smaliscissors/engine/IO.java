@@ -22,7 +22,7 @@ class IO {
     static String currentProjectPathCached = "";
 
     static Patch loadRules(String zipFile) {
-        Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])", Pattern.UNIX_LINES);
+        Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])");
         deleteAll(Prefs.tempDir);
         Prefs.tempDir.mkdirs();
         String txtFile = Prefs.tempDir + File.separator + "patch.txt";
@@ -66,6 +66,26 @@ class IO {
             System.exit(1);
         }
         return resultString;
+    }
+
+    static byte[] readBytes(String path) {
+        final FileInputStream is;
+        byte[] result = null;
+        try {
+            is = new FileInputStream(path);
+            byte[] buffer = new byte[is.available()];
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            is.read(buffer);
+            os.write(buffer);
+            os.close();
+            result = os.toByteArray();
+            is.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Main.out.println("Exiting to prevent file corruption");
+            System.exit(1);
+        }
+        return result;
     }
 
     static void write(String path, String content) {
