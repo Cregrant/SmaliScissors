@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.engine;
 
+import com.googlecode.dex2jar.tools.Dex2jarCmd;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -210,7 +212,6 @@ class ProcessRule {
     }
 
     public static void dex(Rule rule) {
-        byte[] dex = IO.readBytes(Prefs.tempDir + File.separator + rule.script);
-
+        new Dex2jarCmd().doMain(Prefs.tempDir + File.separator + rule.script);
     }
 }
