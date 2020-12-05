@@ -72,9 +72,7 @@ public class TypeExpr extends E1Expr {
                 StringBuilder sb = new StringBuilder("new ")
                         .append(Util.toShortClassName(type.substring(dimension))).append("[").append(op)
                         .append("]");
-                for (int i = 0; i < dimension; i++) {
-                    sb.append("[]");
-                }
+                sb.append("[]".repeat(dimension));
                 return sb.toString();
             }
             return "new " + Util.toShortClassName(type) + "[" + op + "]";

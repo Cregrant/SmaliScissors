@@ -105,7 +105,7 @@ public class IR2JConverter implements Opcodes {
         for (Local local : ir.locals) {
             maxLocalIndex = Math.max(maxLocalIndex, local._ls_index);
         }
-        Map<String, Integer> lockMap = new HashMap<String, Integer>();
+        Map<String, Integer> lockMap = new HashMap<>();
         for (Stmt st : ir.stmts) {
             switch (st.st) {
             case LABEL:
@@ -237,7 +237,6 @@ public class IR2JConverter implements Opcodes {
                         asm.visitLdcInsn(Array.get(arrayData, i));
                         asm.visitInsn(iastoreOP);
                     }
-                    asm.visitInsn(POP);
                 } else {
                     FilledArrayExpr filledArrayExpr = (FilledArrayExpr) e2.getOp2();
                     int arraySize = filledArrayExpr.ops.length;
@@ -256,8 +255,8 @@ public class IR2JConverter implements Opcodes {
                         accept(filledArrayExpr.ops[i], asm);
                         asm.visitInsn(iastoreOP);
                     }
-                    asm.visitInsn(POP);
                 }
+                asm.visitInsn(POP);
             }
             break;
             case GOTO:
@@ -342,7 +341,7 @@ public class IR2JConverter implements Opcodes {
             case LOOKUP_SWITCH: {
                 LookupSwitchStmt lss = (LookupSwitchStmt) st;
                 accept(lss.op, asm);
-                Label targets[] = new Label[lss.targets.length];
+                Label[] targets = new Label[lss.targets.length];
                 for (int i = 0; i < targets.length; i++) {
                     targets[i] = (Label) lss.targets[i].tag;
                 }
@@ -352,7 +351,7 @@ public class IR2JConverter implements Opcodes {
             case TABLE_SWITCH: {
                 TableSwitchStmt tss = (TableSwitchStmt) st;
                 accept(tss.op, asm);
-                Label targets[] = new Label[tss.targets.length];
+                Label[] targets = new Label[tss.targets.length];
                 for (int i = 0; i < targets.length; i++) {
                     targets[i] = (Label) tss.targets[i].tag;
                 }
@@ -419,8 +418,7 @@ public class IR2JConverter implements Opcodes {
             }
             break;
         case 'C':
-            switch (tos.charAt(0)) {
-            case 'I':
+            if (tos.charAt(0) == 'I') {
                 mv.visitInsn(I2C);
             }
             break;
@@ -629,9 +627,7 @@ public class IR2JConverter implements Opcodes {
             }
             NewMutiArrayExpr nmae = (NewMutiArrayExpr) value;
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < nmae.dimension; i++) {
-                sb.append('[');
-            }
+            sb.append("[".repeat(Math.max(0, nmae.dimension)));
             sb.append(nmae.baseType);
             asm.visitMultiANewArrayInsn(sb.toString(), value.ops.length);
             break;
@@ -683,7 +679,7 @@ public class IR2JConverter implements Opcodes {
         break;
         case INVOKE_CUSTOM: {
             InvokeCustomExpr ice = (InvokeCustomExpr) value;
-            String argTypes[] = ice.getProto().getParameterTypes();
+            String[] argTypes = ice.getProto().getParameterTypes();
             Value[] vbs = ice.getOps();
             if (argTypes.length == vbs.length) {
                 for (int i = 0; i < vbs.length; i++) {
@@ -707,7 +703,7 @@ public class IR2JConverter implements Opcodes {
         case INVOKE_POLYMORPHIC: {
             InvokePolymorphicExpr ipe = (InvokePolymorphicExpr) value;
             Method m = ipe.method;
-            String argTypes[] = ipe.getProto().getParameterTypes();
+            String[] argTypes = ipe.getProto().getParameterTypes();
             Value[] vbs = ipe.getOps();
             accept(vbs[0], asm);
             for (int i = 1; i < vbs.length; i++) {

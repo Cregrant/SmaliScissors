@@ -6,9 +6,11 @@ import java.util.ArrayList;
 public class Main {
     static final double version = 0.01;
     static OutStream out;
+    static DexExecutor dex;
 
-    public static void main(String[] args, OutStream logger) {
+    public static void main(String[] args, OutStream logger, DexExecutor dexExecutor) {
         out = logger;
+        dex = dexExecutor;
         long startTimeTotal = System.currentTimeMillis();
         ArrayList<String> zipArr = new ArrayList<>();
         ArrayList<String> projectsList = new ArrayList<>();

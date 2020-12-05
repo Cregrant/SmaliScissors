@@ -28,7 +28,6 @@ import com.googlecode.dex2jar.ir.expr.Value.E2Expr;
  * @see VT#DCMPG
  * @see VT#FCMPL
  * @see VT#DCMPL
- * @see VT#DIV
  * @see VT#EQ
  * @see VT#GE
  * @see VT#GT

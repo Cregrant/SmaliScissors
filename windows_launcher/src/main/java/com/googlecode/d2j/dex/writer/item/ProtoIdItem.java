@@ -65,11 +65,8 @@ public class ProtoIdItem extends BaseItem implements Comparable<ProtoIdItem> {
         } else if (!ret.equals(other.ret))
             return false;
         if (shorty == null) {
-            if (other.shorty != null)
-                return false;
-        } else if (!shorty.equals(other.shorty))
-            return false;
-        return true;
+            return other.shorty == null;
+        } else return shorty.equals(other.shorty);
     }
 
     @Override

@@ -1,19 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.googlecode.d2j.util.zip;
 
 import java.io.IOException;
@@ -34,19 +18,19 @@ public final class ZipEntry implements ZipConstants, Cloneable {
     String name;
     String comment;
 
-    long crc = -1; // Needs to be a long to distinguish -1 ("not set") from the 0xffffffff CRC32.
+    long crc; // Needs to be a long to distinguish -1 ("not set") from the 0xffffffff CRC32.
 
-    long compressedSize = -1;
-    long size = -1;
+    long compressedSize;
+    long size;
 
-    int compressionMethod = -1;
-    int time = -1;
-    int modDate = -1;
+    int compressionMethod;
+    int time;
+    int modDate;
 
     byte[] extra;
 
-    int nameLength = -1;
-    long localHeaderRelOffset = -1;
+    int nameLength;
+    long localHeaderRelOffset;
 
     /**
      * Zip entry state: Deflated.
@@ -171,11 +155,11 @@ public final class ZipEntry implements ZipConstants, Cloneable {
     }
 
     ZipEntry(ByteBuffer it0, boolean skipCommentsAndExtra) throws IOException {
-        ByteBuffer it = it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
+        ByteBuffer it = (ByteBuffer) it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
         ZipFile.skip(it0, CENHDR);
         int sig = it.getInt();
         if (sig != CENSIG) {
-            ZipFile.throwZipException("Central Directory Entry", sig);
+            ZipFile.throwZipException(sig);
         }
 
         it.position(8);

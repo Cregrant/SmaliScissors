@@ -26,7 +26,7 @@ public final class Exprs {
         if (v == null) {
             return new Value[0];
         }
-        Value vb[] = new Value[v.length];
+        Value[] vb = new Value[v.length];
         for (int i = 0; i < v.length; i++) {
             vb[i] = v[i].trim();
         }

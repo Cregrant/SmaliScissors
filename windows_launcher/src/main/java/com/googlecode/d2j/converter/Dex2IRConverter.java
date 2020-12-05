@@ -311,7 +311,7 @@ public class Dex2IRConverter {
                 }
                 if (phiValues.size() > 0) {
                     phis.add(Stmts.nAssign(v.local, Exprs
-                            .nPhi(phiValues.toArray(new Value[phiValues.size()]))));
+                            .nPhi(phiValues.toArray(new Value[0]))));
                     phiValues.clear();
                 }
             }
@@ -461,9 +461,7 @@ public class Dex2IRConverter {
     private void relate(DvmValue parent, DvmValue child) {
         if (child.parent == null) {
             child.parent = parent;
-        } else if (child.parent == parent) {
-            //
-        } else {
+        } else if (child.parent != parent) {
             if (child.otherParent == null) {
                 child.otherParent = new HashSet<>(5);
             }
@@ -531,6 +529,7 @@ public class Dex2IRConverter {
         return first;
     }
 
+    @SuppressWarnings("Convert2Diamond")
     private DvmInterpreter<DvmValue> buildInterpreter() {
         return new DvmInterpreter<DvmValue>() {
             DvmValue b(Value value) {
@@ -1157,7 +1156,7 @@ public class Dex2IRConverter {
                         }
 
                         Method method = ((MethodStmtNode) insn).method;
-                        Value invoke = null;
+                        Value invoke;
                         switch (op) {
                             case INVOKE_VIRTUAL_RANGE:
                             case INVOKE_VIRTUAL:
@@ -1194,10 +1193,7 @@ public class Dex2IRConverter {
                         } else {
                             return b(invoke);
                         }
-
                 }
-
-
             }
 
             void emitNotFindOperand(DexStmtNode insn) {
@@ -1224,7 +1220,6 @@ public class Dex2IRConverter {
                     emitNotFindOperand(insn);
                     return;
                 }
-
                 emit(nReturn(getLocal(value)));
             }
         };
@@ -1287,9 +1282,6 @@ public class Dex2IRConverter {
         }
 
         public DvmValue() {
-
         }
     }
-
-
 }

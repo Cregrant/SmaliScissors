@@ -8,10 +8,12 @@ class Executor {
     String executePatches(ArrayList<String> zipArr) {
         long startTime = currentTimeMillis();
         for (String zipFile : zipArr) {
-            if (zipFile.equals("cancel")) {
+            if (zipFile.equals("cancel"))
                 return "cancel";
-            }
-            Main.out.println("\nPatch - " + Regex.getEndOfPath(zipFile));
+            String zipName = Regex.getEndOfPath(zipFile);
+            Prefs.zipName = zipName;
+            Main.out.println("\nPatch - " + zipName);
+
             Patch patch = IO.loadRules(zipFile);
             boolean scanXml = patch.xmlNeeded && ProcessRule.xmlList.isEmpty();
             boolean scanSmali = patch.smaliNeeded && ProcessRule.smaliList.isEmpty();
@@ -36,13 +38,15 @@ class Executor {
 
         else if (Prefs.verbose_level == 1) {
             Main.out.println("Type - " + rule.type);
-            if (rule.target != null)
-                Main.out.println("Target - " + rule.target);
-            else {
-                Main.out.println("Targets:");
-                if (rule.targetArr.size()<100)
-                    for (String target : rule.targetArr) Main.out.println("    " + target);
-                else Main.out.println("    " + rule.targetArr.size() + " items");
+            if (!rule.type.equals("EXECUTE_DEX") && !rule.type.equals("DUMMY") ) {
+                if (rule.target != null)
+                    Main.out.println("Target - " + rule.target);
+                else {
+                    Main.out.println("Targets:");
+                    if (rule.targetArr.size() < 100)
+                        for (String target : rule.targetArr) Main.out.println("    " + target);
+                    else Main.out.println("    " + rule.targetArr.size() + " items");
+                }
             }
         }
 
@@ -61,6 +65,7 @@ class Executor {
                     ProcessRule.remove(rule);
                     break;
                 case "EXECUTE_DEX":
+                    Main.out.println("Executing dex...");
                     ProcessRule.dex(rule);
                     break;
                 case "GOTO":

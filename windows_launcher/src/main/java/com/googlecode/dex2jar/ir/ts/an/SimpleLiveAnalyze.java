@@ -26,7 +26,7 @@ import java.util.*;
 
 public class SimpleLiveAnalyze extends BaseAnalyze<SimpleLiveValue> {
     protected Set<SimpleLiveValue> markUsed() {
-        Set<SimpleLiveValue> used = new HashSet<SimpleLiveValue>(aValues.size() / 2);
+        Set<SimpleLiveValue> used = new HashSet<>(aValues.size() / 2);
         Queue<SimpleLiveValue> q = new UniqueQueue<>();
         for (SimpleLiveValue sv : aValues) {
             if (sv.used) {

@@ -90,7 +90,7 @@ public class DexClassNode extends DexClassVisitor {
     @Override
     public DexAnnotationVisitor visitAnnotation(String name, Visibility visibility) {
         if (anns == null) {
-            anns = new ArrayList<DexAnnotationNode>(5);
+            anns = new ArrayList<>(5);
         }
         DexAnnotationNode annotation = new DexAnnotationNode(name, visibility);
         anns.add(annotation);
@@ -100,7 +100,7 @@ public class DexClassNode extends DexClassVisitor {
     @Override
     public DexFieldVisitor visitField(int accessFlags, Field field, Object value) {
         if (fields == null) {
-            fields = new ArrayList<DexFieldNode>();
+            fields = new ArrayList<>();
         }
         DexFieldNode fieldNode = new DexFieldNode(accessFlags, field, value);
         fields.add(fieldNode);
@@ -110,7 +110,7 @@ public class DexClassNode extends DexClassVisitor {
     @Override
     public DexMethodVisitor visitMethod(int accessFlags, Method method) {
         if (methods == null) {
-            methods = new ArrayList<DexMethodNode>();
+            methods = new ArrayList<>();
         }
         DexMethodNode methodNode = new DexMethodNode(accessFlags, method);
         methods.add(methodNode);

@@ -1,26 +1,12 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.googlecode.d2j.util.zip;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.Inflater;
@@ -41,7 +27,7 @@ public class ZipFile implements AutoCloseable, ZipConstants {
     /**
      * General Purpose Bit Flags, Bit 0. If set, indicates that the file is encrypted.
      */
-    static final int GPBF_ENCRYPTED_FLAG = 1 << 0;
+    static final int GPBF_ENCRYPTED_FLAG = 1;
 
     /**
      * General Purpose Bit Flags, Bit 3. If this bit is set, the fields crc-32, compressed size and uncompressed size
@@ -135,20 +121,18 @@ public class ZipFile implements AutoCloseable, ZipConstants {
      * @param entry
      *            the android.ZipEntry.
      * @return an input stream of the data contained in the {@code android.ZipEntry}.
-     * @throws IOException
-     *             if an {@code IOException} occurs.
      * @throws IllegalStateException
      *             if this zip file has been closed.
      */
-    public InputStream getInputStream(ZipEntry entry) throws IOException {
+    public InputStream getInputStream(ZipEntry entry) {
         long entryDataStart = getEntryDataStart(entry);
-        ByteBuffer is = raf.duplicate().position((int) entryDataStart);
+        ByteBuffer is = (ByteBuffer) raf.duplicate().position((int) entryDataStart);
 
         if (entry.compressionMethod == ZipEntry.STORED) {
-            final ByteBuffer buf = is.slice().order(ByteOrder.LITTLE_ENDIAN).limit((int) entry.size);
+            final ByteBuffer buf = (ByteBuffer) is.slice().order(ByteOrder.LITTLE_ENDIAN).limit((int) entry.size);
             return new ByteBufferBackedInputStream(buf);
         } else {
-            final ByteBuffer buf = is.slice().order(ByteOrder.LITTLE_ENDIAN)
+            final ByteBuffer buf = (ByteBuffer) is.slice().order(ByteOrder.LITTLE_ENDIAN)
                     .limit((int) entry.compressedSize);
             int bufSize = Math.max(1024, (int) Math.min(entry.getSize(), 65535L));
             return new ZipInflaterInputStream(new ByteBufferBackedInputStream(buf), new Inflater(true), bufSize, entry);
@@ -238,13 +222,7 @@ public class ZipFile implements AutoCloseable, ZipConstants {
             if (commentLength > raf.remaining()) {
                 System.err.println("WARN: the zip comment exceed the zip content");
             } else {
-                if (skipCommentsAndExtra) {
-                    skip(raf, commentLength);
-                } else {
-                    byte[] commentBytes = new byte[commentLength];
-                    raf.get(commentBytes);
-                    comment = new String(commentBytes, 0, commentBytes.length, StandardCharsets.UTF_8);
-                }
+                skip(raf, commentLength);
             }
         }
 
@@ -252,10 +230,10 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         // We have to do this now (from the constructor) rather than lazily because the
         // public API doesn't allow us to throw IOException except from the constructor
         // or from getInputStream.
-        ByteBuffer buf = raf.duplicate().order(ByteOrder.LITTLE_ENDIAN).position((int) centralDirOffset);
+        ByteBuffer buf = (ByteBuffer) raf.duplicate().order(ByteOrder.LITTLE_ENDIAN).position((int) centralDirOffset);
         entries = new ArrayList<>(numEntries);
         for (int i = 0; i < numEntries; ++i) {
-            ZipEntry newEntry = new ZipEntry(buf, skipCommentsAndExtra);
+            ZipEntry newEntry = new ZipEntry(buf, true);
             if (newEntry.localHeaderRelOffset >= centralDirOffset) {
                 // Ignore the entry
                 // throw new ZipException("Local file header offset is after central directory");
@@ -265,9 +243,9 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         }
     }
 
-    static void throwZipException(String msg, int magic) throws ZipException {
+    static void throwZipException(int magic) throws ZipException {
         final String hexString = String.format("0x%08x", magic);
-        throw new ZipException(msg + " signature not found; was " + hexString);
+        throw new ZipException("Central Directory Entry" + " signature not found; was " + hexString);
     }
 
     @Override
@@ -318,7 +296,7 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         }
 
         @Override
-        public int read() throws IOException {
+        public int read() {
             if (!buf.hasRemaining()) {
                 return -1;
             }
@@ -326,7 +304,7 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         }
 
         @Override
-        public int read(byte[] b, int off, int len) throws IOException {
+        public int read(byte[] b, int off, int len) {
             if (!buf.hasRemaining()) {
                 return -1;
             }

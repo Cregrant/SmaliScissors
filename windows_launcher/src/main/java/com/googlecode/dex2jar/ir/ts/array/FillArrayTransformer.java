@@ -141,9 +141,8 @@ public class FillArrayTransformer extends StatedTransformer {
         for (Map.Entry<Local, ArrayObject> e : arraySizes.entrySet()) {
             final Local local0 = e.getKey();
             final ArrayObject ao = e.getValue();
-            final Value t[] = new Value[ao.size];
-            for (Iterator<Stmt> it = ao.putItem.iterator(); it.hasNext();) {
-                Stmt p = it.next();
+            final Value[] t = new Value[ao.size];
+            for (Stmt p : ao.putItem) {
                 if (p.st == Stmt.ST.FILL_ARRAY_DATA) {
                     Local local = (Local) p.getOp1();
                     if (local == local0) {
@@ -210,6 +209,7 @@ public class FillArrayTransformer extends StatedTransformer {
                     Cfg.travelMod(stmt, tcb, false);
                 } else {
                     int size = filledArrayExprs.size();
+                    //noinspection ForLoopReplaceableByForEach
                     for (int i = 0; i < size; i++) {
                         Cfg.travelMod(filledArrayExprs.get(i), tcb);
                     }
@@ -308,7 +308,7 @@ public class FillArrayTransformer extends StatedTransformer {
                 return new ArrayObjectValue[size];
             }
 
-            ArrayObjectValue tmp[] = initFirstFrame(null);
+            final ArrayObjectValue[] tmp = initFirstFrame(null);
             Stmt currentStmt;
 
             @Override
@@ -424,7 +424,7 @@ public class FillArrayTransformer extends StatedTransformer {
             Local local = e.getKey();
             ArrayObject arrayObject = e.getValue();
             for (Stmt use : arrayObject.used) {
-                ArrayObjectValue frame[] = (ArrayObjectValue[]) use.frame;
+                ArrayObjectValue[] frame = (ArrayObjectValue[]) use.frame;
                 ArrayObjectValue aov = frame[local._ls_index];
                 BitSet pos = aov.pos;
                 if (pos.nextClearBit(0) < arrayObject.size || pos.nextSetBit(arrayObject.size) >= 0) {

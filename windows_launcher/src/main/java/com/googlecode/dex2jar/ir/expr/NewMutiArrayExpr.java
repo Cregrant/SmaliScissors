@@ -70,9 +70,7 @@ public class NewMutiArrayExpr extends EnExpr {
         for (Value op : ops) {
             sb.append('[').append(op).append(']');
         }
-        for (int i = ops.length; i < dimension; i++) {
-            sb.append("[]");
-        }
+        sb.append("[]".repeat(Math.max(0, dimension - ops.length)));
         return sb.toString();
     }
 

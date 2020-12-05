@@ -19,7 +19,6 @@ import com.googlecode.d2j.Method;
 import com.googlecode.d2j.Proto;
 import com.googlecode.dex2jar.ir.LabelAndLocalMapper;
 import com.googlecode.dex2jar.ir.Util;
-import com.googlecode.dex2jar.ir.expr.Value.EnExpr;
 
 /**
  * Represent a method invocation expression. To represent a {@link VT#INVOKE_INTERFACE},{@link VT#INVOKE_SPECIAL} or

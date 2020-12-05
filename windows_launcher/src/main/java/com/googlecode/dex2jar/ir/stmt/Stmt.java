@@ -15,12 +15,12 @@
  */
 package com.googlecode.dex2jar.ir.stmt;
 
-import java.util.Set;
-import java.util.TreeSet;
-
 import com.googlecode.dex2jar.ir.ET;
 import com.googlecode.dex2jar.ir.LabelAndLocalMapper;
 import com.googlecode.dex2jar.ir.expr.Value;
+
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Represent a statement
@@ -106,7 +106,7 @@ public abstract class Stmt {
 
     }
 
-    public static final int CAN_CONTINUE = 1 << 0;
+    public static final int CAN_CONTINUE = 1;
     public static final int CAN_BRNANCH = 1 << 1;
     public static final int CAN_SWITCH = 1 << 2;
     public static final int CAN_THROW = 1 << 3;
@@ -116,7 +116,7 @@ public abstract class Stmt {
      * Statement Type
      * 
      */
-    public static enum ST {
+    public enum ST {
 
         LOCAL_START(CAN_CONTINUE), // same as ASSIGN but left must keep and must be local
         LOCAL_END(CAN_CONTINUE), // must keep and op must be local
@@ -126,7 +126,7 @@ public abstract class Stmt {
         RETURN(MAY_THROW), RETURN_VOID(0), THROW(CAN_THROW), //
         GOTO(CAN_BRNANCH), IF(CAN_CONTINUE | CAN_BRNANCH | MAY_THROW), //
         LOOKUP_SWITCH(CAN_SWITCH | MAY_THROW), TABLE_SWITCH(CAN_SWITCH | MAY_THROW), ;
-        private int config;
+        private final int config;
 
         ST(int config) {
             this.config = config;
@@ -261,6 +261,4 @@ public abstract class Stmt {
     public void setOp2(Value op) {
     }
 
-    public void setOps(Value[] op) {
-    }
 }

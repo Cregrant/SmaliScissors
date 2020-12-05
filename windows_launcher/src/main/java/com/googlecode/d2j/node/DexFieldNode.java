@@ -68,7 +68,7 @@ public class DexFieldNode extends DexFieldVisitor {
     @Override
     public DexAnnotationVisitor visitAnnotation(String name, Visibility visibility) {
         if (anns == null) {
-            anns = new ArrayList<DexAnnotationNode>(5);
+            anns = new ArrayList<>(5);
         }
         DexAnnotationNode annotation = new DexAnnotationNode(name, visibility);
         anns.add(annotation);

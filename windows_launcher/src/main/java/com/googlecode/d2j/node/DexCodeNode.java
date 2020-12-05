@@ -28,7 +28,7 @@ import com.googlecode.d2j.visitors.DexMethodVisitor;
 
 public class DexCodeNode extends DexCodeVisitor {
 
-    public List<DexStmtNode> stmts = new ArrayList<DexStmtNode>();
+    public List<DexStmtNode> stmts = new ArrayList<>();
     public List<TryCatchNode> tryStmts = null;
     public DexDebugNode debugNode;
     public int totalRegister = -1;

@@ -53,11 +53,9 @@ public class DexFileWriter extends DexFileVisitor {
                         && method.getParameterTypes()[0]
                         .equals(String.class)) {
                     StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < indent; i++) {
-                        sb.append("  ");
-                    }
+                    sb.append("  ".repeat(Math.max(0, indent)));
                     sb.append(String.format("%05d ", out0.offset()));
-                    sb.append(method.getName() + " [");
+                    sb.append(method.getName()).append(" [");
                     for (Object arg : args) {
                         if (arg instanceof byte[]) {
                             byte[] data = (byte[]) arg;
@@ -126,7 +124,7 @@ public class DexFileWriter extends DexFileVisitor {
         headItem = new HeadItem();
         SectionItem<HeadItem> headSection = new SectionItem<>(SectionType.TYPE_HEADER_ITEM);
         headSection.items.add(headItem);
-        SectionItem<MapListItem> mapSection = new SectionItem<MapListItem>(SectionType.TYPE_MAP_LIST);
+        SectionItem<MapListItem> mapSection = new SectionItem<>(SectionType.TYPE_MAP_LIST);
         mapSection.items.add(mapItem);
         SectionItem<StringIdItem> stringIdSection = new SectionItem<>(
                 SectionType.TYPE_STRING_ID_ITEM, cp.strings.values());

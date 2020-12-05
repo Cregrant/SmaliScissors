@@ -21,6 +21,7 @@ import com.googlecode.d2j.node.DexFileNode;
 import com.googlecode.d2j.node.DexMethodNode;
 import com.googlecode.d2j.reader.BaseDexFileReader;
 import com.googlecode.d2j.reader.DexFileReader;
+import com.googlecode.d2j.reader.zip.ZipUtil;
 import com.googlecode.dex2jar.ir.IrMethod;
 import com.googlecode.dex2jar.ir.stmt.LabelStmt;
 import com.googlecode.dex2jar.ir.stmt.Stmt;
@@ -29,7 +30,10 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,20 +42,43 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Dex2jar {
+    public static Dex2jar from(byte[] in) throws IOException {
+        return from(new DexFileReader(ZipUtil.readDex(in)));
+    }
+
+    public static Dex2jar from(ByteBuffer in) {
+        return from(new DexFileReader(in));
+    }
+
+    public static Dex2jar from(BaseDexFileReader reader) {
+        return new Dex2jar(reader);
+    }
+
+    public static Dex2jar from(File in) throws IOException {
+        return from(Files.readAllBytes(in.toPath()));
+    }
+
+    public static Dex2jar from(InputStream in) throws IOException {
+        return from(new DexFileReader(in));
+    }
+
+    public static Dex2jar from(String in) throws IOException {
+        return from(new File(in));
+    }
 
     private DexExceptionHandler exceptionHandler;
+
     final private BaseDexFileReader reader;
     private int readerConfig;
     private int v3Config;
 
-    public Dex2jar(BaseDexFileReader reader) {
+    private Dex2jar(BaseDexFileReader reader) {
         super();
         this.reader = reader;
         readerConfig |= DexFileReader.SKIP_DEBUG;
     }
 
     private void doTranslate(final Path dist) {
-
         DexFileNode fileNode = new DexFileNode();
         try {
             reader.accept(fileNode, readerConfig | DexFileReader.IGNORE_READ_EXCEPTION);
@@ -104,6 +131,7 @@ public class Dex2jar {
             @Override
             public void optimize(IrMethod irMethod) {
                 T_cleanLabel.transform(irMethod);
+                // T_topologicalSort.transform(irMethod);
                 T_deadCode.transform(irMethod);
                 T_removeLocal.transform(irMethod);
                 T_removeConst.transform(irMethod);
@@ -142,6 +170,10 @@ public class Dex2jar {
 
     }
 
+    public DexExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
+
     public BaseDexFileReader getReader() {
         return reader;
     }
@@ -151,6 +183,15 @@ public class Dex2jar {
             this.v3Config |= V3.REUSE_REGISTER;
         } else {
             this.v3Config &= ~V3.REUSE_REGISTER;
+        }
+        return this;
+    }
+
+    public Dex2jar topoLogicalSort(boolean b) {
+        if (b) {
+            this.v3Config |= V3.TOPOLOGICAL_SORT;
+        } else {
+            this.v3Config &= ~V3.TOPOLOGICAL_SORT;
         }
         return this;
     }
@@ -178,6 +219,39 @@ public class Dex2jar {
             this.v3Config |= V3.PRINT_IR;
         } else {
             this.v3Config &= ~V3.PRINT_IR;
+        }
+        return this;
+    }
+
+    public Dex2jar reUseReg() {
+        this.v3Config |= V3.REUSE_REGISTER;
+        return this;
+    }
+
+    public Dex2jar optimizeSynchronized() {
+        this.v3Config |= V3.OPTIMIZE_SYNCHRONIZED;
+        return this;
+    }
+
+    public Dex2jar printIR() {
+        this.v3Config |= V3.PRINT_IR;
+        return this;
+    }
+
+    public Dex2jar topoLogicalSort() {
+        this.v3Config |= V3.TOPOLOGICAL_SORT;
+        return this;
+    }
+
+    public void setExceptionHandler(DexExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
+
+    public Dex2jar skipDebug(boolean b) {
+        if (b) {
+            this.readerConfig |= DexFileReader.SKIP_DEBUG;
+        } else {
+            this.readerConfig &= ~DexFileReader.SKIP_DEBUG;
         }
         return this;
     }

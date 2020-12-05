@@ -21,7 +21,7 @@ public class Types {
             throw new DexException("not a validate Method Desc %s", desc);
         }
         List<String> ps = listDesc(desc.substring(1, x - 1));
-        return ps.toArray(new String[ps.size()]);
+        return ps.toArray(new String[0]);
     }
 
     /**
@@ -94,7 +94,7 @@ public class Types {
 
     public static Object[] buildDexStyleSignature(String signature) {
         int rawLength = signature.length();
-        ArrayList<String> pieces = new ArrayList<String>(20);
+        ArrayList<String> pieces = new ArrayList<>(20);
 
         for (int at = 0; at < rawLength; /* at */) {
             char c = signature.charAt(at);
@@ -125,7 +125,7 @@ public class Types {
             pieces.add(signature.substring(at, endAt));
             at = endAt;
         }
-        return pieces.toArray(new Object[pieces.size()]);
+        return pieces.toArray(new Object[0]);
     }
 
 }

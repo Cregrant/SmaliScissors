@@ -31,7 +31,7 @@ import com.googlecode.d2j.visitors.DexAnnotationVisitor;
  */
 public class DexAnnotationNode extends DexAnnotationVisitor {
     private abstract static class AV extends DexAnnotationVisitor {
-        List<Object> objs = new ArrayList<Object>();
+        List<Object> objs = new ArrayList<>();
 
         @Override
         public void visit(String name, Object value) {
@@ -109,7 +109,7 @@ public class DexAnnotationNode extends DexAnnotationVisitor {
         }
     }
 
-    public List<Item> items = new ArrayList<Item>(5);
+    public List<Item> items = new ArrayList<>(5);
 
     public String type;
     public Visibility visibility;

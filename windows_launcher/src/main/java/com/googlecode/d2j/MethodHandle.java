@@ -15,6 +15,8 @@
  */
 package com.googlecode.d2j;
 
+import java.util.Objects;
+
 public class MethodHandle {
     public static final int STATIC_PUT = 0x00;
     public static final int STATIC_GET = 0x01;
@@ -26,7 +28,7 @@ public class MethodHandle {
     public static final int INVOKE_DIRECT = 0x07;
     public static final int INVOKE_INTERFACE = 0x08;
 
-    private int type;
+    private final int type;
     private Field field;
     private Method method;
 
@@ -54,8 +56,8 @@ public class MethodHandle {
         MethodHandle that = (MethodHandle) o;
 
         if (type != that.type) return false;
-        if (field != null ? !field.equals(that.field) : that.field != null) return false;
-        return method != null ? method.equals(that.method) : that.method == null;
+        if (!Objects.equals(field, that.field)) return false;
+        return Objects.equals(method, that.method);
     }
 
     @Override

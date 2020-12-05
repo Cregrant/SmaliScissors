@@ -16,7 +16,6 @@
 package com.googlecode.dex2jar.ir.stmt;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 
 import com.googlecode.dex2jar.ir.LabelAndLocalMapper;
@@ -55,7 +54,6 @@ public class StmtList implements Iterable<Stmt>, java.util.Comparator<Stmt> {
             if (x != null) {
                 next = x.next;
             } else {
-                next = null;
             }
             return x;
         }
@@ -185,7 +183,7 @@ public class StmtList implements Iterable<Stmt>, java.util.Comparator<Stmt> {
     @Override
     public Iterator<Stmt> iterator() {
         return new StmtListIterator(this, first);
-    };
+    }
 
     public void remove(Stmt stmt) {
         if (stmt.list == this) {

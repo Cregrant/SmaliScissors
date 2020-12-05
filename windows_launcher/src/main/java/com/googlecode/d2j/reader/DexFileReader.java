@@ -20,9 +20,11 @@ import com.googlecode.d2j.node.DexAnnotationNode;
 import com.googlecode.d2j.util.Mutf8;
 import com.googlecode.d2j.visitors.*;
 
-import java.io.UTFDataFormatException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 import static com.googlecode.d2j.DexConstants.DEX_035;
@@ -74,6 +76,8 @@ public class DexFileReader implements BaseDexFileReader {
      * keep clinit method when {@link #SKIP_DEBUG}
      */
     public static final int SKIP_EXCEPTION = 1 << 8;
+
+    // private static final int REVERSE_ENDIAN_CONSTANT = 0x78563412;
 
     static final int DBG_END_SEQUENCE = 0x00;
     static final int DBG_ADVANCE_PC = 0x01;
@@ -140,10 +144,26 @@ public class DexFileReader implements BaseDexFileReader {
     final int method_handle_ids_size;
     final int dex_version;
 
+    /**
+     * read dex from a {@link ByteBuffer}.
+     * 
+     * @param in
+     */
     public DexFileReader(ByteBuffer in) {
         in.position(0);
         in = in.asReadOnlyBuffer().order(ByteOrder.BIG_ENDIAN);
+        int magic = in.getInt() & 0xFFFFFF00;
 
+        final int MAGIC_DEX = 0x6465780A & 0xFFFFFF00;// hex for 'dex ', ignore the 0A
+        final int MAGIC_ODEX = 0x6465790A & 0xFFFFFF00;// hex for 'dey ', ignore the 0A
+
+        if (magic != MAGIC_DEX) {
+            if (magic == MAGIC_ODEX) {
+                throw new DexException("Not support odex");
+            } else {
+                throw new DexException("not support magic.");
+            }
+        }
         int version = in.getInt() >> 8;
         if (version < DEX_035) {
             throw new DexException("not support version.");
@@ -237,9 +257,28 @@ public class DexFileReader implements BaseDexFileReader {
      * 
      * @param data
      *            the byte array of dex
+     * @return
      */
     public DexFileReader(byte[] data) {
         this(ByteBuffer.wrap(data));
+    }
+
+    /**
+     * 
+     * @param file
+     *            the dex file
+     * @throws IOException
+     */
+    public DexFileReader(File file) throws IOException {
+        this(file.toPath());
+    }
+
+    public DexFileReader(Path file) throws IOException {
+        this(Files.readAllBytes(file));
+    }
+
+    public DexFileReader(InputStream is) throws IOException {
+        this(toByteArray(is));
     }
 
     /**
@@ -251,6 +290,15 @@ public class DexFileReader implements BaseDexFileReader {
     private static int readStringIndex(ByteBuffer bs) {
         int offsetIndex = readULeb128i(bs);
         return offsetIndex - 1;
+    }
+
+    private static byte[] toByteArray(InputStream is) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buff = new byte[1024];
+        for (int c = is.read(buff); c > 0; c = is.read(buff)) {
+            out.write(buff, 0, c);
+        }
+        return out.toByteArray();
     }
 
     private static ByteBuffer slice(ByteBuffer in, int offset, int length) {
@@ -267,9 +315,7 @@ public class DexFileReader implements BaseDexFileReader {
 
     public static void niceExceptionMessage(Throwable t, int deep) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < deep + 1; i++) {
-            sb.append(".");
-        }
+        sb.append(".".repeat(Math.max(0, deep + 1)));
         sb.append(' ');
         if (t instanceof DexException) {
             sb.append(t.getMessage());
@@ -496,9 +542,7 @@ public class DexFileReader implements BaseDexFileReader {
                 dcv.visitEpiogue(labelMap.get(address));
                 break;
             case DBG_SET_FILE:
-                // skip
                 break;
-
             default:
                 int adjopcode = opcode - DBG_FIRST_SPECIAL;
                 address += adjopcode / DBG_LINE_RANGE;
@@ -506,6 +550,7 @@ public class DexFileReader implements BaseDexFileReader {
                 order(labelMap, address);
                 dcv.visitLineNumber(line, labelMap.get(address));
                 break;
+
             }
         }
     }
@@ -517,6 +562,8 @@ public class DexFileReader implements BaseDexFileReader {
 
     /**
      * equals to {@link #accept(DexFileVisitor, int)} with 0 as config
+     * 
+     * @param dv
      */
     @Override
     public void accept(DexFileVisitor dv) {
@@ -578,6 +625,7 @@ public class DexFileReader implements BaseDexFileReader {
         int static_values_off = classDefIn.getInt();
 
         String className = getType(class_idx);
+        if(ignoreClass(className)) return;
         String superClassName = getType(superclass_idx);
         String[] interfaceNames = getTypeList(interfaces_off);
         try {
@@ -595,6 +643,10 @@ public class DexFileReader implements BaseDexFileReader {
                 throw dexException;
             }
         }
+    }
+
+    public Boolean ignoreClass(String className){
+       return false;
     }
 
     private Object readEncodedValue(ByteBuffer in) {
@@ -640,7 +692,6 @@ public class DexFileReader implements BaseDexFileReader {
         case VALUE_METHOD: {
             int method_id = (int) readUIntBits(in, b);
             return getMethod(method_id);
-
         }
         case VALUE_ENUM: {
             return getField((int) readUIntBits(in, b));
@@ -687,10 +738,8 @@ public class DexFileReader implements BaseDexFileReader {
 
     private void acceptClass(DexClassVisitor dcv, int source_file_idx, int annotations_off, int class_data_off,
             int static_values_off, int config) {
-        if ((config & SKIP_DEBUG) == 0) {
-            if (source_file_idx != -1) {
-                dcv.visitSource(this.getString(source_file_idx));
-            }
+        if ((config & SKIP_DEBUG) == 0 && source_file_idx != -1) {
+            dcv.visitSource(this.getString(source_file_idx));
         }
 
         Map<Integer, Integer> fieldAnnotationPositions;
@@ -701,9 +750,7 @@ public class DexFileReader implements BaseDexFileReader {
             methodAnnotationPositions = new HashMap<>();
             paramAnnotationPositions = new HashMap<>();
             if (annotations_off != 0) { // annotations_directory_item
-
                 annotationsDirectoryItemIn.position(annotations_off);
-
                 int class_annotations_off = annotationsDirectoryItemIn.getInt();
                 int field_annotation_size = annotationsDirectoryItemIn.getInt();
                 int method_annotation_size = annotationsDirectoryItemIn.getInt();
@@ -1019,6 +1066,15 @@ public class DexFileReader implements BaseDexFileReader {
         }
     }
 
+    /**
+     * the size of class in dex file
+     * 
+     * @return class_defs_size
+     */
+    public final int getClassSize() {
+        return class_defs_size;
+    }
+
     static class BadOpException extends RuntimeException{
         public BadOpException(String fmt,Object ...args){
             super(String.format(fmt,args));
@@ -1056,8 +1112,7 @@ public class DexFileReader implements BaseDexFileReader {
             throw new IndexOutOfBoundsException();
         }
         int opcode = 0xFF & insns[u1offset];
-        Op op;
-        op = Op.ops[opcode];
+        Op op = Op.ops[opcode];
         if (op == null || op.format == null) {
             throw new BadOpException("zero-width instruction op=0x%02x", opcode);
         }
@@ -1282,7 +1337,7 @@ public class DexFileReader implements BaseDexFileReader {
         }
     }
 
-    /* package */void acceptCode(int code_off, DexCodeVisitor dcv, int config, boolean isStatic, Method method) {
+    void acceptCode(int code_off, DexCodeVisitor dcv, int config, boolean isStatic, Method method) {
         ByteBuffer in = codeItemIn;
         in.position(code_off);
         int registers_size = 0xFFFF & in.getShort();
@@ -1298,7 +1353,6 @@ public class DexFileReader implements BaseDexFileReader {
         BitSet nextInsn = new BitSet();
         Map<Integer, DexLabel> labelsMap = new TreeMap<>();
         Set<Integer> handlers = new HashSet<>();
-        // 处理异常处理
         if (tries_size > 0) {
             if ((insns & 0x01) != 0) {// skip padding
                 in.getShort();
@@ -1307,7 +1361,6 @@ public class DexFileReader implements BaseDexFileReader {
                 findTryCatch(in, dcv, tries_size, insns, labelsMap, handlers);
             }
         }
-        // 处理debug信息
         if (debug_info_off != 0 && (0 == (config & SKIP_DEBUG))) {
             DexDebugVisitor ddv = dcv.visitDebug();
             if (ddv != null) {
@@ -1322,7 +1375,6 @@ public class DexFileReader implements BaseDexFileReader {
         dcv.visitEnd();
     }
 
-    // 处理指令
     private void acceptInsn(byte[] insns, DexCodeVisitor dcv, BitSet nextInsn, BitSet badOps, Map<Integer, DexLabel> labelsMap) {
         Iterator<Integer> labelOffsetIterator = labelsMap.keySet().iterator();
         Integer nextLabelOffset = labelOffsetIterator.hasNext() ? labelOffsetIterator.next() : null;

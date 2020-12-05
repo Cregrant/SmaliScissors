@@ -261,7 +261,7 @@ public enum Op implements CFG {
     /* package */InstructionIndexType indexType;
     /* package */int flags;
     public String displayName;
-    public final static Op ops[] = new Op[256];
+    public final static Op[] ops = new Op[256];
     public boolean changeFrame;
     static {
         Op[] ops = Op.ops;

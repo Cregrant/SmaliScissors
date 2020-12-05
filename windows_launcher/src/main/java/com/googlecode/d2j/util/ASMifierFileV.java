@@ -15,6 +15,11 @@
  */
 package com.googlecode.d2j.util;
 
+import com.googlecode.d2j.reader.DexFileReader;
+import com.googlecode.d2j.reader.zip.ZipUtil;
+import com.googlecode.d2j.visitors.DexClassVisitor;
+import com.googlecode.d2j.visitors.DexFileVisitor;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,11 +27,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.googlecode.d2j.reader.DexFileReader;
-import com.googlecode.d2j.reader.zip.ZipUtil;
-import com.googlecode.d2j.visitors.DexClassVisitor;
-import com.googlecode.d2j.visitors.DexFileVisitor;
+import java.util.Objects;
 
 /**
  * similar with org.objectweb.asm.util.ASMifierClassVisitor
@@ -40,7 +41,7 @@ public class ASMifierFileV extends DexFileVisitor {
     ArrayOut file = new ArrayOut();
     int i = 0;
 
-    public static void doData(byte[] data, Path destdir) throws IOException {
+    public static void doData(byte[] data, Path destdir) {
         new DexFileReader(data).accept(new ASMifierFileV(destdir, null));
     }
 
@@ -66,11 +67,7 @@ public class ASMifierFileV extends DexFileVisitor {
 
     public ASMifierFileV(Path dir, String pkgName) {
         super();
-        if (dir == null) {
-            this.dir = new File(".").toPath();
-        } else {
-            this.dir = dir;
-        }
+        this.dir = Objects.requireNonNullElseGet(dir, () -> new File(".").toPath());
         if (pkgName != null) {
             this.pkgName = pkgName;
         }
@@ -86,13 +83,11 @@ public class ASMifierFileV extends DexFileVisitor {
 
     static void write(ArrayOut out, Path file) {
         StringBuilder sb = new StringBuilder();
-        List<String> list = new ArrayList<String>(out.array.size());
+        List<String> list = new ArrayList<>(out.array.size());
         for (int i = 0; i < out.array.size(); i++) {
             sb.setLength(0);
             int p = out.is.get(i);
-            for (int j = 0; j < p; j++) {
-                sb.append("    ");
-            }
+            sb.append("    ".repeat(Math.max(0, p)));
             sb.append(out.array.get(i));
             list.add(sb.toString());
         }

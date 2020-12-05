@@ -29,7 +29,7 @@ public class Dex2Asm {
 
         void addInner(Clz clz) {
             if (inners == null) {
-                inners = new HashSet<Clz>();
+                inners = new HashSet<>();
             }
             inners.add(clz);
         }
@@ -44,11 +44,8 @@ public class Dex2Asm {
                 return false;
             Clz other = (Clz) obj;
             if (name == null) {
-                if (other.name != null)
-                    return false;
-            } else if (!name.equals(other.name))
-                return false;
-            return true;
+                return other.name == null;
+            } else return name.equals(other.name);
         }
 
         @Override
@@ -70,7 +67,6 @@ public class Dex2Asm {
             | DexConstants.ACC_ANNOTATION;
 
     protected static final CleanLabel T_cleanLabel = new CleanLabel();
-    protected static final EndRemover T_endRemove = new EndRemover();
     protected static final Ir2JRegAssignTransformer T_ir2jRegAssign = new Ir2JRegAssignTransformer();
     protected static final NewTransformer T_new = new NewTransformer();
     protected static final RemoveConstantFromSSA T_removeConst = new RemoveConstantFromSSA();
@@ -224,7 +220,7 @@ public class Dex2Asm {
     }
 
     private static MethodVisitor collectBasicMethodInfo(DexMethodNode methodNode, ClassVisitor cv) {
-        String xthrows[] = null;
+        String[] xthrows = null;
         String signature = null;
         if (methodNode.anns != null) {
             for (DexAnnotationNode ann : methodNode.anns) {
@@ -274,7 +270,7 @@ public class Dex2Asm {
                         switch (ann.type) {
                         case DexConstants.ANNOTATION_ENCLOSING_CLASS_TYPE: {
                             DexType type = (DexType) findAnnotationAttribute(ann, "value");
-                            Clz enclosingClass = get(classes, type.desc);
+                            Clz enclosingClass = get(classes, Objects.requireNonNull(type).desc);
                             clz.enclosingClass = enclosingClass;
 
                             // apply patch from ChaeHoon Lim,
@@ -289,7 +285,7 @@ public class Dex2Asm {
                             break;
                         case DexConstants.ANNOTATION_ENCLOSING_METHOD_TYPE: {
                             Method m = (Method) findAnnotationAttribute(ann, "value");
-                            Clz enclosingClass = get(classes, m.getOwner());
+                            Clz enclosingClass = get(classes, Objects.requireNonNull(m).getOwner());
                             clz.enclosingClass = enclosingClass;
                             clz.enclosingMethod = m;
                             enclosingClass.addInner(clz);
@@ -306,8 +302,8 @@ public class Dex2Asm {
                         }
                             break;
                         case DexConstants.ANNOTATION_MEMBER_CLASSES_TYPE: {
-                            Object ts[] = (Object[]) findAnnotationAttribute(ann, "value");
-                            for (Object v : ts) {
+                            Object[] ts = (Object[]) findAnnotationAttribute(ann, "value");
+                            for (Object v : Objects.requireNonNull(ts)) {
                                 DexType type = (DexType) v;
                                 Clz inner = get(classes, type.desc);
                                 clz.addInner(inner);
@@ -331,7 +327,7 @@ public class Dex2Asm {
         convertClass(DexConstants.DEX_035, classNode, cvf);
     }
     public void convertClass(int dexVersion, DexClassNode classNode, ClassVisitorFactory cvf) {
-        convertClass(dexVersion, classNode, cvf, new HashMap<String, Clz>());
+        convertClass(dexVersion, classNode, cvf, new HashMap<>());
     }
 
     private static boolean isJavaIdentifier(String str) {
@@ -367,8 +363,7 @@ public class Dex2Asm {
         if (classNode.anns != null) {
             for (DexAnnotationNode ann : classNode.anns) {
                 if (ann.visibility == Visibility.SYSTEM) {
-                    switch (ann.type) {
-                    case DexConstants.ANNOTATION_SIGNATURE_TYPE: {
+                    if (DexConstants.ANNOTATION_SIGNATURE_TYPE.equals(ann.type)) {
                         Object[] strs = (Object[]) findAnnotationAttribute(ann, "value");
                         if (strs != null) {
                             StringBuilder sb = new StringBuilder();
@@ -378,12 +373,10 @@ public class Dex2Asm {
                             signature = sb.toString();
                         }
                     }
-                        break;
-                    }
                 }
             }
         }
-        String interfaceInterNames[] = null;
+        String[] interfaceInterNames = null;
         if (classNode.interfaceNames != null) {
             interfaceInterNames = new String[classNode.interfaceNames.length];
             for (int i = 0; i < classNode.interfaceNames.length; i++) {
@@ -403,7 +396,7 @@ public class Dex2Asm {
         cv.visit(version, access, toInternalName(classNode.className), signature,
                 classNode.superClass == null ? null : toInternalName(classNode.superClass), interfaceInterNames);
 
-        List<InnerClassNode> innerClassNodes = new ArrayList<InnerClassNode>(5);
+        List<InnerClassNode> innerClassNodes = new ArrayList<>(5);
         if (clzInfo != null) {
             searchInnerClass(clzInfo, innerClassNodes, classNode.className);
         }
@@ -421,7 +414,7 @@ public class Dex2Asm {
             }
             searchEnclosing(clzInfo, innerClassNodes);
         }
-        Collections.sort(innerClassNodes, INNER_CLASS_NODE_COMPARATOR);
+        innerClassNodes.sort(INNER_CLASS_NODE_COMPARATOR);
         for (InnerClassNode icn : innerClassNodes) {
             if (icn.innerName != null && !isJavaIdentifier(icn.innerName)) {
                 System.err.println("WARN: ignored invalid inner class name " + ", treat as anonymous inner class.");
@@ -466,8 +459,7 @@ public class Dex2Asm {
         if (fieldNode.anns != null) {
             for (DexAnnotationNode ann : fieldNode.anns) {
                 if (ann.visibility == Visibility.SYSTEM) {
-                    switch (ann.type) {
-                    case DexConstants.ANNOTATION_SIGNATURE_TYPE: {
+                    if (DexConstants.ANNOTATION_SIGNATURE_TYPE.equals(ann.type)) {
                         Object[] strs = (Object[]) findAnnotationAttribute(ann, "value");
                         if (strs != null) {
                             StringBuilder sb = new StringBuilder();
@@ -476,8 +468,6 @@ public class Dex2Asm {
                             }
                             signature = sb.toString();
                         }
-                    }
-                        break;
                     }
                 }
             }
@@ -748,11 +738,6 @@ public class Dex2Asm {
         }
     }
 
-    private static final Comparator<InnerClassNode> INNER_CLASS_NODE_COMPARATOR = new Comparator<InnerClassNode>() {
-        @Override
-        public int compare(InnerClassNode o1, InnerClassNode o2) {
-            return o1.name.compareTo(o2.name);
-        }
-    };
+    private static final Comparator<InnerClassNode> INNER_CLASS_NODE_COMPARATOR = Comparator.comparing(o -> o.name);
 
 }

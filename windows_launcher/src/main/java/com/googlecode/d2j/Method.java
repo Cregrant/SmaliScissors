@@ -15,7 +15,7 @@
  */
 package com.googlecode.d2j;
 
-import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * represent a method_id_item in dex file format
@@ -27,15 +27,15 @@ public class Method {
     /**
      * name of the method.
      */
-    private String name;
+    private final String name;
     /**
      * owner class of the method, in TypeDescriptor format.
      */
-    private String owner;
+    private final String owner;
     /**
      * parameter types of the method, in TypeDescriptor format.
      */
-    private Proto proto;
+    private final Proto proto;
 
     public Proto getProto() {
         return proto;
@@ -87,8 +87,8 @@ public class Method {
 
         Method method = (Method) o;
 
-        if (name != null ? !name.equals(method.name) : method.name != null) return false;
-        if (owner != null ? !owner.equals(method.owner) : method.owner != null) return false;
+        if (!Objects.equals(name, method.name)) return false;
+        if (!Objects.equals(owner, method.owner)) return false;
         return proto.equals(method.proto);
     }
 

@@ -18,7 +18,7 @@ public class AggTransformer extends StatedTransformer {
 
         Set<Stmt> locationSensitiveStmts = new HashSet<>();
         // 1. merge location Insensitive stmts
-        changed = simpleMergeLocals(method, changed, locationSensitiveStmts);
+        changed = simpleMergeLocals(method, false, locationSensitiveStmts);
 
         if (locationSensitiveStmts.size() == 0) {
             return changed;
@@ -108,8 +108,8 @@ public class AggTransformer extends StatedTransformer {
         throw FAIL;
     }
 
-    private static MergeResult FAIL = new MergeResult();
-    private static MergeResult SUCCESS = new MergeResult();
+    private static final MergeResult FAIL = new MergeResult();
+    private static final MergeResult SUCCESS = new MergeResult();
 
     /**
      * dfs searching, if local is appear before first location-insensitive value, throws SUCCESS, or throws FAIL

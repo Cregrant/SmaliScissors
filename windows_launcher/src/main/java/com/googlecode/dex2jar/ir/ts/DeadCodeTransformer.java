@@ -68,8 +68,8 @@ public class DeadCodeTransformer implements Transformer {
                             labelStmts.add(t.handlers[i]);
                             types.add(t.types[i]);
                         }
-                        t.handlers = labelStmts.toArray(new LabelStmt[labelStmts.size()]);
-                        t.types = types.toArray(new String[types.size()]);
+                        t.handlers = labelStmts.toArray(new LabelStmt[0]);
+                        t.types = types.toArray(new String[0]);
                     }
                 }
             }
@@ -106,8 +106,7 @@ public class DeadCodeTransformer implements Transformer {
         method.locals.addAll(definedLocals);
         Set<Value> tmp = new HashSet<>();
         if (method.phiLabels != null) {
-            for (Iterator<LabelStmt> it = method.phiLabels.iterator(); it.hasNext();) {
-                LabelStmt labelStmt = it.next();
+            for (LabelStmt labelStmt : method.phiLabels) {
                 if (labelStmt.phis != null) {
                     for (AssignStmt phi : labelStmt.phis) {
                         PhiExpr phiExpr = (PhiExpr) phi.getOp2();
@@ -124,7 +123,7 @@ public class DeadCodeTransformer implements Transformer {
                                     tmp.add(v);
                                 }
                             }
-                            phiExpr.setOps(tmp.toArray(new Value[tmp.size()]));
+                            phiExpr.setOps(tmp.toArray(new Value[0]));
                             tmp.clear();
                         }
                     }

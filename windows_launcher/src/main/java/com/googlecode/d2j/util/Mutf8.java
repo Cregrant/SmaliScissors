@@ -64,7 +64,7 @@ public final class Mutf8 {
     /**
      * Returns the number of bytes the modified UTF8 representation of 's' would take.
      */
-    private static long countBytes(String s, boolean shortLength) throws UTFDataFormatException {
+    private static long countBytes(String s) throws UTFDataFormatException {
         long result = 0;
         final int length = s.length();
         for (int i = 0; i < length; ++i) {
@@ -76,7 +76,7 @@ public final class Mutf8 {
             } else {
                 result += 3;
             }
-            if (shortLength && result > 65535) {
+            if (result > 65535) {
                 throw new UTFDataFormatException("String more than 65535 UTF bytes long");
             }
         }
@@ -107,7 +107,7 @@ public final class Mutf8 {
      * Returns an array containing the <i>modified UTF-8</i> form of {@code s}.
      */
     public static byte[] encode(String s) throws UTFDataFormatException {
-        int utfCount = (int) countBytes(s, true);
+        int utfCount = (int) countBytes(s);
         byte[] result = new byte[utfCount];
         encode(result, 0, s);
         return result;

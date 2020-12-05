@@ -43,7 +43,7 @@ public class LookupSwitchStmt extends BaseSwitchStmt {
         for (int i = 0; i < nTargets.length; i++) {
             nTargets[i] = mapper.map(targets[i]);
         }
-        int nLookupValues[] = new int[lookupValues.length];
+        int[] nLookupValues = new int[lookupValues.length];
         System.arraycopy(lookupValues, 0, nLookupValues, 0, nLookupValues.length);
 
         return new LookupSwitchStmt(op.clone(mapper), nLookupValues, nTargets, mapper.map(defaultTarget));

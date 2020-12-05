@@ -193,7 +193,7 @@ public class ConstTransformer implements Transformer {
     }
 
     static class ConstAnalyzeValue {
-        private static final Integer ZERO = Integer.valueOf(0);
+        private static final Integer ZERO = 0;
         public final Local local;
         public Boolean isConst = null;
         public boolean replacable = false;

@@ -69,9 +69,8 @@ public class FixVar implements Transformer {
                     irMethod.stmts.insertBefore(var.start, Stmts.nAssign(n, old));
                     var.reg = n;
                     irMethod.locals.add(n);
-                } else {
-                    // throw new DexExcpeption("not support");
-                }
+                }  // throw new DexExcpeption("not support");
+
             }
         }
     }

@@ -141,7 +141,7 @@ public class NpeTransformer extends StatedTransformer {
                 case INVOKE_VIRTUAL:
                 case INVOKE_SPECIAL:
                 case INVOKE_INTERFACE: {
-                    Value ops[] = op.getOps();
+                    Value[] ops = op.getOps();
                     if (isNull(ops[0])) {
                         for (int i = 1; i < ops.length; i++) {
                             travel(ops[i]);

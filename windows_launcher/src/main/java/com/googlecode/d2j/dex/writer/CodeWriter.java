@@ -37,7 +37,7 @@ public class CodeWriter extends DexCodeVisitor {
     final CodeItem codeItem;
     final ConstPool cp;
     ByteBuffer b = ByteBuffer.allocate(10).order(ByteOrder.LITTLE_ENDIAN);
-    int in_reg_size = 0;
+    int in_reg_size;
     int max_out_reg_size = 0;
     List<Insn> ops = new ArrayList<>();
     List<Insn> tailOps = new ArrayList<>();
@@ -273,6 +273,7 @@ public class CodeWriter extends DexCodeVisitor {
         return copy(b);
     }
 
+    // op AAAA BBBB
     private byte[] build32x(Op op, int vAAAA, int vBBBB) {
         checkRegAAAA(op, "vAAAA", vAAAA);
         checkRegAAAA(op, "vBBBB", vBBBB);
@@ -431,23 +432,7 @@ public class CodeWriter extends DexCodeVisitor {
         if (codeItem.debugInfo != null) {
             cp.addDebugInfoItem(codeItem.debugInfo);
             List<DebugInfoItem.DNode> debugNodes = codeItem.debugInfo.debugNodes;
-            Collections.sort(debugNodes, new Comparator<DebugInfoItem.DNode>() {
-                @Override
-                public int compare(DebugInfoItem.DNode o1, DebugInfoItem.DNode o2) {
-                    int x = o1.label.offset - o2.label.offset;
-                    // if (x == 0) {
-                    // if (o1.op == o2.op) {
-                    // x = o1.reg - o2.reg;
-                    // if (x == 0) {
-                    // x = o1.line - o2.line;
-                    // }
-                    // } else {
-                    // //
-                    // }
-                    // }
-                    return x;
-                }
-            });
+            debugNodes.sort(Comparator.comparingInt(o -> o.label.offset));
         }
 
         ops = null;
@@ -511,8 +496,8 @@ public class CodeWriter extends DexCodeVisitor {
             public void write(ByteBuffer out) {
                 out.putShort((short) 0x0100).putShort((short) labels.length).putInt(first_case);
 
-                for (int i = 0; i < labels.length; i++) {
-                    out.putInt(getLabel(labels[i]).offset - jumpOp.offset);
+                for (DexLabel label : labels) {
+                    out.putInt(getLabel(label).offset - jumpOp.offset);
                 }
             }
         });
@@ -540,8 +525,8 @@ public class CodeWriter extends DexCodeVisitor {
             @Override
             public void write(ByteBuffer out) {
                 out.putShort((short) 0x0200).putShort((short) cases.length);
-                for (int i = 0; i < cases.length; i++) {
-                    out.putInt(cases[i]);
+                for (int aCase : cases) {
+                    out.putInt(aCase);
                 }
                 for (int i = 0; i < cases.length; i++) {
                     out.putInt(getLabel(labels[i]).offset - jumpOp.offset);
@@ -558,9 +543,8 @@ public class CodeWriter extends DexCodeVisitor {
         } else {
             if (op.format == kFmt10x) {
                 ops.add(new PreBuildInsn(build10x(op)));
-            } else {
-                // FIXME error
-            }
+            }  // FIXME error
+
         }
     }
 
@@ -574,7 +558,6 @@ public class CodeWriter extends DexCodeVisitor {
     public void visitStmt1R(Op op, int reg) {
         if (op.format == kFmt11x) {
             ops.add(new PreBuildInsn(build11x(op, reg)));
-        } else {
         }
     }
 
@@ -614,7 +597,6 @@ public class CodeWriter extends DexCodeVisitor {
             ops.add(new PreBuildInsn(build22s(op, distReg, srcReg, content)));
         } else if (op.format == kFmt22b) {
             ops.add(new PreBuildInsn(build22b(op, distReg, srcReg, content)));
-        } else {
         }
     }
 
@@ -630,7 +612,6 @@ public class CodeWriter extends DexCodeVisitor {
     public void visitStmt3R(Op op, int a, int b, int c) {
         if (op.format == kFmt23x) {
             ops.add(new PreBuildInsn(build23x(op, a, b, c)));
-        } else {
         }
     }
 

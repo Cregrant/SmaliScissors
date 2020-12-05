@@ -22,7 +22,7 @@ class IO {
     static String currentProjectPathCached = "";
 
     static Patch loadRules(String zipFile) {
-        Pattern patRule = Pattern.compile("(\\[.+?](?:\\RNAME:\\R.++)?(?:\\RGOTO:\\R.++)?(?:\\RSOURCE:\\R.++)?\\R(?:TARGET:[\\s\\S]*?)?\\[/.+?])");
+        Pattern patRule = Pattern.compile("(\\[.+?](?:\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET):)[\\s\\S]*?\\[/.+?])");
         deleteAll(Prefs.tempDir);
         Prefs.tempDir.mkdirs();
         String txtFile = Prefs.tempDir + File.separator + "patch.txt";

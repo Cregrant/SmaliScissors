@@ -34,8 +34,8 @@ import com.googlecode.d2j.visitors.DexMethodVisitor;
  */
 public class ASMifierClassV extends DexClassVisitor {
     protected ArrayOut out = new ArrayOut();
-    private List<ArrayOut> methodOuts = new ArrayList<ArrayOut>();
-    private List<ArrayOut> fieldOuts = new ArrayList<ArrayOut>();
+    private List<ArrayOut> methodOuts = new ArrayList<>();
+    private List<ArrayOut> fieldOuts = new ArrayList<>();
 
     int fCount = 0;
     int mCount = 0;
@@ -130,13 +130,7 @@ public class ASMifierClassV extends DexClassVisitor {
             @Override
             public DexAnnotationAble visitParameterAnnotation(final int index) {
                 m.s("DexAnnotationAble pv%02d = mv.visitParameterAnnotation(%s);", index, index);
-                return new DexAnnotationAble() {
-
-                    @Override
-                    public DexAnnotationVisitor visitAnnotation(String name, Visibility visibility) {
-                        return new ASMifierAnnotationV(String.format("pv%02d", index), m, name, visibility);
-                    }
-                };
+                return (name, visibility) -> new ASMifierAnnotationV(String.format("pv%02d", index), m, name, visibility);
             }
 
             @Override

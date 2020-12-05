@@ -24,14 +24,16 @@ import com.googlecode.dex2jar.ir.stmt.LabelStmt;
  * @version $Rev$
  */
 public class Trap {
-    public LabelStmt start, end, handlers[];
-    public String types[];
+    public LabelStmt start;
+    public LabelStmt end;
+    public LabelStmt[] handlers;
+    public String[] types;
 
     public Trap() {
         super();
     }
 
-    public Trap(LabelStmt start, LabelStmt end, LabelStmt handlers[], String types[]) {
+    public Trap(LabelStmt start, LabelStmt end, LabelStmt[] handlers, String[] types) {
         super();
         this.start = start;
         this.end = end;

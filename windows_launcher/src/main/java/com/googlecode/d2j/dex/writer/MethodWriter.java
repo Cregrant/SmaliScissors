@@ -62,25 +62,21 @@ import com.googlecode.d2j.visitors.DexMethodVisitor;
 
     @Override
     public DexAnnotationAble visitParameterAnnotation(final int index) {
-        return new DexAnnotationAble() {
-            @Override
-            public DexAnnotationVisitor visitAnnotation(String name,
-                                                        Visibility visibility) {
-                AnnotationSetRefListItem asrl = encodedMethod.parameterAnnotation;
-                if (asrl == null) {
-                    asrl = new AnnotationSetRefListItem(parameterSize);
-                    encodedMethod.parameterAnnotation = asrl;
-                }
-                AnnotationSetItem asi = asrl.annotationSets[index];
-                if (asi == null) {
-                    asi = new AnnotationSetItem();
-                    asrl.annotationSets[index] = asi;
-                }
-                final AnnotationItem annItem = new AnnotationItem(
-                        cp.uniqType(name), visibility);
-                asi.annotations.add(annItem);
-                return new AnnotationWriter(annItem.annotation.elements, cp);
+        return (name, visibility) -> {
+            AnnotationSetRefListItem asrl = encodedMethod.parameterAnnotation;
+            if (asrl == null) {
+                asrl = new AnnotationSetRefListItem(parameterSize);
+                encodedMethod.parameterAnnotation = asrl;
             }
+            AnnotationSetItem asi = asrl.annotationSets[index];
+            if (asi == null) {
+                asi = new AnnotationSetItem();
+                asrl.annotationSets[index] = asi;
+            }
+            final AnnotationItem annItem = new AnnotationItem(
+                    cp.uniqType(name), visibility);
+            asi.annotations.add(annItem);
+            return new AnnotationWriter(annItem.annotation.elements, cp);
         };
     }
 }

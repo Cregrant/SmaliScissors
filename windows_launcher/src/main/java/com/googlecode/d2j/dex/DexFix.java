@@ -129,21 +129,21 @@ public class DexFix {
     private static Object getDefaultValueOfType(char t) {
         switch (t) {
         case 'B':
-            return Byte.valueOf((byte) 0);
+            return (byte) 0;
         case 'Z':
             return Boolean.FALSE;
         case 'S':
-            return Short.valueOf((short) 0);
+            return (short) 0;
         case 'C':
-            return Character.valueOf((char) 0);
+            return (char) 0;
         case 'I':
             return 0;
         case 'F':
-            return Float.valueOf((float) 0.0);
+            return (float) 0.0;
         case 'J':
-            return Long.valueOf((long) 0);
+            return (long) 0;
         case 'D':
-            return Double.valueOf(0.0);
+            return 0.0;
         case '[':
         case 'L':
         default:
@@ -157,21 +157,21 @@ public class DexFix {
             switch (desc.charAt(0)) {
             // case 'V':// VOID_TYPE
             case 'Z':// BOOLEAN_TYPE
-                return ((Boolean) value).booleanValue() == false;
+                return !(Boolean) value;
             case 'C':// CHAR_TYPE
-                return ((Character) value).charValue() == (char) 0;
+                return (Character) value == (char) 0;
             case 'B':// BYTE_TYPE
-                return ((Byte) value).byteValue() == 0;
+                return (Byte) value == 0;
             case 'S':// SHORT_TYPE
-                return ((Short) value).shortValue() == 0;
+                return (Short) value == 0;
             case 'I':// INT_TYPE
-                return ((Integer) value).intValue() == 0;
+                return (Integer) value == 0;
             case 'F':// FLOAT_TYPE
-                return ((Float) value).floatValue() == 0f;
+                return (Float) value == 0f;
             case 'J':// LONG_TYPE
-                return ((Long) value).longValue() == 0L;
+                return (Long) value == 0L;
             case 'D':// DOUBLE_TYPE
-                return ((Double) value).doubleValue() == 0.0;
+                return (Double) value == 0.0;
             }
         }
         return false;

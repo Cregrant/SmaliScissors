@@ -11,9 +11,8 @@ repositories {
 dependencies {
     compile 'org.antlr:antlr4-runtime:4.5'
     antlr 'org.antlr:antlr4:4.5'
-    //testCompile 'org.smali:baksmali:2.0.6'
-    compile project(':patcher')
     compile 'org.ow2.asm:asm-debug-all:5.0.3'
+    compile project(':patcher')
 }
 
 

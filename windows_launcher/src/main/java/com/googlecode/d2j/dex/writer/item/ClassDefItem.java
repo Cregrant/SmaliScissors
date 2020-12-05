@@ -26,6 +26,7 @@ import com.googlecode.d2j.dex.writer.item.ClassDataItem.EncodedMethod;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class ClassDefItem extends BaseItem {
@@ -82,11 +83,7 @@ public class ClassDefItem extends BaseItem {
             for (int i = 0; i <= count; i++) {
                 EncodedField f = fs.get(i);
                 EncodedValue ev = f.staticValue;
-                if (ev == null) {
-                    array.values.add(EncodedValue.defaultValueForType(f.field.getTypeString()));
-                } else {
-                    array.values.add(ev);
-                }
+                array.values.add(Objects.requireNonNullElseGet(ev, () -> EncodedValue.defaultValueForType(f.field.getTypeString())));
             }
             staticValues = encodedArrayItem;
         }

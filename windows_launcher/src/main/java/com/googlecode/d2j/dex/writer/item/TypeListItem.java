@@ -50,11 +50,8 @@ public class TypeListItem extends BaseItem implements Comparable<TypeListItem> {
             return false;
         TypeListItem other = (TypeListItem) obj;
         if (items == null) {
-            if (other.items != null)
-                return false;
-        } else if (!items.equals(other.items))
-            return false;
-        return true;
+            return other.items == null;
+        } else return items.equals(other.items);
     }
 
     @Override
@@ -79,6 +76,6 @@ public class TypeListItem extends BaseItem implements Comparable<TypeListItem> {
                 return x;
             }
         }
-        return (items.size() == o.items.size() ? 0 : (items.size() < o.items.size() ? -1 : 1));
+        return (Integer.compare(items.size(), o.items.size()));
     }
 }

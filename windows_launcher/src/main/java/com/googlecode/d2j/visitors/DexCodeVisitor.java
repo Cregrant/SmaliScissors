@@ -303,7 +303,7 @@ public class DexCodeVisitor {
         }
     }
 
-    public void visitTryCatch(DexLabel start, DexLabel end, DexLabel handler[], String type[]) {
+    public void visitTryCatch(DexLabel start, DexLabel end, DexLabel[] handler, String[] type) {
         if (visitor != null) {
             visitor.visitTryCatch(start, end, handler, type);
         }

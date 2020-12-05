@@ -240,7 +240,7 @@ public class BaksmaliDumper implements DexConstants {
             return obj.toString();
         }
         if (obj instanceof Long) {
-            Long v = ((Long) obj);
+            long v = ((Long) obj);
             if (v == Long.MIN_VALUE) {
                 return "0x" + Long.toHexString(v) + "L";
             } else {
@@ -262,7 +262,7 @@ public class BaksmaliDumper implements DexConstants {
         if (obj instanceof Character) {
             StringBuilder buf = new StringBuilder();
             buf.append("\'");
-            escape0(buf, ((Character) obj).charValue());
+            escape0(buf, (Character) obj);
             buf.append("\'");
             return buf.toString();
         }
@@ -528,11 +528,7 @@ public class BaksmaliDumper implements DexConstants {
         if (codeNode.debugNode != null) {
             DexDebugNode debugNode = codeNode.debugNode;
             for (DexDebugNode.DexDebugOpNode opNode : debugNode.debugNodes) {
-                List<DexDebugNode.DexDebugOpNode> list = debugLabelMap.get(opNode.label);
-                if (list == null) {
-                    list = new ArrayList<>(3);
-                    debugLabelMap.put(opNode.label, list);
-                }
+                List<DexDebugNode.DexDebugOpNode> list = debugLabelMap.computeIfAbsent(opNode.label, k -> new ArrayList<>(3));
                 list.add(opNode);
             }
         }

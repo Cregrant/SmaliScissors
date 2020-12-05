@@ -31,7 +31,7 @@ public class IrMethod {
 
     public boolean isStatic;
     public String[] args;
-    public List<Local> locals = new ArrayList<Local>();
+    public List<Local> locals = new ArrayList<>();
     public String name;
 
     public String owner;
@@ -40,8 +40,8 @@ public class IrMethod {
 
     public StmtList stmts = new StmtList();
 
-    public List<Trap> traps = new ArrayList<Trap>();
-    public List<LocalVar> vars = new ArrayList<LocalVar>();
+    public List<Trap> traps = new ArrayList<>();
+    public List<LocalVar> vars = new ArrayList<>();
     public List<LabelStmt> phiLabels;
 
     public IrMethod clone() {

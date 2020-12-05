@@ -18,18 +18,13 @@ package com.googlecode.dex2jar.tools;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.*;
 
@@ -46,27 +41,7 @@ public abstract class BaseCmd {
     public interface FileVisitorX {
         // change the relative from Path to String
         // java.nio.file.ProviderMismatchException on jdk8
-        void visitFile(Path file, String relative) throws IOException;
-    }
-
-    public static void walkFileTreeX(final Path base, final FileVisitorX fv) throws IOException {
-        Files.walkFileTree(base, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                fv.visitFile(file, base.relativize(file).toString());
-                return super.visitFile(file, attrs);
-            }
-        });
-    }
-
-    public static void walkJarOrDir(final Path in, final FileVisitorX fv) throws IOException {
-        if (Files.isDirectory(in)) {
-            walkFileTreeX(in, fv);
-        } else {
-            try (FileSystem inputFileSystem = openZip(in)) {
-                walkFileTreeX(inputFileSystem.getPath("/"), fv);
-            }
-        }
+        void visitFile(Path file, String relative);
     }
 
     public static void createParentDirectories(Path p) throws IOException {
@@ -93,16 +68,6 @@ public abstract class BaseCmd {
         throw new IOException("cant find zipfs support");
     }
 
-    public static FileSystem openZip(Path in) throws IOException {
-        for (FileSystemProvider p : FileSystemProvider.installedProviders()) {
-            String s = p.getScheme();
-            if ("jar".equals(s) || "zip".equalsIgnoreCase(s)) {
-                return p.newFileSystem(in, new HashMap<String, Object>());
-            }
-        }
-        throw new IOException("cant find zipfs support");
-    }
-
     @SuppressWarnings("serial")
     protected static class HelpException extends RuntimeException {
 
@@ -118,7 +83,7 @@ public abstract class BaseCmd {
 
     @Retention(value = RetentionPolicy.RUNTIME)
     @Target(value = { ElementType.FIELD })
-    static public @interface Opt {
+    public @interface Opt {
         String argName() default "";
 
         String description() default "";
@@ -186,55 +151,24 @@ public abstract class BaseCmd {
 
     }
 
-    @Retention(value = RetentionPolicy.RUNTIME)
-    @Target(value = { ElementType.TYPE })
-    static public @interface Syntax {
+    protected Map<String, Option> optMap = new HashMap<>();
 
-        String cmd();
-
-        String desc() default "";
-
-        String onlineHelp() default "";
-
-        String syntax() default "";
-    }
-
-    private String cmdLineSyntax;
-
-    private String cmdName;
-    private String desc;
-    private String onlineHelp;
-
-    protected Map<String, Option> optMap = new HashMap<String, Option>();
-
-    @Opt(opt = "h", longOpt = "help", hasArg = false, description = "Print this help message")
-    private boolean printHelp = false;
-
-    protected String remainingArgs[];
-    protected String orginalArgs[];
+    protected String[] remainingArgs;
+    protected String[] orginalArgs;
 
     public BaseCmd() {
     }
 
     public BaseCmd(String cmdLineSyntax, String header) {
         super();
-        int i = cmdLineSyntax.indexOf(' ');
-        if (i > 0) {
-            this.cmdName = cmdLineSyntax.substring(0, i);
-            this.cmdLineSyntax = cmdLineSyntax.substring(i + 1);
-        }
-        this.desc = header;
     }
 
     public BaseCmd(String cmdName, String cmdSyntax, String header) {
         super();
-        this.cmdName = cmdName;
-        this.cmdLineSyntax = cmdSyntax;
-        this.desc = header;
     }
 
     private Set<Option> collectRequriedOptions(Map<String, Option> optMap) {
-        Set<Option> options = new HashSet<Option>();
+        Set<Option> options = new HashSet<>();
         for (Map.Entry<String, Option> e : optMap.entrySet()) {
             Option option = e.getValue();
             if (option.required) {
@@ -273,13 +207,11 @@ public abstract class BaseCmd {
         try {
             type.asSubclass(Enum.class);
             return Enum.valueOf(type, value);
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         throw new RuntimeException("can't convert [" + value + "] to type " + type);
     }
-
-    ;
 
     protected abstract void doCommandLine() throws Exception;
 
@@ -293,14 +225,9 @@ public abstract class BaseCmd {
             if (msg != null && msg.length() > 0) {
                 System.err.println("ERROR: " + msg);
             }
-            usage();
         } catch (Exception e) {
             e.printStackTrace(System.err);
         }
-    }
-
-    protected String getVersionString() {
-        return getClass().getPackage().getImplementationVersion();
     }
 
     protected void initOptionFromClass(Class<?> clz) {
@@ -308,14 +235,6 @@ public abstract class BaseCmd {
             return;
         } else {
             initOptionFromClass(clz.getSuperclass());
-        }
-
-        Syntax syntax = clz.getAnnotation(Syntax.class);
-        if (syntax != null) {
-            this.cmdLineSyntax = syntax.syntax();
-            this.cmdName = syntax.cmd();
-            this.desc = syntax.desc();
-            this.onlineHelp = syntax.onlineHelp();
         }
 
         Field[] fs = clz.getDeclaredFields();
@@ -411,15 +330,11 @@ public abstract class BaseCmd {
     }
 
     public static void main(String... args) throws Exception {
-        if (args.length < 1) {
-            System.err.println("d2j-run <class> [args]");
-            return;
-        }
         Class<?> clz = Class.forName(args[0]);
-        String newArgs[] = new String[args.length - 1];
+        String[] newArgs = new String[args.length - 1];
         System.arraycopy(args, 1, newArgs, 0, newArgs.length);
         if (BaseCmd.class.isAssignableFrom(clz)) {
-            BaseCmd baseCmd = (BaseCmd) clz.newInstance();
+            BaseCmd baseCmd = (BaseCmd) clz.getDeclaredConstructor().newInstance();
             baseCmd.doMain(newArgs);
         } else {
             Method m = clz.getMethod("main",String[].class);
@@ -430,7 +345,7 @@ public abstract class BaseCmd {
     
     protected void parseSetArgs(String... args) throws IllegalArgumentException, IllegalAccessException {
         this.orginalArgs = args;
-        List<String> remainsOptions = new ArrayList<String>();
+        List<String> remainsOptions = new ArrayList<>();
         Set<Option> requiredOpts = collectRequriedOptions(optMap);
         Option needArgOpt = null;
         for (String s : args) {
@@ -459,10 +374,7 @@ public abstract class BaseCmd {
             System.err.println("ERROR: Option " + needArgOpt.getOptAndLongOpt() + " need an argument value");
             throw new HelpException();
         }
-        this.remainingArgs = remainsOptions.toArray(new String[remainsOptions.size()]);
-        if (this.printHelp) {
-            throw new HelpException();
-        }
+        this.remainingArgs = remainsOptions.toArray(new String[0]);
         if (!requiredOpts.isEmpty()) {
             StringBuilder sb = new StringBuilder();
             sb.append("ERROR: Options: ");
@@ -482,93 +394,4 @@ public abstract class BaseCmd {
 
     }
 
-    protected void usage() {
-        PrintWriter out = new PrintWriter(new OutputStreamWriter(System.err, StandardCharsets.UTF_8), true);
-
-        final int maxLength = 80;
-        final int maxPaLength = 40;
-        out.println(this.cmdName + " -- " + desc);
-        out.println("usage: " + this.cmdName + " " + cmdLineSyntax);
-        if (this.optMap.size() > 0) {
-            out.println("options:");
-        }
-        // [PART.A.........][Part.B
-        // .-a,--aa.<arg>...desc1
-        // .................desc2
-        // .-b,--bb
-        TreeSet<Option> options = new TreeSet<Option>(this.optMap.values());
-        int palength = -1;
-        for (Option option : options) {
-            int pa = 4 + option.getOptAndLongOpt().length();
-            if (option.hasArg) {
-                pa += 3 + option.argName.length();
-            }
-            if (pa < maxPaLength) {
-                if (pa > palength) {
-                    palength = pa;
-                }
-            }
-        }
-        int pblength = maxLength - palength;
-
-        StringBuilder sb = new StringBuilder();
-        for (Option option : options) {
-            sb.setLength(0);
-            sb.append(" ").append(option.getOptAndLongOpt());
-            if (option.hasArg) {
-                sb.append(" <").append(option.argName).append(">");
-            }
-            String desc = option.description;
-            if (desc == null || desc.length() == 0) {// no description
-                out.println(sb);
-            } else {
-                for (int i = palength - sb.length(); i > 0; i--) {
-                    sb.append(' ');
-                }
-                if (sb.length() > maxPaLength) {// to huge part A
-                    out.println(sb);
-                    sb.setLength(0);
-                    for (int i = 0; i < palength; i++) {
-                        sb.append(' ');
-                    }
-                }
-                int nextStart = 0;
-                while (nextStart < desc.length()) {
-                    if (desc.length() - nextStart < pblength) {// can put in one line
-                        sb.append(desc.substring(nextStart));
-                        out.println(sb);
-                        nextStart = desc.length();
-                        sb.setLength(0);
-                    } else {
-                        sb.append(desc.substring(nextStart, nextStart + pblength));
-                        out.println(sb);
-                        nextStart += pblength;
-                        sb.setLength(0);
-                        if (nextStart < desc.length()) {
-                            for (int i = 0; i < palength; i++) {
-                                sb.append(' ');
-                            }
-                        }
-                    }
-                }
-                if (sb.length() > 0) {
-                    out.println(sb);
-                    sb.setLength(0);
-                }
-            }
-        }
-        String ver = getVersionString();
-        if (ver != null && !"".equals(ver)) {
-            out.println("version: " + ver);
-        }
-        if (onlineHelp != null && !"".equals(onlineHelp)) {
-            if (onlineHelp.length() + "online help: ".length() > maxLength) {
-                out.println("online help: ");
-                out.println(onlineHelp);
-            } else {
-                out.println("online help: " + onlineHelp);
-            }
-        }
-        out.flush();
-    }
 }

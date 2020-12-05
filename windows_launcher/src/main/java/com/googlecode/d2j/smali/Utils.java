@@ -7,7 +7,6 @@ import com.googlecode.d2j.Visibility;
 import com.googlecode.d2j.reader.Op;
 import com.googlecode.d2j.visitors.DexAnnotationVisitor;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,50 +37,32 @@ public class Utils implements DexConstants {
     }
 
     public static int getAcc(String name) {
-        if (name.equals("public")) {
-            return ACC_PUBLIC;
-        } else if (name.equals("private")) {
-            return ACC_PRIVATE;
-        } else if (name.equals("protected")) {
-            return ACC_PROTECTED;
-        } else if (name.equals("static")) {
-            return ACC_STATIC;
-        } else if (name.equals("final")) {
-            return ACC_FINAL;
-        } else if (name.equals("synchronized")) {
-            return ACC_SYNCHRONIZED;
-        } else if (name.equals("volatile")) {
-            return ACC_VOLATILE;
-        } else if (name.equals("bridge")) {
-            return ACC_BRIDGE;
-        } else if (name.equals("varargs")) {
-            return ACC_VARARGS;
-        } else if (name.equals("transient")) {
-            return ACC_TRANSIENT;
-        } else if (name.equals("native")) {
-            return ACC_NATIVE;
-        } else if (name.equals("interface")) {
-            return ACC_INTERFACE;
-        } else if (name.equals("abstract")) {
-            return ACC_ABSTRACT;
-        } else if (name.equals("strict")) {
-            return ACC_STRICT;
-        } else if (name.equals("synthetic")) {
-            return ACC_SYNTHETIC;
-        } else if (name.equals("annotation")) {
-            return ACC_ANNOTATION;
-        } else if (name.equals("enum")) {
-            return ACC_ENUM;
-        } else if (name.equals("constructor")) {
-            return ACC_CONSTRUCTOR;
-        } else if (name.equals("declared-synchronized")) {
-            return ACC_DECLARED_SYNCHRONIZED;
-        }
-        return 0;
+        return switch (name) {
+            case "public" -> ACC_PUBLIC;
+            case "private" -> ACC_PRIVATE;
+            case "protected" -> ACC_PROTECTED;
+            case "static" -> ACC_STATIC;
+            case "final" -> ACC_FINAL;
+            case "synchronized" -> ACC_SYNCHRONIZED;
+            case "volatile" -> ACC_VOLATILE;
+            case "bridge" -> ACC_BRIDGE;
+            case "varargs" -> ACC_VARARGS;
+            case "transient" -> ACC_TRANSIENT;
+            case "native" -> ACC_NATIVE;
+            case "interface" -> ACC_INTERFACE;
+            case "abstract" -> ACC_ABSTRACT;
+            case "strict" -> ACC_STRICT;
+            case "synthetic" -> ACC_SYNTHETIC;
+            case "annotation" -> ACC_ANNOTATION;
+            case "enum" -> ACC_ENUM;
+            case "constructor" -> ACC_CONSTRUCTOR;
+            case "declared-synchronized" -> ACC_DECLARED_SYNCHRONIZED;
+            default -> 0;
+        };
     }
 
     public static List<String> listDesc(String desc) {
-        List<String> list = new ArrayList(5);
+        List<String> list = new ArrayList<>(5);
         if (desc == null) {
             return list;
         }
@@ -138,95 +119,6 @@ public class Utils implements DexConstants {
         return listDesc(s).toArray(new String[0]);
     }
 
-    static public Byte parseByte(String str) {
-        return Byte.valueOf((byte) parseInt(str.substring(0, str.length() - 1)));
-    }
-
-    static public Short parseShort(String str) {
-        return Short.valueOf((short) parseInt(str.substring(0, str.length() - 1)));
-    }
-
-    static public Long parseLong(String str) {
-        int sof = 0;
-        int end = str.length() - 1;
-        int x = 1;
-        if (str.charAt(sof) == '+') {
-            sof++;
-        } else if (str.charAt(sof) == '-') {
-            sof++;
-            x = -1;
-        }
-        BigInteger v;
-        if (str.charAt(sof) == '0') {
-            sof++;
-            if (sof >= end) {
-                return 0L;
-            }
-            char c = str.charAt(sof);
-            if (c == 'x' || c == 'X') {// hex
-                sof++;
-                v = new BigInteger(str.substring(sof, end), 16);
-            } else {// oct
-                v = new BigInteger(str.substring(sof, end), 8);
-            }
-        } else {
-            v = new BigInteger(str.substring(sof, end), 10);
-        }
-        if (x == -1) {
-            return v.negate().longValue();
-        } else {
-            return v.longValue();
-        }
-    }
-
-    static public float parseFloat(String str) {
-        str = str.toLowerCase();
-        int s = 0;
-        float x = 1f;
-        if (str.charAt(s) == '+') {
-            s++;
-        } else if (str.charAt(s) == '-') {
-            s++;
-            x = -1;
-        }
-        int e = str.length() - 1;
-        if (str.charAt(e) == 'f') {
-            e--;
-        }
-        str = str.substring(s, e + 1);
-        if (str.equals("nan")) {
-            return Float.NaN;
-        }
-        if (str.equals("infinity")) {
-            return x < 0 ? Float.NEGATIVE_INFINITY : Float.POSITIVE_INFINITY;
-        }
-        return (float) x * Float.parseFloat(str);
-    }
-
-    static public double parseDouble(String str) {
-        str = str.toLowerCase();
-        int s = 0;
-        double x = 1;
-        if (str.charAt(s) == '+') {
-            s++;
-        } else if (str.charAt(s) == '-') {
-            s++;
-            x = -1;
-        }
-        int e = str.length() - 1;
-        if (str.charAt(e) == 'd') {
-            e--;
-        }
-        str = str.substring(s, e + 1);
-        if (str.equals("nan")) {
-            return Double.NaN;
-        }
-        if (str.equals("infinity")) {
-            return x < 0 ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
-        }
-        return x * Double.parseDouble(str);
-    }
-
     static public int parseInt(String str, int start, int end) {
         int sof = start;
         int x = 1;
@@ -268,7 +160,7 @@ public class Utils implements DexConstants {
     }
 
     public static int[] toIntArray(List<String> ss) {
-        int vs[] = new int[ss.size()];
+        int[] vs = new int[ss.size()];
         for (int i = 0; i < ss.size(); i++) {
             vs[i] = parseInt(ss.get(i));
         }
@@ -276,14 +168,14 @@ public class Utils implements DexConstants {
     }
 
     public static byte[] toByteArray(List<Object> ss) {
-        byte vs[] = new byte[ss.size()];
+        byte[] vs = new byte[ss.size()];
         for (int i = 0; i < ss.size(); i++) {
             vs[i] = ((Number) (ss.get(i))).byteValue();
         }
         return vs;
     }
 
-    static Map<String, Op> ops = new HashMap();
+    static Map<String, Op> ops = new HashMap<>();
 
     static {
         for (Op op : Op.values()) {
@@ -423,10 +315,10 @@ public class Utils implements DexConstants {
 
     public static class Ann {
         public String name;
-        public List<Map.Entry<String, Object>> elements = new ArrayList();
+        public List<Map.Entry<String, Object>> elements = new ArrayList<>();
 
         public void put(String name, Object value) {
-            elements.add(new java.util.AbstractMap.SimpleEntry(name, value));
+            elements.add(new java.util.AbstractMap.SimpleEntry<>(name, value));
         }
     }
 

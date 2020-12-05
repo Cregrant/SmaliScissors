@@ -34,9 +34,7 @@ public class EncodedAnnotation {
         EncodedAnnotation that = (EncodedAnnotation) o;
 
         if (!elements.equals(that.elements)) return false;
-        if (!type.equals(that.type)) return false;
-
-        return true;
+        return type.equals(that.type);
     }
 
     @Override
@@ -58,9 +56,7 @@ public class EncodedAnnotation {
             AnnotationElement that = (AnnotationElement) o;
 
             if (!name.equals(that.name)) return false;
-            if (!value.equals(that.value)) return false;
-
-            return true;
+            return value.equals(that.value);
         }
 
         @Override

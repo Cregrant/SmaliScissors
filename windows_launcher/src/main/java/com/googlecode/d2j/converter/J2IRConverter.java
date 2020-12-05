@@ -26,7 +26,7 @@ public class J2IRConverter {
     JvmFrame[] frames;
     MethodNode methodNode;
     IrMethod target;
-    List<Stmt> emitStmts[];
+    List<Stmt>[] emitStmts;
     List<Stmt> preEmit = new ArrayList<>();
     List<Stmt> currentEmit;
 
@@ -57,7 +57,7 @@ public class J2IRConverter {
         target.owner = "L" + owner + ";";
         target.ret = Type.getReturnType(source.desc).getDescriptor();
         Type[] args = Type.getArgumentTypes(source.desc);
-        String sArgs[] = new String[args.length];
+        String[] sArgs = new String[args.length];
         target.args = sArgs;
         for (int i = 0; i < args.length; i++) {
             sArgs[i] = args[i].getDescriptor();
@@ -197,7 +197,7 @@ public class J2IRConverter {
                     }
                 }
                 if (phiValues.size() > 0) {
-                    phis.add(Stmts.nAssign(v.local, Exprs.nPhi(phiValues.toArray(new com.googlecode.dex2jar.ir.expr.Value[phiValues.size()]))));
+                    phis.add(Stmts.nAssign(v.local, Exprs.nPhi(phiValues.toArray(new com.googlecode.dex2jar.ir.expr.Value[0]))));
                     phiValues.clear();
                 }
             }
@@ -317,6 +317,7 @@ public class J2IRConverter {
     }
 
     private Interpreter<JvmValue> buildInterpreter() {
+        //noinspection Convert2Diamond
         return new Interpreter<JvmValue>(Opcodes.ASM4) {
             @Override
             public JvmValue newValue(Type type) {
@@ -324,7 +325,7 @@ public class J2IRConverter {
             }
 
             @Override
-            public JvmValue newOperation(AbstractInsnNode insn) throws AnalyzerException {
+            public JvmValue newOperation(AbstractInsnNode insn) {
                 switch (insn.getOpcode()) {
                     case ACONST_NULL:
                         return b(1, Exprs.nNull());
@@ -390,7 +391,7 @@ public class J2IRConverter {
             }
 
             @Override
-            public JvmValue copyOperation(AbstractInsnNode insn, JvmValue value) throws AnalyzerException {
+            public JvmValue copyOperation(AbstractInsnNode insn, JvmValue value) {
                 return b(value.getSize(), getLocal(value));
             }
 
@@ -464,7 +465,7 @@ public class J2IRConverter {
                         return null;
                     case TABLESWITCH: {
                         TableSwitchInsnNode ts = (TableSwitchInsnNode) insn;
-                        LabelStmt targets[] = new LabelStmt[ts.labels.size()];
+                        LabelStmt[] targets = new LabelStmt[ts.labels.size()];
                         for (int i = 0; i < ts.labels.size(); i++) {
                             targets[i] = getLabel((LabelNode) ts.labels.get(i));
                         }
@@ -473,7 +474,7 @@ public class J2IRConverter {
                     }
                     case LOOKUPSWITCH: {
                         LookupSwitchInsnNode ls = (LookupSwitchInsnNode) insn;
-                        LabelStmt targets[] = new LabelStmt[ls.labels.size()];
+                        LabelStmt[] targets = new LabelStmt[ls.labels.size()];
                         int[] lookupValues = new int[ls.labels.size()];
                         for (int i = 0; i < ls.labels.size(); i++) {
                             targets[i] = getLabel((LabelNode) ls.labels.get(i));
@@ -563,8 +564,7 @@ public class J2IRConverter {
             }
 
             @Override
-            public JvmValue binaryOperation(AbstractInsnNode insn, JvmValue value10, JvmValue value20)
-                    throws AnalyzerException {
+            public JvmValue binaryOperation(AbstractInsnNode insn, JvmValue value10, JvmValue value20) {
                 Local local1 = getLocal(value10);
                 Local local2 = getLocal(value20);
                 switch (insn.getOpcode()) {
@@ -704,8 +704,7 @@ public class J2IRConverter {
             }
 
             @Override
-            public JvmValue ternaryOperation(AbstractInsnNode insn, JvmValue value1, JvmValue value2, JvmValue value3)
-                    throws AnalyzerException {
+            public JvmValue ternaryOperation(AbstractInsnNode insn, JvmValue value1, JvmValue value2, JvmValue value3) {
                 Local local1 = getLocal(value1);
                 Local local2 = getLocal(value2);
                 Local local3 = getLocal(value3);
@@ -756,9 +755,9 @@ public class J2IRConverter {
             }
 
             @Override
-            public JvmValue naryOperation(AbstractInsnNode insn, List<? extends JvmValue> xvalues) throws AnalyzerException {
+            public JvmValue naryOperation(AbstractInsnNode insn, List<? extends JvmValue> xvalues) {
 
-                com.googlecode.dex2jar.ir.expr.Value values[] = new com.googlecode.dex2jar.ir.expr.Value[xvalues.size()];
+                com.googlecode.dex2jar.ir.expr.Value[] values = new com.googlecode.dex2jar.ir.expr.Value[xvalues.size()];
                 for (int i = 0; i < xvalues.size(); i++) {
                     values[i] = getLocal(xvalues.get(i));
                 }
@@ -769,7 +768,7 @@ public class J2IRConverter {
                     com.googlecode.dex2jar.ir.expr.Value v = null;
                     String ret = Type.getReturnType(mi.desc).getDescriptor();
                     String owner = "L" + mi.owner + ";";
-                    String ps[] = toDescArray(Type.getArgumentTypes(mi.desc));
+                    String[] ps = toDescArray(Type.getArgumentTypes(mi.desc));
                     switch (insn.getOpcode()) {
                         case INVOKEVIRTUAL:
                             v = Exprs.nInvokeVirtual(values, owner, mi.name, ps, ret);
@@ -801,7 +800,7 @@ public class J2IRConverter {
             }
 
             @Override
-            public void returnOperation(AbstractInsnNode insn, JvmValue value, JvmValue expected) throws AnalyzerException {
+            public void returnOperation(AbstractInsnNode insn, JvmValue value, JvmValue expected) {
                 switch (insn.getOpcode()) {
                     case IRETURN:
                     case LRETURN:

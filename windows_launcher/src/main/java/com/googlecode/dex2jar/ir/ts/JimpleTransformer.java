@@ -43,7 +43,7 @@ public class JimpleTransformer implements Transformer {
     static class N {
         public List<Stmt> tmp;
         int nextIdx;
-        private List<Local> locals;
+        private final List<Local> locals;
 
         public N(List<Stmt> tmp, List<Local> locals) {
             super();

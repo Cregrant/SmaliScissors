@@ -31,7 +31,7 @@ public class EndRemover implements Transformer {
 
     @Override
     public void transform(IrMethod irMethod) {
-        for (Trap trap : new ArrayList<Trap>(irMethod.traps)) {// copy the list and we can remove one from original list
+        for (Trap trap : new ArrayList<>(irMethod.traps)) {// copy the list and we can remove one from original list
             LabelStmt start = null;
             boolean removeTrap = true;
             for (Stmt p = trap.start.getNext(); p != null && p != trap.end;) {

@@ -16,16 +16,8 @@
  */
 package com.googlecode.dex2jar.ir.ts.array;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.googlecode.dex2jar.ir.IrMethod;
-import com.googlecode.dex2jar.ir.expr.ArrayExpr;
-import com.googlecode.dex2jar.ir.expr.Constant;
-import com.googlecode.dex2jar.ir.expr.Exprs;
-import com.googlecode.dex2jar.ir.expr.FieldExpr;
-import com.googlecode.dex2jar.ir.expr.Local;
-import com.googlecode.dex2jar.ir.expr.Value;
+import com.googlecode.dex2jar.ir.expr.*;
 import com.googlecode.dex2jar.ir.expr.Value.E1Expr;
 import com.googlecode.dex2jar.ir.expr.Value.E2Expr;
 import com.googlecode.dex2jar.ir.expr.Value.EnExpr;
@@ -37,6 +29,9 @@ import com.googlecode.dex2jar.ir.stmt.Stmt.ST;
 import com.googlecode.dex2jar.ir.stmt.StmtList;
 import com.googlecode.dex2jar.ir.stmt.Stmts;
 import com.googlecode.dex2jar.ir.ts.Transformer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * run after {@link com.googlecode.dex2jar.ir.ts.ConstTransformer}, to deal with following code
@@ -72,7 +67,7 @@ public class ArrayNullPointerTransformer implements Transformer {
     }
 
     private void replaceNPE(StmtList stmts, List<Local> locals, Stmt p) {
-        List<Value> values = new ArrayList<Value>();
+        List<Value> values = new ArrayList<>();
         switch (p.et) {
         case E1:
             tryAdd(((E1Stmt) p).op.trim(), values);
@@ -140,7 +135,7 @@ public class ArrayNullPointerTransformer implements Transformer {
                 E2Expr e2 = (E2Expr) value;
                 if (e2.vt == VT.ARRAY && e2.op1.trim().vt == VT.CONSTANT) {
                     Constant cst = (Constant) e2.op1.trim();
-                    if (cst.value.equals(Integer.valueOf(0))) {
+                    if (cst.value.equals(0)) {
                         tryAdd(e2.op2.trim(), values);
                         return false;
                     }
@@ -198,7 +193,7 @@ public class ArrayNullPointerTransformer implements Transformer {
             E2Expr e2 = (E2Expr) value;
             if (e2.vt == VT.ARRAY && e2.op1.trim().vt == VT.CONSTANT) {
                 Constant cst = (Constant) e2.op1.trim();
-                if (cst.value.equals(Integer.valueOf(0))) {
+                if (cst.value.equals(0)) {
                     return true;
                 }
             }

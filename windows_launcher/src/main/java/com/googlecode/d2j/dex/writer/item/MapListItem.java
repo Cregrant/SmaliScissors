@@ -19,7 +19,6 @@ package com.googlecode.d2j.dex.writer.item;
 import com.googlecode.d2j.dex.writer.io.DataOut;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class MapListItem extends BaseItem {
@@ -39,12 +38,7 @@ public class MapListItem extends BaseItem {
     }
 
     public void cleanZeroSizeEntry() {
-        for (Iterator<SectionItem<?>> it = items.iterator(); it.hasNext(); ) {
-            SectionItem<?> i = it.next();
-            if (i == null || i.items.size() < 1) {
-                it.remove();
-            }
-        }
+        items.removeIf(i -> i == null || i.items.size() < 1);
     }
 
     public void write(DataOut out) {

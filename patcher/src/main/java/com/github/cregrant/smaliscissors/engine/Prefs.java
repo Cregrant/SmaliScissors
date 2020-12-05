@@ -7,15 +7,17 @@ import java.util.Properties;
 
 public class Prefs {
     public static String run_type = "";
-    public static String projectPath = "";
+    public static String projectPath;
+    public static String apkPath;
     public static File patchesDir;
+    public static String zipName;
     public static File tempDir;
     private static double versionConf = 0.01;
     static int verbose_level = 1;
     static boolean keepSmaliFilesInRAM = false;
     static boolean keepXmlFilesInRAM = false;
-    static boolean skipSomeSmaliFiles = true;
-    static String[] smaliFoldersToSkip = new String[]{"android", "androidx", "kotlin", "kotlinx"};
+    static final boolean skipSomeSmaliFiles = true;
+    static final String[] smaliFoldersToSkip = new String[]{"android", "androidx", "kotlin", "kotlinx"};
     //todo move to main
 
     public void loadConf() {

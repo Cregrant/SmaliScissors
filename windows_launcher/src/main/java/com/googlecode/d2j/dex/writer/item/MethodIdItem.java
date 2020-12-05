@@ -60,11 +60,8 @@ public class MethodIdItem extends BaseItem implements Comparable<MethodIdItem> {
         } else if (!proto.equals(other.proto))
             return false;
         if (clazz == null) {
-            if (other.clazz != null)
-                return false;
-        } else if (!clazz.equals(other.clazz))
-            return false;
-        return true;
+            return other.clazz == null;
+        } else return clazz.equals(other.clazz);
     }
 
     @Idx

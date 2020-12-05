@@ -24,7 +24,7 @@ import java.util.List;
 
 public class DebugInfoItem extends BaseItem {
     public List<DNode> debugNodes = new ArrayList<>();
-    public StringIdItem parameterNames[];
+    public StringIdItem[] parameterNames;
     public int firstLine;
     public StringIdItem fileName;
 
@@ -187,12 +187,10 @@ public class DebugInfoItem extends BaseItem {
                     if (addrDelta > 15) { // pc not ok, add addvance_PC
                         offset += 1;
                         offset += lengthOfUleb128(addrDelta);
-                        addrDelta = 0;
                     }
                     if (lineDelta < -4 || lineDelta > 10) { // line not ok, add DBG_ADVANCE_LINE
                         offset += 1;
                         offset += lengthOfSleb128(lineDelta);
-                        lineDelta = 0;
                     }
                 }
                 // int op = lineDelta + 4 + addrDelta * DBG_LINE_RANGE + DBG_FIRST_SPECIAL;

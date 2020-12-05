@@ -61,16 +61,16 @@ public class TypeTransformer implements Transformer {
                             cst.value = Constant.Null;
                         }
                         if (type.equals("[F") && cst.value instanceof int[]) {
-                            int x[] = (int[]) cst.value;
-                            float f[] = new float[x.length];
+                            int[] x = (int[]) cst.value;
+                            float[] f = new float[x.length];
                             for (int i = 0; i < x.length; i++) {
                                 f[i] = Float.intBitsToFloat(x[i]);
                             }
                             cst.value = f;
                         }
                         if (type.equals("[D") && cst.value instanceof long[]) {
-                            long x[] = (long[]) cst.value;
-                            double f[] = new double[x.length];
+                            long[] x = (long[]) cst.value;
+                            double[] f = new double[x.length];
                             for (int i = 0; i < x.length; i++) {
                                 f[i] = Double.longBitsToDouble(x[i]);
                             }
@@ -336,28 +336,24 @@ public class TypeTransformer implements Transformer {
         public boolean addUses(String ele) {
             assert this.next == null;
             TypeRef t = this;
-            if (t.uses != null) {
-                return t.uses.add(ele);
-            } else {
+            if (t.uses == null) {
                 t.uses = new HashSet<>();
-                return t.uses.add(ele);
             }
+            return t.uses.add(ele);
         }
 
         public boolean addAllUses(Set<String> uses) {
             assert this.next == null;
-            if (uses != null) {
-                return uses.addAll(uses);
-            } else {
+            if (uses == null) {
                 uses = new HashSet<>();
-                return uses.addAll(uses);
             }
+            return uses.addAll(uses);
         }
     }
 
     private static class TypeAnalyze {
         protected IrMethod method;
-        private List<TypeRef> refs = new ArrayList<>();
+        private final List<TypeRef> refs = new ArrayList<>();
 
         public TypeAnalyze(IrMethod method) {
             super();
@@ -490,7 +486,7 @@ public class TypeTransformer implements Transformer {
                     return a;
                 } else if (!ta.fixed && tb.fixed) {
                     return b;
-                } else if (ta.fixed && tb.fixed) {
+                } else if (ta.fixed) {
                     if (ta != tb) {
                         if (as == 0) {
                             throw new RuntimeException();
@@ -608,7 +604,7 @@ public class TypeTransformer implements Transformer {
                 return a;
             } else if (!ta.fixed && tb.fixed) {
                 return b;
-            } else if (ta.fixed && tb.fixed) {
+            } else if (ta.fixed) {
                 // special allow merge of Z and I
                 if ((ta == TypeClass.INT && tb == TypeClass.BOOLEAN) || (tb == TypeClass.INT && ta == TypeClass.BOOLEAN)) {
                     return "I";
@@ -635,7 +631,7 @@ public class TypeTransformer implements Transformer {
                         String elementTypeB = a.substring(bs);
                         if (as < bs) {
                             return buildArray(elementTypeB.charAt(0) == 'L' ? bs : bs - 1, "L");
-                        } else if (bs > as) {
+                        } else if (as > bs) {
                             return buildArray(elementTypeA.charAt(0) == 'L' ? as : as - 1, "L");
                         } else { // as==bs
                             if (elementTypeA.charAt(0) != 'L' || elementTypeB.charAt(0) != 'L') {
@@ -657,12 +653,7 @@ public class TypeTransformer implements Transformer {
             if (dim == 0) {
                 return s;
             }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < dim; i++) {
-                sb.append('[');
-            }
-            sb.append(s);
-            return sb.toString();
+            return "[".repeat(Math.max(0, dim)) + s;
         }
 
         private static int countArrayDim(String a) {
@@ -915,7 +906,7 @@ public class TypeTransformer implements Transformer {
         }
 
         private void enexpr(EnExpr enExpr) {
-            Value vbs[] = enExpr.ops;
+            Value[] vbs = enExpr.ops;
             switch (enExpr.vt) {
                 case INVOKE_NEW:
                 case INVOKE_INTERFACE:
@@ -929,7 +920,7 @@ public class TypeTransformer implements Transformer {
                     provideAs(enExpr, type);
                     useAs(enExpr, type); // no one else will use it
 
-                    String argTypes[] = ice.getProto().getParameterTypes();
+                    String[] argTypes = ice.getProto().getParameterTypes();
                     if (argTypes.length == vbs.length) {
                         for (int i = 0; i < vbs.length; i++) {
                             useAs(vbs[i], argTypes[i]);
@@ -957,12 +948,8 @@ public class TypeTransformer implements Transformer {
                     for (Value vb : vbs) {
                         useAs(vb, "I");
                     }
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < nmae.dimension; i++) {
-                        sb.append('[');
-                    }
-                    sb.append(nmae.baseType);
-                    provideAs(nmae, sb.toString());
+                    String sb = "[".repeat(Math.max(0, nmae.dimension)) + nmae.baseType;
+                    provideAs(nmae, sb);
                     break;
                 case PHI:
                     for (Value vb : vbs) {
@@ -1001,7 +988,7 @@ public class TypeTransformer implements Transformer {
         private TypeRef getDefTypeRef(Value v) {
             Object object = v.tag;
             TypeRef typeRef;
-            if (object == null || !(object instanceof TypeRef)) {
+            if (!(object instanceof TypeRef)) {
                 typeRef = new TypeRef(v);
                 refs.add(typeRef);
                 v.tag = typeRef;
@@ -1065,8 +1052,6 @@ public class TypeTransformer implements Transformer {
                 case LOOKUP_SWITCH:
                 case TABLE_SWITCH:
                     useAs(op, "I");
-                    break;
-                case GOTO:
                     break;
                 case IF:
                     useAs(op, "Z");

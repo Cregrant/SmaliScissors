@@ -173,7 +173,7 @@ public abstract class Value implements Cloneable {
     /**
      * Value Type
      */
-    public static enum VT {
+    public enum VT {
 
         ADD("+", MAY_THROW), AND("&", MAY_THROW), ARRAY(MAY_THROW), CAST(MAY_THROW), CHECK_CAST(CAN_THROW), CONSTANT(0), DCMPG(
                 MAY_THROW), DCMPL(MAY_THROW), IDIV("/", CAN_THROW), LDIV("/", CAN_THROW), FDIV("/", MAY_THROW), DDIV("/", MAY_THROW), EQ("==", MAY_THROW), EXCEPTION_REF(0), FCMPG(
@@ -186,8 +186,8 @@ public abstract class Value implements Cloneable {
         NEW(CAN_THROW), NEW_ARRAY(CAN_THROW), NEW_MUTI_ARRAY(CAN_THROW), NOT(MAY_THROW), OR("|", MAY_THROW), PARAMETER_REF(
                 0), PHI(0), REM("%", MAY_THROW), SHL("<<", MAY_THROW), SHR(">>", MAY_THROW), STATIC_FIELD(CAN_THROW), SUB(
                 "-", MAY_THROW), THIS_REF(MAY_THROW), USHR(">>>", MAY_THROW), XOR("^", MAY_THROW);
-        private String name;
-        private int flags;
+        private final String name;
+        private final int flags;
 
         VT(int flags) {
             this(null, flags);

@@ -77,8 +77,7 @@ public class SSATransformer implements Transformer {
                     return a;
                 }
                 SSAValue lsv = (SSAValue) a.tag;
-                Local b = lsv.local;
-                return b;
+                return lsv.local;
             }
 
         };
@@ -108,7 +107,7 @@ public class SSATransformer implements Transformer {
                             phis = new ArrayList<>();
                         }
                         locals.add(v.local);
-                        phis.add(Stmts.nAssign(v.local, Exprs.nPhi(froms.toArray(new Value[froms.size()]))));
+                        phis.add(Stmts.nAssign(v.local, Exprs.nPhi(froms.toArray(new Value[0]))));
                         froms.clear();
                     }
                 }
@@ -146,8 +145,8 @@ public class SSATransformer implements Transformer {
     private boolean prepare(final IrMethod method) {
         int index = Cfg.reIndexLocal(method);
 
-        final int readCounts[] = new int[index];
-        final int writeCounts[] = new int[index];
+        final int[] readCounts = new int[index];
+        final int[] writeCounts = new int[index];
         Cfg.travel(method.stmts, new TravelCallBack() {
             @Override
             public Value onAssign(Local v, AssignStmt as) {
@@ -173,14 +172,10 @@ public class SSATransformer implements Transformer {
             int idx = local._ls_index;
             int read = readCounts[idx];
             int write = writeCounts[idx];
-            if (read > 0 && write == 0) {
-                // TODO if we need throw exception ?
-                // or the code is dead?
-            }
+            // TODO if we need throw exception ?
+            // or the code is dead?
 
-            if (read == 0 && write == 0) {
-                // ignore the local
-            } else {
+            if (read != 0 || write != 0) {
                 if (write <= 1) {
                     // no phi require
                     local._ls_index = -1;
@@ -271,9 +266,8 @@ public class SSATransformer implements Transformer {
                 clearLsEmptyValueFromFrame();
             }
             for (SSAValue v0 : set) {
-                SSAValue v = v0;
-                if (v.used && v.local == null) {
-                    v.local = new Local(nextIndex++);
+                if (v0.used && v0.local == null) {
+                    v0.local = new Local(nextIndex++);
                 }
             }
         }
@@ -304,7 +298,7 @@ public class SSATransformer implements Transformer {
         }
 
         protected Set<SSAValue> markUsed() {
-            Set<SSAValue> used = new HashSet<SSAValue>(aValues.size() / 2);
+            Set<SSAValue> used = new HashSet<>(aValues.size() / 2);
             Queue<SSAValue> q = new UniqueQueue<>();
             q.addAll(aValues);
             while (!q.isEmpty()) {
@@ -406,9 +400,9 @@ public class SSATransformer implements Transformer {
 
         protected void relationMerge(SSAValue[] frame, Stmt dist, SSAValue[] distFrame) {
             for (int i = 0; i < localSize; i++) {
-                SSAValue srcValue = (SSAValue) frame[i];
+                SSAValue srcValue = frame[i];
                 if (srcValue != null) {
-                    SSAValue distValue = (SSAValue) distFrame[i];
+                    SSAValue distValue = distFrame[i];
                     if (distValue == null) {
                         if (!dist.visited) {
                             distValue = newValue();
@@ -426,9 +420,8 @@ public class SSATransformer implements Transformer {
         private void linkParentChildren(SSAValue p, SSAValue c) {
             if (c.parent == null) {
                 c.parent = p;
-            } else if (c.parent == p) {
-                return;
-            } else {
+            }
+            else if (c.parent != p) {
                 Set<SSAValue> ps = c.otherParents;
                 if (ps == null) {
                     c.otherParents = ps = new HashSet<>(3);

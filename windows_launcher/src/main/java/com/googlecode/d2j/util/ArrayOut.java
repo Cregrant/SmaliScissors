@@ -26,8 +26,8 @@ public class ArrayOut implements Out {
 
     int i = 0;
 
-    public List<String> array = new ArrayList<String>();
-    public List<Integer> is = new ArrayList<Integer>();
+    public List<String> array = new ArrayList<>();
+    public List<Integer> is = new ArrayList<>();
 
     @Override
     public void push() {

@@ -96,7 +96,7 @@ public class ExceptionHandlerTrim implements Transformer {
                         }
                         ntrap.start = (LabelStmt) pre;
                         status = 1;
-                    } else if (status == 1) {
+                    } else {
                         // continue;
                     }
 
@@ -116,7 +116,6 @@ public class ExceptionHandlerTrim implements Transformer {
             if (status == 1) {
                 ntrap.end = trap.end;
                 irMethod.traps.add(ntrap);
-                status = 0;
             }
         }
     }

@@ -32,8 +32,8 @@ import java.util.List;
 public abstract class BaseAnalyze<T extends AnalyzeValue> implements FrameVisitor<T[]>, TravelCallBack {
     protected static final boolean DEBUG = false;
 
-    public List<T> aValues = new ArrayList<T>();
-    private boolean reindexLocal;
+    public List<T> aValues = new ArrayList<>();
+    private final boolean reindexLocal;
     private T[] currentFrame;
 
     protected int localSize;

@@ -147,16 +147,7 @@ public class CodeItem extends BaseItem {
                 set.clear();
                 this.tries = uniqTrys;
                 if (uniqTrys.size() > 0) {
-                    Collections.sort(uniqTrys, new Comparator<TryItem>() {
-                        @Override
-                        public int compare(TryItem o1, TryItem o2) {
-                            int x = o1.start.offset - o2.start.offset;
-                            if (x == 0) {
-                                x = o1.end.offset - o2.end.offset;
-                            }
-                            return x;
-                        }
-                    });
+                    uniqTrys.sort(Comparator.comparingInt((TryItem o) -> o.start.offset).thenComparingInt(o -> o.end.offset));
                 }
             }
             { // merge dup handlers
@@ -249,10 +240,7 @@ public class CodeItem extends BaseItem {
 
             if (!addPairs.equals(that.addPairs))
                 return false;
-            if (catchAll != null ? !catchAll.equals(that.catchAll) : that.catchAll != null)
-                return false;
-
-            return true;
+            return Objects.equals(catchAll, that.catchAll);
         }
 
         @Override
@@ -282,10 +270,7 @@ public class CodeItem extends BaseItem {
 
                 if (addr.offset != addrPair.addr.offset)
                     return false;
-                if (!type.equals(addrPair.type))
-                    return false;
-
-                return true;
+                return type.equals(addrPair.type);
             }
 
             @Override
@@ -313,10 +298,7 @@ public class CodeItem extends BaseItem {
 
             if (end.offset != tryItem.end.offset)
                 return false;
-            if (start.offset != tryItem.start.offset)
-                return false;
-
-            return true;
+            return start.offset == tryItem.start.offset;
         }
 
         @Override

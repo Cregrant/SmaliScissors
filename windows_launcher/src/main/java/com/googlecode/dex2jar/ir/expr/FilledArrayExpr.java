@@ -49,8 +49,8 @@ public class FilledArrayExpr extends EnExpr {
     @Override
     public String toString0() {
         StringBuilder sb = new StringBuilder().append("new ").append(Util.toShortClassName(type)).append("[]{");
-        for (int i = 0; i < ops.length; i++) {
-            sb.append(ops[i]).append(", ");
+        for (Value op : ops) {
+            sb.append(op).append(", ");
         }
         if (ops.length > 0) {
             sb.setLength(sb.length() - 2); // remove tail ", "

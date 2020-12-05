@@ -16,8 +16,6 @@
  */
 package com.googlecode.dex2jar.ir.ts;
 
-import java.util.*;
-
 import com.googlecode.dex2jar.ir.IrMethod;
 import com.googlecode.dex2jar.ir.expr.Local;
 import com.googlecode.dex2jar.ir.expr.RefExpr;
@@ -27,6 +25,8 @@ import com.googlecode.dex2jar.ir.stmt.Stmt;
 import com.googlecode.dex2jar.ir.stmt.Stmt.ST;
 import com.googlecode.dex2jar.ir.ts.an.SimpleLiveAnalyze;
 import com.googlecode.dex2jar.ir.ts.an.SimpleLiveValue;
+
+import java.util.*;
 
 /**
  * <ol>
@@ -46,20 +46,16 @@ public class Ir2JRegAssignTransformer implements Transformer {
         public char type;
     }
 
-    private static final Comparator<Reg> OrderRegAssignByPreferredSizeDesc = new Comparator<Reg>() {
-
-        @Override
-        public int compare(Reg o1, Reg o2) {
-            int x = o2.prefers.size() - o1.prefers.size();
-            if (x == 0) {
-                x = o2.excludes.size() - o1.excludes.size();
-            }
-            return x;
+    private static final Comparator<Reg> OrderRegAssignByPreferredSizeDesc = (o1, o2) -> {
+        int x = o2.prefers.size() - o1.prefers.size();
+        if (x == 0) {
+            x = o2.excludes.size() - o1.excludes.size();
         }
+        return x;
     };
 
     private Reg[] genGraph(IrMethod method, final Reg[] regs) {
-        Reg args[];
+        Reg[] args;
         if (method.isStatic) {
             args = new Reg[method.args.length];
         } else {
@@ -129,25 +125,11 @@ public class Ir2JRegAssignTransformer implements Transformer {
         Map<Character, List<Reg>> groups = new HashMap<>();
         for (Reg reg : regs) {
             char simpleType = reg.type;
-            List<Reg> group = groups.get(simpleType);
-            if (group == null) {
-                group = new ArrayList<>();
-                groups.put(simpleType, group);
-            }
+            List<Reg> group = groups.computeIfAbsent(simpleType, k -> new ArrayList<>());
             group.add(reg);
 
-            for (Iterator<Reg> it = reg.excludes.iterator(); it.hasNext(); ) {
-                Reg ex = it.next();
-                if (ex.type != reg.type) {
-                    it.remove();
-                }
-            }
-            for (Iterator<Reg> it = reg.prefers.iterator(); it.hasNext(); ) {
-                Reg ex = it.next();
-                if (ex.type != reg.type) {
-                    it.remove();
-                }
-            }
+            reg.excludes.removeIf(ex -> ex.type != reg.type);
+            reg.prefers.removeIf(ex -> ex.type != reg.type);
         }
         return groups;
     }
@@ -183,7 +165,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
 
         // init regs
         int maxLocalSize = sa.getLocalSize();
-        final Reg regs[] = new Reg[maxLocalSize];
+        final Reg[] regs = new Reg[maxLocalSize];
         for (Local local : method.locals) {
             Reg reg = new Reg();
             char type = local.valueType.charAt(0);
@@ -238,7 +220,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         BitSet usedInOneType = new BitSet();
         for (Map.Entry<Character, List<Reg>> e : groups.entrySet()) {
             List<Reg> assigns = e.getValue();
-            Collections.sort(assigns, OrderRegAssignByPreferredSizeDesc);
+            assigns.sort(OrderRegAssignByPreferredSizeDesc);
             char type = e.getKey();
             boolean doubleOrLong = type == 'J' || type == 'D';
             for (Reg as : assigns) {
@@ -266,17 +248,17 @@ public class Ir2JRegAssignTransformer implements Transformer {
                         }
                     }
                     if (as.reg < 0) {
+                        int reg;
                         if (doubleOrLong) {
-                            int reg = -1;
+                            reg = -1;
                             do {
                                 reg++;
                                 reg = excludeColor.nextClearBit(reg);
                             } while (excludeColor.get(reg + 1));
-                            as.reg = reg;
                         } else {
-                            int reg = excludeColor.nextClearBit(0);
-                            as.reg = reg;
+                            reg = excludeColor.nextClearBit(0);
                         }
+                        as.reg = reg;
                     }
                 }
                 usedInOneType.set(as.reg);

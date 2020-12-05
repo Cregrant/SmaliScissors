@@ -33,9 +33,7 @@ public class EncodedArray {
 
         EncodedArray that = (EncodedArray) o;
 
-        if (!values.equals(that.values)) return false;
-
-        return true;
+        return values.equals(that.values);
     }
 
     @Override

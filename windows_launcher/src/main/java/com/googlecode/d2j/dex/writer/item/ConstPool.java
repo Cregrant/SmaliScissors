@@ -208,7 +208,7 @@ public class ConstPool {
         return uniqMethod(key);
     }
 
-    public MethodIdItem uniqMethod(String owner, String name, String parms[], String ret) {
+    public MethodIdItem uniqMethod(String owner, String name, String[] parms, String ret) {
         MethodIdItem key = new MethodIdItem(uniqType(owner), uniqString(name), uniqProto(parms, ret));
         return uniqMethod(key);
     }
@@ -315,7 +315,7 @@ public class ConstPool {
     }
 
     public AnnotationSetItem uniqAnnotationSetItem(AnnotationSetItem key) {
-        List<AnnotationItem> copy = new ArrayList<AnnotationItem>(key.annotations);
+        List<AnnotationItem> copy = new ArrayList<>(key.annotations);
         key.annotations.clear();
         for (AnnotationItem annotationItem : copy) {
             key.annotations.add(uniqAnnotationItem(annotationItem));

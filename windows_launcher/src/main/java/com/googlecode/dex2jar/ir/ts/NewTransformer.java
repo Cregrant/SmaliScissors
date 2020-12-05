@@ -117,7 +117,7 @@ public class NewTransformer implements Transformer {
     void replace0(IrMethod method, Map<Local, TObject> init, int size) {
         Set<Local> toDelete = new HashSet<>();
 
-        Local locals[] = new Local[size];
+        Local[] locals = new Local[size];
         for (Local local : method.locals) {
             locals[local._ls_index] = local;
         }
@@ -166,8 +166,8 @@ public class NewTransformer implements Transformer {
         Cfg.dfs(method.stmts, new Cfg.FrameVisitor<Vx[]>() {
 
             boolean keepFrame = false;
-            Vx[] tmp = new Vx[size];
-            StmtTraveler stmtTraveler = new StmtTraveler() {
+            final Vx[] tmp = new Vx[size];
+            final StmtTraveler stmtTraveler = new StmtTraveler() {
                 Stmt current;
 
                 @Override
@@ -367,11 +367,9 @@ public class NewTransformer implements Transformer {
         public Stmt invokeStmt;
         Local local;
         boolean useBeforeInit;
-        private AssignStmt init;
 
         TObject(Local local, AssignStmt init) {
             this.local = local;
-            this.init = init;
         }
     }
 

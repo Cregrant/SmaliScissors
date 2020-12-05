@@ -16,6 +16,7 @@
 package com.googlecode.d2j;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class Proto {
     public Proto(String[] parameterTypes, String returnType) {
@@ -30,12 +31,12 @@ public class Proto {
     /**
      * parameter types of the method, in TypeDescriptor format.
      */
-    private String[] parameterTypes;
+    private final String[] parameterTypes;
 
     /**
      * return type of the method, in TypeDescriptor format.
      */
-    private String returnType;
+    private final String returnType;
 
     /**
      * @return the parameterTypes
@@ -71,7 +72,7 @@ public class Proto {
 
         // Probably incorrect - comparing Object[] arrays with Arrays.equals
         if (!Arrays.equals(parameterTypes, proto.parameterTypes)) return false;
-        return returnType != null ? returnType.equals(proto.returnType) : proto.returnType == null;
+        return Objects.equals(returnType, proto.returnType);
     }
 
     @Override

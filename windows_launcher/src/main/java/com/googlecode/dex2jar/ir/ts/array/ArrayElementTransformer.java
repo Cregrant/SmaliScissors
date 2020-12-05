@@ -51,7 +51,7 @@ public class ArrayElementTransformer extends StatedTransformer {
         final List<Stmt> used = new ArrayList<>();
         Cfg.dfs(method.stmts, new Cfg.FrameVisitor<ArrayValue[]>() {
 
-            Set<Integer> phis = new HashSet<>();
+            final Set<Integer> phis = new HashSet<>();
 
             @Override
             public ArrayValue[] merge(ArrayValue[] srcFrame, ArrayValue[] distFrame, Stmt src, Stmt dist) {
@@ -117,7 +117,7 @@ public class ArrayElementTransformer extends StatedTransformer {
                 return new ArrayValue[size];
             }
 
-            ArrayValue[] tmp = new ArrayValue[size];
+            final ArrayValue[] tmp = new ArrayValue[size];
             Stmt currentStmt;
 
 
@@ -304,16 +304,10 @@ public class ArrayElementTransformer extends StatedTransformer {
 
         // TODO travel stmt to find must-be array element
 
-        for (Stmt p : method.stmts) {
-
-        }
         new StmtTraveler() {
             @Override
             public Value travel(Value op) {
                 op = super.travel(op);
-                if (op.vt == Value.VT.ARRAY) {
-
-                }
                 return op;
             }
         }.travel(method.stmts);

@@ -28,3 +28,6 @@ run.bat
 .idea/
 /.gradle/
 /jmh/
+/patches/temp/
+/patcher/build/
+/windows_launcher/build/

@@ -19,6 +19,8 @@ package com.googlecode.d2j.dex.writer.ev;
 import com.googlecode.d2j.dex.writer.io.DataOut;
 import com.googlecode.d2j.dex.writer.item.*;
 
+import java.util.Objects;
+
 public class EncodedValue {
 
     public final static int VALUE_ANNOTATION = 0x1d;
@@ -71,7 +73,7 @@ public class EncodedValue {
         return (nbBits + 0x07) >> 3;
     }
 
-    public final static int lengthOfUint(int val) {
+    public static int lengthOfUint(int val) {
         int size = 1;
         if (val != 0) {
             val = val >>> 8;
@@ -168,7 +170,7 @@ public class EncodedValue {
             case 2:
                 data[1] = (byte) (value >> 8);
             case 1:
-                data[0] = (byte) (value >> 0);
+                data[0] = (byte) (value);
                 break;
             default:
                 throw new RuntimeException();
@@ -187,7 +189,7 @@ public class EncodedValue {
             case 2:
                 data[1] = (byte) (value >> 8);
             case 1:
-                data[0] = (byte) (value >> 0);
+                data[0] = (byte) (value);
                 break;
             default:
                 throw new RuntimeException();
@@ -203,9 +205,7 @@ public class EncodedValue {
         EncodedValue that = (EncodedValue) o;
 
         if (valueType != that.valueType) return false;
-        if (value != null ? !value.equals(that.value) : that.value != null) return false;
-
-        return true;
+        return Objects.equals(value, that.value);
     }
 
     @Override
@@ -222,7 +222,7 @@ public class EncodedValue {
         switch (valueType) {
             case VALUE_CHAR:
                 Character c = (Character) this.value;
-                return c.charValue() == 0;
+                return c == 0;
             case VALUE_BYTE:
             case VALUE_INT:
             case VALUE_SHORT:
@@ -277,7 +277,7 @@ public class EncodedValue {
             case VALUE_INT:
                 return lengthOfSint(((Number) value).intValue()) - 1;
             case VALUE_CHAR:
-                return lengthOfUint(((Character) value).charValue()) - 1;
+                return lengthOfUint((Character) value) - 1;
             case VALUE_LONG:
                 return lengthOfSint(((Number) value).longValue()) - 1;
             case VALUE_DOUBLE:

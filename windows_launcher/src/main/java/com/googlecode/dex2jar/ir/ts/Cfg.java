@@ -15,11 +15,6 @@
  */
 package com.googlecode.dex2jar.ir.ts;
 
-import java.util.Collections;
-import java.util.Set;
-import java.util.Stack;
-import java.util.TreeSet;
-
 import com.googlecode.dex2jar.ir.ET;
 import com.googlecode.dex2jar.ir.IrMethod;
 import com.googlecode.dex2jar.ir.Trap;
@@ -28,6 +23,8 @@ import com.googlecode.dex2jar.ir.expr.Value;
 import com.googlecode.dex2jar.ir.expr.Value.VT;
 import com.googlecode.dex2jar.ir.stmt.*;
 import com.googlecode.dex2jar.ir.stmt.Stmt.ST;
+
+import java.util.*;
 
 /**
  * TODO DOC
@@ -39,7 +36,7 @@ public class Cfg {
 
     public static int[] countLocalReads(IrMethod method) {
         int size = reIndexLocal(method);
-        final int readCounts[] = new int[size];
+        final int[] readCounts = new int[size];
         travel(method.stmts, new TravelCallBack() {
             @Override
             public Value onAssign(Local v, AssignStmt as) {
@@ -168,7 +165,7 @@ public class Cfg {
 
     }
 
-    public static interface DfsVisitor {
+    public interface DfsVisitor {
         void onVisit(Stmt p);
     }
 
@@ -220,7 +217,7 @@ public class Cfg {
             st.frame = null;
         }
 
-        Stack<Stmt> stack = new Stack<Stmt>();
+        Stack<Stmt> stack = new Stack<>();
         Stmt first = stmts.getFirst();
         Stmt nop = null;
         if (first.st == ST.LABEL && first._cfg_froms.size() > 0) {
@@ -315,7 +312,7 @@ public class Cfg {
             value.setOp2(travelMod(value.getOp2(), callback));
             break;
         case En:
-            Value ops[] = value.getOps();
+            Value[] ops = value.getOps();
             for (int i = 0; i < ops.length; i++) {
                 ops[i] = travelMod(ops[i], callback);
             }
@@ -339,9 +336,9 @@ public class Cfg {
             travel(value.getOp2(), callback);
             break;
         case En:
-            Value ops[] = value.getOps();
-            for (int i = 0; i < ops.length; i++) {
-                travel(ops[i], callback);
+            Value[] ops = value.getOps();
+            for (Value op : ops) {
+                travel(op, callback);
             }
             break;
         }
@@ -440,9 +437,7 @@ public class Cfg {
             BaseSwitchStmt bss = (BaseSwitchStmt) stmt;
             tos.add(bss.defaultTarget);
 
-            for (Stmt target : bss.targets) {
-                tos.add(target);
-            }
+            tos.addAll(Arrays.asList(bss.targets));
         }
         if (stmt.exceptionHandlers != null) {
             tos.addAll(stmt.exceptionHandlers);

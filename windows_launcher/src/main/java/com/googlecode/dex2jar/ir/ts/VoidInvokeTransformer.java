@@ -43,7 +43,7 @@ public class VoidInvokeTransformer extends StatedTransformer {
         if (method.locals.size() == 0) {
             return false;
         }
-        int reads[] = Cfg.countLocalReads(method);
+        int[] reads = Cfg.countLocalReads(method);
         boolean changed = false;
         for (Stmt p = method.stmts.getFirst(); p != null; p = p.getNext()) {
             if (p.st == Stmt.ST.ASSIGN && p.getOp1().vt == Value.VT.LOCAL) {

@@ -49,9 +49,9 @@ import static com.googlecode.dex2jar.ir.stmt.Stmts.*;
 public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstants {
 
     protected IrMethod irMethod;
-    private Method method;
-    private boolean isStatic;
-    private StmtList list;
+    private final Method method;
+    private final boolean isStatic;
+    private final StmtList list;
     private Local[] locals;
     Map<DexLabel, LabelStmt> labelStmtMap = new HashMap<>();
 
@@ -71,7 +71,6 @@ public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstan
         irMethod.isStatic = isStatic;
         this.irMethod = irMethod;
         this.list = irMethod.stmts;
-        this.irMethod = irMethod;
         this.method = method;
         this.isStatic = isStatic;
     }
@@ -543,9 +542,8 @@ public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstan
         Value[] vs;
         if (args.length > 0) {
             int i = 0;
-            List<Local> ps = new ArrayList<Local>(args.length);
+            List<Local> ps = new ArrayList<>(args.length);
             if (op == Op.INVOKE_STATIC || op == Op.INVOKE_STATIC_RANGE) {
-                ;
             } else {
                 ps.add(locals[args[i]]);
                 i++;
@@ -558,12 +556,12 @@ public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstan
                     i++;
                 }
             }
-            vs = ps.toArray(new Value[ps.size()]);
+            vs = ps.toArray(new Value[0]);
         } else {
             vs = new Value[0];
         }
 
-        Value invoke = null;
+        Value invoke;
         switch (op) {
         case INVOKE_VIRTUAL_RANGE:
         case INVOKE_VIRTUAL:
@@ -639,7 +637,7 @@ public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstan
     public void visitStmt2R(Op op, int a, int b) {
         Local va = locals[a];
         Local vb = locals[b];
-        Value to = null;
+        Value to;
         switch (op) {
         case MOVE:
         case MOVE_16:
@@ -851,7 +849,7 @@ public class Dex2IrAdapter extends DexCodeVisitor implements Opcodes, DexConstan
 
     @Override
     public void visitTryCatch(DexLabel start, DexLabel end, DexLabel[] handlers, String[] types) {
-        LabelStmt xlabelStmts[] = new LabelStmt[types.length];
+        LabelStmt[] xlabelStmts = new LabelStmt[types.length];
         for (int i = 0; i < types.length; i++) {
             xlabelStmts[i] = toLabelStmt(handlers[i]);
         }

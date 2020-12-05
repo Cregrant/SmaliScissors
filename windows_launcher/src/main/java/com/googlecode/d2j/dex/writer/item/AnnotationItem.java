@@ -32,9 +32,7 @@ public class AnnotationItem extends BaseItem {
         AnnotationItem that = (AnnotationItem) o;
 
         if (!annotation.equals(that.annotation)) return false;
-        if (visibility != that.visibility) return false;
-
-        return true;
+        return visibility == that.visibility;
     }
 
     @Override

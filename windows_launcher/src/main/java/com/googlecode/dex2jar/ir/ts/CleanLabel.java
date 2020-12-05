@@ -16,15 +16,16 @@
  */
 package com.googlecode.dex2jar.ir.ts;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.googlecode.dex2jar.ir.IrMethod;
 import com.googlecode.dex2jar.ir.LocalVar;
 import com.googlecode.dex2jar.ir.Trap;
 import com.googlecode.dex2jar.ir.stmt.*;
 import com.googlecode.dex2jar.ir.stmt.Stmt.ST;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Clean unused {@link LabelStmt}
@@ -36,7 +37,7 @@ public class CleanLabel implements Transformer {
 
     @Override
     public void transform(IrMethod irMethod) {
-        Set<LabelStmt> uselabels = new HashSet<LabelStmt>();
+        Set<LabelStmt> uselabels = new HashSet<>();
         addTrap(irMethod.traps, uselabels);
         addVars(irMethod.vars, uselabels);
         addStmt(irMethod.stmts, uselabels);
@@ -77,9 +78,7 @@ public class CleanLabel implements Transformer {
             } else if (p instanceof BaseSwitchStmt) {
                 BaseSwitchStmt stmt = (BaseSwitchStmt) p;
                 labels.add(stmt.defaultTarget);
-                for (LabelStmt t : stmt.targets) {
-                    labels.add(t);
-                }
+                labels.addAll(Arrays.asList(stmt.targets));
             }
         }
     }
@@ -89,9 +88,7 @@ public class CleanLabel implements Transformer {
             for (Trap trap : traps) {
                 labels.add(trap.start);
                 labels.add(trap.end);
-                for (LabelStmt h : trap.handlers) {
-                    labels.add(h);
-                }
+                labels.addAll(Arrays.asList(trap.handlers));
             }
         }
     }

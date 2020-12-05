@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Util {
     public static List<String> listDesc(String desc) {
-        List<String> list = new ArrayList<String>(5);
+        List<String> list = new ArrayList<>(5);
         char[] chars = desc.toCharArray();
         int i = 0;
         while (i < chars.length) {
@@ -143,9 +143,7 @@ public class Util {
                 }
             }
             StringBuilder sb = new StringBuilder().append(toShortClassName(desc.substring(d)));
-            for (int t = 0; t < d; t++) {
-                sb.append("[]");
-            }
+            sb.append("[]".repeat(d));
             return sb.toString();
         }
         throw new UnsupportedOperationException();
