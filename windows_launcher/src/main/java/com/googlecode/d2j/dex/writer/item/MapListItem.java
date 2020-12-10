@@ -28,8 +28,8 @@ public class MapListItem extends BaseItem {
         return 4 + items.size() * 12;
     }
 
-    public void writeMapItem(DataOut out, int type, int size, int offset) {
-        out.begin("map_item");
+    public static void writeMapItem(DataOut out, int type, int size, int offset) {
+        out.begin();
         out.ushort("type", type);
         out.ushort("unused", 0);
         out.uint("size", size);
@@ -42,7 +42,7 @@ public class MapListItem extends BaseItem {
     }
 
     public void write(DataOut out) {
-        out.begin("map_list");
+        out.begin();
         out.uint("size", items.size());
         for (SectionItem<?> t : items) {
             writeMapItem(out, t.sectionType.code, t.items.size(), t.offset);

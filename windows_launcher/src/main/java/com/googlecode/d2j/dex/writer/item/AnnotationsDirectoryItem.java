@@ -33,13 +33,13 @@ public class AnnotationsDirectoryItem extends BaseItem {
     public int place(int offset) {
         offset += 16;
         if (fieldAnnotations != null) {
-            offset += fieldAnnotations.size() * 8;
+            offset += fieldAnnotations.size() << 3;
         }
         if (methodAnnotations != null) {
-            offset += methodAnnotations.size() * 8;
+            offset += methodAnnotations.size() << 3;
         }
         if (parameterAnnotations != null) {
-            offset += parameterAnnotations.size() * 8;
+            offset += parameterAnnotations.size() << 3;
         }
         return offset;
     }

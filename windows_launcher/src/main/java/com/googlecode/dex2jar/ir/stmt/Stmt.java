@@ -240,7 +240,7 @@ public abstract class Stmt {
         return null;
     }
 
-    public Value[] getOps() {
+    public static Value[] getOps() {
         return null;
     }
 

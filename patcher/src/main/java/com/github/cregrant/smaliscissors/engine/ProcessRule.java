@@ -13,8 +13,8 @@ import java.util.regex.Pattern;
 class ProcessRule {
     static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
     static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
-    static int patchedFilesNum;
-    static final HashMap<String, String> assignMap = new HashMap<>();
+    private static int patchedFilesNum;
+    private static final HashMap<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
     static void matchReplace(Rule rule) {
@@ -118,8 +118,10 @@ class ProcessRule {
     static void add(Rule rule) {
         String src = Prefs.tempDir + File.separator + rule.source;
         String dst = Prefs.projectPath + File.separator + rule.target;
-        if (rule.extract) IO.zipExtract(src, dst);
-        else IO.copy(src, dst);
+        if (rule.extract)
+            IO.zipExtract(src, dst);
+        else
+            IO.copy(src, dst);
         ArrayList<DecompiledFile> newFiles = Scan.scanFolder(new File(rule.target)); //todo check for correctness
         for (DecompiledFile df : newFiles) {
             if (df.isXML())
@@ -201,7 +203,9 @@ class ProcessRule {
     }
 
     public static void dex(Rule rule) {
-        String apkPath = "";
+        String apkPath = Scan.getApkPath();
+        if (apkPath == null)
+            Main.out.println("ERROR: apk file not found.");
         String zipPath = Prefs.patchesDir + File.separator + Prefs.zipName;
         String projectPath = Prefs.projectPath;
         String dexPath = Prefs.tempDir + File.separator + rule.script;

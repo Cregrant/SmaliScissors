@@ -96,9 +96,8 @@ public class ExceptionHandlerTrim implements Transformer {
                         }
                         ntrap.start = (LabelStmt) pre;
                         status = 1;
-                    } else {
-                        // continue;
-                    }
+                    }  // continue;
+
 
                 } else if (status == 1) {
                     Stmt pre = p.getPre();

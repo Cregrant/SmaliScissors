@@ -25,15 +25,15 @@ class Rule {
     boolean checkRuleIntegrity() {
         switch (type) {
             case "MATCH_ASSIGN":
-                if (target==null | match==null | assignments==null)
+                if (target == null || match == null || assignments == null)
                     return false;
                 break;
             case "ADD_FILES":
-                if (target==null | source==null)
+                if (target == null || source == null)
                     return false;
                 break;
             case "MATCH_REPLACE":
-                if (target==null | match==null | replacement==null)
+                if (target == null || match == null || replacement == null)
                     return false;
                 break;
             case "REMOVE_FILES":
@@ -45,7 +45,7 @@ class Rule {
                     return false;
                 break;
             case "EXECUTE_DEX":
-                if (script==null | mainClass==null | entrance==null | param==null)
+                if (script == null || mainClass == null || entrance == null || param == null)
                     return false;
                 break;
             case "GOTO":
@@ -53,7 +53,7 @@ class Rule {
                     return false;
                 break;
             case "MATCH_GOTO":
-                if (target==null | match==null | goTo==null)
+                if (target == null || match == null || goTo == null)
                     return false;
                 break;
         }

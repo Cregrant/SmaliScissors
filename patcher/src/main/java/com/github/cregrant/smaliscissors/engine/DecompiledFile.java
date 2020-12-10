@@ -56,12 +56,12 @@ public class DecompiledFile {
         return !this.isBigSize;
     }
 
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (anObject instanceof DecompiledFile) {
-            return this.path.equals(((DecompiledFile)anObject).getPath()) && this.isModified == ((DecompiledFile)anObject).isModified && this.body.equals(((DecompiledFile)anObject).getBody());
+        if (obj instanceof DecompiledFile) {
+            return this.path.equals(((DecompiledFile) obj).path) && this.isModified == ((DecompiledFile) obj).isModified && this.body.equals(((DecompiledFile) obj).getBody());
         }
         return false;
     }

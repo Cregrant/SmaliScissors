@@ -56,13 +56,13 @@ public class ConstTransformer implements Transformer {
         clean(m);
     }
 
-    private void clean(IrMethod m) {
+    private static void clean(IrMethod m) {
         for (Local local : m.locals) {
             local.tag = null;
         }
     }
 
-    private void replace(IrMethod m) {
+    private static void replace(IrMethod m) {
         Cfg.travelMod(m.stmts, new TravelCallBack() {
 
             @Override
@@ -88,7 +88,7 @@ public class ConstTransformer implements Transformer {
         }, true);
     }
 
-    private void markReplacable(IrMethod m) {
+    private static void markReplacable(IrMethod m) {
         for (Local local : m.locals) {
             ConstAnalyzeValue cav = (ConstAnalyzeValue) local.tag;
             if (Boolean.TRUE.equals(cav.isConst)) {
@@ -106,7 +106,7 @@ public class ConstTransformer implements Transformer {
         }
     }
 
-    private void markConstant(IrMethod m) {
+    private static void markConstant(IrMethod m) {
         Queue<Local> queue = new UniqueQueue<>();
         queue.addAll(m.locals);
         while (!queue.isEmpty()) {
@@ -154,7 +154,7 @@ public class ConstTransformer implements Transformer {
         }
     }
 
-    private void collect(IrMethod m) {
+    private static void collect(IrMethod m) {
         for (Stmt p = m.stmts.getFirst(); p != null; p = p.getNext()) {
             if (p.st == ST.ASSIGN || p.st == ST.IDENTITY) {
                 E2Stmt e2 = (E2Stmt) p;
@@ -186,7 +186,7 @@ public class ConstTransformer implements Transformer {
         }
     }
 
-    private void init(IrMethod m) {
+    private static void init(IrMethod m) {
         for (Local local : m.locals) {
             local.tag = new ConstAnalyzeValue(local);
         }

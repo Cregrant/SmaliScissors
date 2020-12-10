@@ -51,7 +51,7 @@ public class J2IRConverter {
         currentEmit.add(stmt);
     }
 
-    IrMethod populate(String owner, MethodNode source) {
+    static IrMethod populate(String owner, MethodNode source) {
         IrMethod target = new IrMethod();
         target.name = source.name;
         target.owner = "L" + owner + ";";
@@ -204,7 +204,7 @@ public class J2IRConverter {
         }
     }
 
-    private void addToQueue(Queue<JvmValue> queue, JvmValue v) {
+    private static void addToQueue(Queue<JvmValue> queue, JvmValue v) {
         if (v != null) {
             if (v.local != null) {
                 if (v.parent != null) {
@@ -294,9 +294,7 @@ public class J2IRConverter {
                     merge(tmp, insnList.indexOf(lsin.dflt));
                 }
             }
-            if ((op >= Opcodes.GOTO && op <= Opcodes.RETURN) || op == Opcodes.ATHROW) {
-                // can't continue
-            } else {
+            if ((op < Opcodes.GOTO || op > Opcodes.RETURN) && op != Opcodes.ATHROW) {
                 stack.push(p.getNext());
                 merge(tmp, index + 1);
             }
@@ -467,7 +465,7 @@ public class J2IRConverter {
                         TableSwitchInsnNode ts = (TableSwitchInsnNode) insn;
                         LabelStmt[] targets = new LabelStmt[ts.labels.size()];
                         for (int i = 0; i < ts.labels.size(); i++) {
-                            targets[i] = getLabel((LabelNode) ts.labels.get(i));
+                            targets[i] = getLabel(ts.labels.get(i));
                         }
                         emit(Stmts.nTableSwitch(local, ts.min, targets, getLabel(ts.dflt)));
                         return null;
@@ -477,8 +475,8 @@ public class J2IRConverter {
                         LabelStmt[] targets = new LabelStmt[ls.labels.size()];
                         int[] lookupValues = new int[ls.labels.size()];
                         for (int i = 0; i < ls.labels.size(); i++) {
-                            targets[i] = getLabel((LabelNode) ls.labels.get(i));
-                            lookupValues[i] = (Integer) ls.keys.get(i);
+                            targets[i] = getLabel(ls.labels.get(i));
+                            lookupValues[i] = ls.keys.get(i);
                         }
                         emit(Stmts.nLookupSwitch(local, lookupValues, targets, getLabel(ls.dflt)));
                         return null;
@@ -515,7 +513,6 @@ public class J2IRConverter {
                             case T_FLOAT:
                                 return b(1, Exprs.nNewArray("F", local));
                             case T_DOUBLE:
-                                return b(1, Exprs.nNewArray("D", local));
                             case T_LONG:
                                 return b(1, Exprs.nNewArray("D", local));
                             default:
@@ -531,7 +528,7 @@ public class J2IRConverter {
                         return null;
                     case CHECKCAST:
                         String orgDesc = ((TypeInsnNode) insn).desc;
-                        desc = orgDesc.startsWith("[") ? orgDesc : ("L" + orgDesc + ";");
+                        desc = !orgDesc.isEmpty() && orgDesc.charAt(0) == '[' ? orgDesc : ("L" + orgDesc + ";");
                         return b(1, Exprs.nCheckCast(local, desc));
                     case INSTANCEOF:
                         return b(1, Exprs.nInstanceOf(local, "L" + ((TypeInsnNode) insn).desc + ";"));
@@ -849,9 +846,7 @@ public class J2IRConverter {
                     parentCount[insnList.indexOf(lsin.dflt)]++;
                 }
             }
-            if ((op >= Opcodes.GOTO && op <= Opcodes.RETURN) || op == Opcodes.ATHROW) {
-                // can't continue
-            } else {
+            if ((op < Opcodes.GOTO || op > Opcodes.RETURN) && op != Opcodes.ATHROW) {
                 AbstractInsnNode next = p.getNext();
                 if(next!=null) {
                     parentCount[insnList.indexOf(p.getNext())]++;
@@ -914,12 +909,10 @@ public class J2IRConverter {
         }
     }
 
-    private void relate(JvmValue parent, JvmValue child) {
+    private static void relate(JvmValue parent, JvmValue child) {
         if (child.parent == null) {
             child.parent = parent;
-        } else if (child.parent == parent) {
-            //
-        } else {
+        } else if (child.parent != parent) {
             if (child.otherParent == null) {
                 child.otherParent = new HashSet<>(5);
             }
@@ -945,7 +938,7 @@ public class J2IRConverter {
         return first;
     }
 
-    private int sizeOfType(String arg) {
+    private static int sizeOfType(String arg) {
         switch (arg.charAt(0)) {
             case 'J':
             case 'D':

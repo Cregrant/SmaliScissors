@@ -137,7 +137,7 @@ public class BaksmaliBaseDexExceptionHandler extends BaseDexExceptionHandler {
     }
 
     // dump each method
-    private void dumpMethod(BufferedWriter writer, DexMethodNode dexMethodNode, Exception ex) throws IOException {
+    private static void dumpMethod(BufferedWriter writer, DexMethodNode dexMethodNode, Exception ex) throws IOException {
         writer.append(dexMethodNode.method.toString());
         writer.newLine();
         writer.flush();

@@ -3,8 +3,8 @@ package com.github.cregrant.smaliscissors.engine;
 import java.util.ArrayList;
 
 class Patch {
-    final ArrayList<Rule> rules = new ArrayList<>();
-    int currentRuleNum = 0;
+    private final ArrayList<Rule> rules = new ArrayList<>();
+    private int currentRuleNum = 0;
     boolean smaliNeeded = false;
     boolean xmlNeeded = false;
 

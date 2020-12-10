@@ -326,7 +326,7 @@ public class Dex2IRConverter {
         return local;
     }
 
-    private void addToQueue(Queue<DvmValue> queue, DvmValue v) {
+    private static void addToQueue(Queue<DvmValue> queue, DvmValue v) {
         if (v != null) {
             if (v.local != null) {
                 if (v.parent != null) {
@@ -458,7 +458,7 @@ public class Dex2IRConverter {
 
     }
 
-    private void relate(DvmValue parent, DvmValue child) {
+    private static void relate(DvmValue parent, DvmValue child) {
         if (child.parent == null) {
             child.parent = parent;
         } else if (child.parent != parent) {

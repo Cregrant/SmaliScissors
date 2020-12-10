@@ -167,7 +167,7 @@ public abstract class BaseCmd {
         super();
     }
 
-    private Set<Option> collectRequriedOptions(Map<String, Option> optMap) {
+    private static Set<Option> collectRequriedOptions(Map<String, Option> optMap) {
         Set<Option> options = new HashSet<>();
         for (Map.Entry<String, Option> e : optMap.entrySet()) {
             Option option = e.getValue();
@@ -179,7 +179,7 @@ public abstract class BaseCmd {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    protected Object convert(String value, Class type) {
+    protected static Object convert(String value, Class type) {
         if (type.equals(String.class)) {
             return value;
         }
@@ -247,7 +247,7 @@ public abstract class BaseCmd {
                 option.description = opt.description();
                 option.hasArg = opt.hasArg();
                 option.required = opt.required();
-                if ("".equals(opt.longOpt()) && "".equals(opt.opt())) {   // into automode
+                if (opt.longOpt().isEmpty() && opt.opt().isEmpty()) {   // into automode
                     option.longOpt = fromCamel(f.getName());
                     if (f.getType().equals(boolean.class)) {
                         option.hasArg=false;
@@ -277,15 +277,15 @@ public abstract class BaseCmd {
                     }
                 }
                 boolean haveLongOpt = false;
-                if (!"".equals(opt.longOpt())) {
+                if (!opt.longOpt().isEmpty()) {
                     option.longOpt = opt.longOpt();
                     checkConflict(option, "--" + option.longOpt);
                     haveLongOpt = true;
                 }
-                if (!"".equals(opt.argName())) {
+                if (!opt.argName().isEmpty()) {
                     option.argName = opt.argName();
                 }
-                if (!"".equals(opt.opt())) {
+                if (!opt.opt().isEmpty()) {
                     option.opt = opt.opt();
                     checkConflict(option, "-" + option.opt);
                 } else {
@@ -352,7 +352,7 @@ public abstract class BaseCmd {
             if (needArgOpt != null) {
                 needArgOpt.field.set(this, convert(s, needArgOpt.field.getType()));
                 needArgOpt = null;
-            } else if (s.startsWith("-")) {// its a short or long option
+            } else if (!s.isEmpty() && s.charAt(0) == '-') {// its a short or long option
                 Option opt = optMap.get(s);
                 requiredOpts.remove(opt);
                 if (opt == null) {

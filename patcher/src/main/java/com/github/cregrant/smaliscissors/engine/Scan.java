@@ -9,8 +9,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
-public class Scan {
+class Scan {
     static void scanProject(boolean xmlNeeded, boolean smaliNeeded) {
         long startTime = System.currentTimeMillis();
         List<Future<ArrayList<DecompiledFile>>> results = new ArrayList<>();
@@ -19,7 +20,7 @@ public class Scan {
 
         if (smaliNeeded) {         //add smali folders
             File[] list = new File(Prefs.projectPath).listFiles();
-            if (list.length == 0)
+            if (Objects.requireNonNull(list).length == 0)
                 Main.out.println("WARNING: no smali folders found inside the project folder \"" + Regex.getEndOfPath(Prefs.projectPath) + '\"');
             for (File folder : list) {
                 String name = folder.toString().replace(Prefs.projectPath + File.separator, "");
@@ -180,5 +181,31 @@ public class Scan {
                 size--;
             }
         }
+    }
+
+    static String getApkPath() {
+        File[] files = new File(Prefs.projectPath).listFiles();
+        if (files != null) {
+            for (File str : files) {
+                if (str.getName().startsWith("apktool."))
+                    return parseConfig(str);
+            }
+        }
+        return null;
+    }
+
+    private static String parseConfig(File config) {
+        Pattern pattern = Pattern.compile(".{0,5}apkFile.+?(?:\": \"|: )(.+?\\.apk)(?:\",)?");
+        String scannedPath = Regex.matchSingleLine(pattern, IO.read(config.getPath()));
+        File outerDir = new File(Prefs.projectPath).getParentFile();
+        File apkFile = new File(outerDir + File.separator + scannedPath);
+        if (scannedPath != null) {
+            if (apkFile.exists())
+                return apkFile.getPath();
+            apkFile = new File(scannedPath);
+            if (apkFile.exists())
+                return apkFile.getPath();
+        }
+        return null;
     }
 }

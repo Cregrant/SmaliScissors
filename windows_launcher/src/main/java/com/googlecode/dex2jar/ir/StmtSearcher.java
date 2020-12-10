@@ -23,7 +23,7 @@ public class StmtSearcher {
                 travel(stmt.getOp2());
                 break;
             case En:
-                Value[] ops = stmt.getOps();
+                Value[] ops = Stmt.getOps();
                 for (Value op : ops) {
                     travel(op);
                 }

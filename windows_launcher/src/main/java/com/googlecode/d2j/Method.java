@@ -107,6 +107,6 @@ public class Method {
          */
     @Override
     public String toString() {
-        return this.getOwner() + "." + this.getName() + this.getDesc();
+        return this.owner + "." + this.name + this.getDesc();
     }
 }

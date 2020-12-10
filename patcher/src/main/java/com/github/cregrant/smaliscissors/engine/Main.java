@@ -35,7 +35,7 @@ public class Main {
         Main.out.println("Good bye Sir.");
     }
 
-    static void runAsModule(ArrayList<String> projectsList, ArrayList<String> zipArr) {
+    private static void runAsModule(ArrayList<String> projectsList, ArrayList<String> zipArr) {
         if (projectsList.isEmpty() || zipArr.isEmpty()) {
             Main.out.println("Empty project or patch list");
             throw new IndexOutOfBoundsException();

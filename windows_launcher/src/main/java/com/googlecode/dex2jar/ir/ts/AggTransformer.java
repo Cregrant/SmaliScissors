@@ -13,7 +13,7 @@ import java.util.*;
 public class AggTransformer extends StatedTransformer {
     @Override
     public boolean transformReportChanged(IrMethod method) {
-        boolean changed = false;
+        boolean changed;
 
 
         Set<Stmt> locationSensitiveStmts = new HashSet<>();
@@ -249,7 +249,7 @@ public class AggTransformer extends StatedTransformer {
         return useInPhi;
     }
 
-    private void modReplace(Map<Local, Value> toReplace, Cfg.TravelCallBack tcb) {
+    private static void modReplace(Map<Local, Value> toReplace, Cfg.TravelCallBack tcb) {
         for (Map.Entry<Local, Value> e : toReplace.entrySet()) {
             Value v = e.getValue();
             if (v.vt == Value.VT.LOCAL) {

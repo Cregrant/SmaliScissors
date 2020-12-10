@@ -136,7 +136,7 @@ public class NewTransformer implements Transformer {
         for (Iterator<Stmt> it = method.stmts.iterator(); it.hasNext(); ) {
             Stmt p = it.next();
             if (p.st == ASSIGN && p.getOp1().vt == LOCAL) {
-                if (toDelete.contains((Local) p.getOp1())) {
+                if (toDelete.contains(p.getOp1())) {
                     it.remove();
                 }
             }

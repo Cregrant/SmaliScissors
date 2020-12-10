@@ -37,8 +37,8 @@ public class RemoveLocalFromSSA extends StatedTransformer {
         }
     }
 
-    private boolean simpleAssign(List<LabelStmt> phiLabels, List<AssignStmt> assignStmtList,
-                                 Map<Local, Local> toReplace, StmtList stmts) {
+    private static boolean simpleAssign(List<LabelStmt> phiLabels, List<AssignStmt> assignStmtList,
+                                        Map<Local, Local> toReplace, StmtList stmts) {
         Set<Value> usedInPhi = new HashSet<>();
         if (phiLabels != null) {
             for (LabelStmt labelStmt : phiLabels) {
@@ -61,7 +61,7 @@ public class RemoveLocalFromSSA extends StatedTransformer {
         return changed;
     }
 
-    private void replacePhi(List<LabelStmt> phiLabels, Map<Local, Local> toReplace, Set<Value> set) {
+    private static void replacePhi(List<LabelStmt> phiLabels, Map<Local, Local> toReplace, Set<Value> set) {
         if (phiLabels != null) {
             for (LabelStmt labelStmt : phiLabels) {
                 for (AssignStmt phi : labelStmt.phis) {
@@ -105,7 +105,7 @@ public class RemoveLocalFromSSA extends StatedTransformer {
     }
 
 
-    private boolean simplePhi(List<LabelStmt> phiLabels, Map<Local, Local> toReplace, Set<Value> set) {
+    private static boolean simplePhi(List<LabelStmt> phiLabels, Map<Local, Local> toReplace, Set<Value> set) {
         boolean changed = false;
         if (phiLabels != null) {
             for (Iterator<LabelStmt> itLabel = phiLabels.iterator(); itLabel.hasNext(); ) {

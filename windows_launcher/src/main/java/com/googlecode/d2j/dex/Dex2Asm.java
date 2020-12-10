@@ -57,7 +57,7 @@ public class Dex2Asm {
         }
 
         public String toString() {
-            return "" + name;
+            return name;
         }
     }
 
@@ -454,7 +454,7 @@ public class Dex2Asm {
         }
     }
 
-    public void convertField(DexClassNode classNode, DexFieldNode fieldNode, ClassVisitor cv) {
+    public static void convertField(DexClassNode classNode, DexFieldNode fieldNode, ClassVisitor cv) {
         String signature = null;
         if (fieldNode.anns != null) {
             for (DexAnnotationNode ann : fieldNode.anns) {
@@ -501,14 +501,10 @@ public class Dex2Asm {
             MethodHandle mh = (MethodHandle) ele;
             switch (mh.getType()) {
                 case MethodHandle.INSTANCE_GET:
-                    h = new Handle(Opcodes.H_GETFIELD, toInternalName(mh.getField().getOwner()), mh.getField().getName(), mh.getField().getType());
-                    break;
-                case MethodHandle.INSTANCE_PUT:
-                    h = new Handle(Opcodes.H_PUTFIELD, toInternalName(mh.getField().getOwner()), mh.getField().getName(), mh.getField().getType());
-                    break;
                 case MethodHandle.STATIC_GET:
                     h = new Handle(Opcodes.H_GETFIELD, toInternalName(mh.getField().getOwner()), mh.getField().getName(), mh.getField().getType());
                     break;
+                case MethodHandle.INSTANCE_PUT:
                 case MethodHandle.STATIC_PUT:
                     h = new Handle(Opcodes.H_PUTFIELD, toInternalName(mh.getField().getOwner()), mh.getField().getName(), mh.getField().getType());
                     break;
@@ -590,7 +586,7 @@ public class Dex2Asm {
 
     }
 
-    public IrMethod dex2ir(DexMethodNode methodNode) {
+    public static IrMethod dex2ir(DexMethodNode methodNode) {
         return new Dex2IRConverter()
                 .convert(0 != (methodNode.access & DexConstants.ACC_STATIC), methodNode.method, methodNode.codeNode);
     }

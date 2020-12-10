@@ -1,13 +1,7 @@
 package com.github.cregrant.smaliscissors.engine;
 
-import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,7 +13,7 @@ import java.util.zip.ZipInputStream;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class IO {
 
-    static String currentProjectPathCached = "";
+    private static String currentProjectPathCached = "";
 
     static Patch loadRules(String zipFile) {
         Pattern patRule = Pattern.compile("(\\[.+?](?:\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET):)[\\s\\S]*?\\[/.+?])");
@@ -91,7 +85,7 @@ class IO {
     static void write(String path, String content) {
         try {
             deleteAll(new File(path));
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path, StandardCharsets.UTF_8));
             bufferedWriter.write(content);
             bufferedWriter.flush();
             bufferedWriter.close();
@@ -164,7 +158,7 @@ class IO {
         }
     }
 
-    static File mergePath(String dstFolder, String toMerge) {
+    private static File mergePath(String dstFolder, String toMerge) {
         String[] dstTree;
         String[] srcTree;
         if (dstFolder.contains("/"))
@@ -181,10 +175,10 @@ class IO {
         StringBuilder sb = new StringBuilder();
         String prevStr = "";
         for (String str : fullTree) {
-            if (str.equals(prevStr) || str.startsWith("smali") || str.equals("res"))
+            if (str.equals(prevStr))
                 continue;
-            prevStr = str;
             sb.append(str).append(File.separator);
+            prevStr = str;
         }
         return new File(sb.toString());
     }

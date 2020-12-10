@@ -118,8 +118,8 @@ public class ClassDefItem extends BaseItem {
         }
     }
 
-    private void collectMethod(Map<MethodIdItem, AnnotationSetItem> methodAnnotations,
-                               Map<MethodIdItem, AnnotationSetRefListItem> parameterAnnotations, List<EncodedMethod> ms, ConstPool cp) {
+    private static void collectMethod(Map<MethodIdItem, AnnotationSetItem> methodAnnotations,
+                                      Map<MethodIdItem, AnnotationSetRefListItem> parameterAnnotations, List<EncodedMethod> ms, ConstPool cp) {
         for (EncodedMethod m : ms) {
             if (m.annotationSetItem != null) {
                 methodAnnotations.put(m.method, cp.uniqAnnotationSetItem(m.annotationSetItem));
@@ -130,7 +130,7 @@ public class ClassDefItem extends BaseItem {
         }
     }
 
-    private void collectField(Map<FieldIdItem, AnnotationSetItem> fieldAnnotations, List<EncodedField> fs, ConstPool cp) {
+    private static void collectField(Map<FieldIdItem, AnnotationSetItem> fieldAnnotations, List<EncodedField> fs, ConstPool cp) {
         for (EncodedField f : fs) {
             if (f.annotationSetItem != null) {
                 fieldAnnotations.put(f.field, cp.uniqAnnotationSetItem(f.annotationSetItem));

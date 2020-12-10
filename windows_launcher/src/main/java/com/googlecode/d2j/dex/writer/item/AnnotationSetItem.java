@@ -42,7 +42,7 @@ public class AnnotationSetItem extends BaseItem {
 
     @Override
     public int place(int offset) {
-        return offset + 4 + annotations.size() * 4;
+        return offset + 4 + (annotations.size() << 2);
     }
 
     @Override

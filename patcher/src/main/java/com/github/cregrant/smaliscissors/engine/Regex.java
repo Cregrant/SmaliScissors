@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Regex {
+class Regex {
     static ArrayList<String> matchMultiLines(Pattern readyPattern, String content, String mode) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
@@ -55,7 +55,7 @@ public class Regex {
         return path.substring(last);
     }
 
-    static String globToRegex(String line) {
+    private static String globToRegex(String line) {
         line = line.trim();
         int strLen = line.length();
         StringBuilder sb = new StringBuilder(strLen);

@@ -133,7 +133,7 @@ public class NpeTransformer extends StatedTransformer {
         return changed;
     }
 
-    private void replace(final IrMethod m, final Stmt p) {
+    private static void replace(final IrMethod m, final Stmt p) {
         StmtTraveler traveler = new StmtTraveler() {
             @Override
             public Value travel(Value op) {

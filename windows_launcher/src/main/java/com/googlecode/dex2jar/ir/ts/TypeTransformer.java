@@ -296,14 +296,13 @@ public class TypeTransformer implements Transformer {
 
             switch (clz) {
                 case ZI:
+                case INT:
+                case IF:
                     return "I";
                 case ZIFL:
                 case ZIF:
                 case ZIL:
                     return "Z";
-                case INT:
-                case IF:
-                    return "I";
                 default:
             }
             throw new RuntimeException();
@@ -420,7 +419,7 @@ public class TypeTransformer implements Transformer {
             }
         }
 
-        private void mergeArrayRelation(TypeRef ref, Relation r) {
+        private static void mergeArrayRelation(TypeRef ref, Relation r) {
             Set<TypeRef> v = r.get(ref);
             if (v != null && v.size() > 1) {
                 List<TypeRef> copy = new ArrayList<>(v);
@@ -664,7 +663,7 @@ public class TypeTransformer implements Transformer {
             return i;
         }
 
-        private String mergeParentType(Set<TypeRef> parents) {
+        private static String mergeParentType(Set<TypeRef> parents) {
             Iterator<TypeRef> it = parents.iterator();
             String a = it.next().getProvideDesc();
             while (it.hasNext()) {

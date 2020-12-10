@@ -333,7 +333,7 @@ public class ArrayElementTransformer extends StatedTransformer {
         new ArrayElementTransformer().transform(m);
     }
 
-    private Set<Local> searchForArrayObject(IrMethod method) {
+    private static Set<Local> searchForArrayObject(IrMethod method) {
         final Set<Local> arrays = new HashSet<>();
         for (Stmt stmt : method.stmts) {
             if (stmt.st == Stmt.ST.ASSIGN) {

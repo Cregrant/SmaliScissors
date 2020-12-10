@@ -98,7 +98,7 @@ public abstract class BaseAnalyze<T extends AnalyzeValue> implements FrameVisito
     }
 
     protected T getFromFrame(int idx) {
-        return (T) currentFrame[idx];
+        return currentFrame[idx];
     }
 
     protected T[] getFrame(Stmt stmt) {
@@ -162,7 +162,7 @@ public abstract class BaseAnalyze<T extends AnalyzeValue> implements FrameVisito
 
     @Override
     public Local onUse(Local local) {
-        T aValue = (T) currentFrame[local._ls_index];
+        T aValue = currentFrame[local._ls_index];
         onUseLocal(aValue, local);
         return local;
     }

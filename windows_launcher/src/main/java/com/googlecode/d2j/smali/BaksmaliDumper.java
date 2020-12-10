@@ -248,10 +248,10 @@ public class BaksmaliDumper implements DexConstants {
             }
         }
         if (obj instanceof Float) {
-            return ((Float) obj).toString() + "F";
+            return obj.toString() + "F";
         }
         if (obj instanceof Double) {
-            return ((Double) obj).toString() + "D";
+            return obj.toString() + "D";
         }
         if (obj instanceof Short) {
             return ((Short) obj).toString() + "S";
@@ -261,9 +261,9 @@ public class BaksmaliDumper implements DexConstants {
         }
         if (obj instanceof Character) {
             StringBuilder buf = new StringBuilder();
-            buf.append("\'");
+            buf.append("'");
             escape0(buf, (Character) obj);
-            buf.append("\'");
+            buf.append("'");
             return buf.toString();
         }
         if (obj instanceof Boolean) {
@@ -547,7 +547,7 @@ public class BaksmaliDumper implements DexConstants {
         dexCodeVisitor.visitEnd();
     }
 
-    void accept(Out out, DexCodeNode code, DexCodeVisitor v) {
+    static void accept(Out out, DexCodeNode code, DexCodeVisitor v) {
         if (code.tryStmts != null) {
             for (TryCatchNode n : code.tryStmts) {
                 n.accept(v);

@@ -33,7 +33,7 @@ public class Main {
         Prefs.run_type = "pc";
         File patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
         File projectsHome = new File("C:\\BAT\\_INPUT_APK");
-        new Prefs().loadConf();
+        Prefs.loadConf();
         while (true) {
             if (!projectsHome.isDirectory()) {
                 out.println("Error loading projects folder\n" + projectsHome);

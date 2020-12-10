@@ -15,11 +15,11 @@
  */
 package com.googlecode.dex2jar.ir.stmt;
 
-import java.util.Collection;
-import java.util.Iterator;
-
 import com.googlecode.dex2jar.ir.LabelAndLocalMapper;
 import com.googlecode.dex2jar.ir.stmt.Stmt.ST;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * Represent a list of statement.
@@ -53,7 +53,6 @@ public class StmtList implements Iterable<Stmt>, java.util.Comparator<Stmt> {
             Stmt x = current = next;
             if (x != null) {
                 next = x.next;
-            } else {
             }
             return x;
         }

@@ -57,7 +57,7 @@ public class InvokePolymorphicExpr extends AbstractInvokeExpr {
         StringBuilder sb = new StringBuilder();
         int i = 0;
         sb.append(ops[i++]).append('.').append(this.method.getName());
-        String[] argTypes = getProto().getParameterTypes();
+        String[] argTypes = proto.getParameterTypes();
         sb.append('(');
         int j = 0;
         boolean first = true;

@@ -33,11 +33,6 @@ public final class ZipEntry implements ZipConstants, Cloneable {
     long localHeaderRelOffset;
 
     /**
-     * Zip entry state: Deflated.
-     */
-    public static final int DEFLATED = 8;
-
-    /**
      * Zip entry state: Stored.
      */
     public static final int STORED = 0;
@@ -77,12 +72,6 @@ public final class ZipEntry implements ZipConstants, Cloneable {
         return extra;
     }
 
-    /**
-     * Gets the compression method for this {@code android.ZipEntry}.
-     * 
-     * @return the compression method, either {@code DEFLATED}, {@code STORED} or -1 if the compression method has not
-     *         been set.
-     */
     public int getMethod() {
         return compressionMethod;
     }
@@ -155,7 +144,7 @@ public final class ZipEntry implements ZipConstants, Cloneable {
     }
 
     ZipEntry(ByteBuffer it0, boolean skipCommentsAndExtra) throws IOException {
-        ByteBuffer it = (ByteBuffer) it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
+        ByteBuffer it = it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
         ZipFile.skip(it0, CENHDR);
         int sig = it.getInt();
         if (sig != CENSIG) {
@@ -163,7 +152,6 @@ public final class ZipEntry implements ZipConstants, Cloneable {
         }
 
         it.position(8);
-        int gpbf = it.getShort() & 0xffff;
 
         compressionMethod = it.getShort() & 0xffff;
         time = it.getShort() & 0xffff;

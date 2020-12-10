@@ -59,9 +59,7 @@ public class InvokeCustomExpr extends AbstractInvokeExpr {
 
     @Override
     public String toString0() {
-        StringBuilder sb = new StringBuilder();
 
-        sb.append("InvokeCustomExpr(....)");
-        return sb.toString();
+        return "InvokeCustomExpr(....)";
     }
 }

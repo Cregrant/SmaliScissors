@@ -54,7 +54,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         return x;
     };
 
-    private Reg[] genGraph(IrMethod method, final Reg[] regs) {
+    private static Reg[] genGraph(IrMethod method, final Reg[] regs) {
         Reg[] args;
         if (method.isStatic) {
             args = new Reg[method.args.length];
@@ -121,7 +121,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         return args;
     }
 
-   Map<Character, List<Reg>> groupAndCleanUpByType(Reg[] regs) {
+   static Map<Character, List<Reg>> groupAndCleanUpByType(Reg[] regs) {
         Map<Character, List<Reg>> groups = new HashMap<>();
         for (Reg reg : regs) {
             char simpleType = reg.type;
@@ -134,7 +134,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         return groups;
     }
 
-    private void initExcludeColor(BitSet excludeColor, Reg as) {
+    private static void initExcludeColor(BitSet excludeColor, Reg as) {
         excludeColor.clear();
         for (Reg ex : as.excludes) {
             if (ex.reg >= 0) {
@@ -146,7 +146,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         }
     }
 
-    private void initSuggestColor(BitSet suggestColor, Reg as) {
+    private static void initSuggestColor(BitSet suggestColor, Reg as) {
         suggestColor.clear();
         for (Reg ex : as.prefers) {
             if (ex.reg >= 0) {
@@ -280,7 +280,7 @@ public class Ir2JRegAssignTransformer implements Transformer {
         }
     }
 
-    private void excludeParameters(BitSet excludeColor, Reg[] args, char type) {
+    private static void excludeParameters(BitSet excludeColor, Reg[] args, char type) {
         for (Reg arg : args) {
             if (arg.type != type) {
                 excludeColor.set(arg.reg);

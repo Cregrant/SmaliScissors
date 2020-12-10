@@ -44,7 +44,7 @@ public class ClassDataItem extends BaseItem {
         return offset;
     }
 
-    private int placeMethod(int offset, List<EncodedMethod> methods) {
+    private static int placeMethod(int offset, List<EncodedMethod> methods) {
         if (methods.size() == 0) {
             return offset;
         }
@@ -58,7 +58,7 @@ public class ClassDataItem extends BaseItem {
         return offset;
     }
 
-    private int placeField(int offset, List<EncodedField> fields) {
+    private static int placeField(int offset, List<EncodedField> fields) {
         if (fields.size() == 0) {
             return offset;
         }
@@ -84,7 +84,7 @@ public class ClassDataItem extends BaseItem {
         writeMethod(out, virtualMethods);
     }
 
-    private void writeMethod(DataOut out, List<EncodedMethod> methods) {
+    private static void writeMethod(DataOut out, List<EncodedMethod> methods) {
         if (methods == null || methods.size() == 0) {
             return;
         }
@@ -97,7 +97,7 @@ public class ClassDataItem extends BaseItem {
         }
     }
 
-    private void writeField(DataOut out, List<EncodedField> fields) {
+    private static void writeField(DataOut out, List<EncodedField> fields) {
         if (fields == null || fields.size() == 0) {
             return;
         }

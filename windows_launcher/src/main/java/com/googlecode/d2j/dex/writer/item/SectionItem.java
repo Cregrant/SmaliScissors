@@ -71,7 +71,7 @@ public class SectionItem<T extends BaseItem> extends BaseItem {
     }
 
     public void write(DataOut out) {
-        out.begin("Section:" + sectionType);
+        out.begin();
         List<T> items = this.items;
         if (sectionType == SectionType.TYPE_STRING_DATA_ITEM) {
             Buffer buff = new Buffer();

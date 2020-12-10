@@ -57,7 +57,7 @@ public class IR2JConverter implements Opcodes {
         reBuildTryCatchBlocks(ir, asm);
     }
 
-    private void mapLabelStmt(IrMethod ir) {
+    private static void mapLabelStmt(IrMethod ir) {
         for (Stmt p : ir.stmts) {
             if (p.st == ST.LABEL) {
                 LabelStmt labelStmt = (LabelStmt) p;
@@ -73,7 +73,7 @@ public class IR2JConverter implements Opcodes {
      * @param ir
      * @param asm
      */
-    private void reBuildTryCatchBlocks(IrMethod ir, MethodVisitor asm) {
+    private static void reBuildTryCatchBlocks(IrMethod ir, MethodVisitor asm) {
         for (Trap trap : ir.traps) {
             boolean needAdd = false;
             for (Stmt p = trap.start.getNext(); p != null && p != trap.end; p = p.getNext()) {
@@ -433,7 +433,7 @@ public class IR2JConverter implements Opcodes {
         return false;
     }
 
-    private void reBuildJumpInstructions(IfStmt st, MethodVisitor asm) {
+    private static void reBuildJumpInstructions(IfStmt st, MethodVisitor asm) {
         Label target = (Label) st.target.tag;
         Value v = st.op;
         Value v1 = v.getOp1();
@@ -540,8 +540,6 @@ public class IR2JConverter implements Opcodes {
                 return Type.SHORT_TYPE.getOpcode(op);
             case 'C':
                 return Type.CHAR_TYPE.getOpcode(op);
-            case 'I':
-                return Type.INT_TYPE.getOpcode(op);
             case 'F':
                 return Type.FLOAT_TYPE.getOpcode(op);
             case 'J':
@@ -626,10 +624,9 @@ public class IR2JConverter implements Opcodes {
                 accept(vb, asm);
             }
             NewMutiArrayExpr nmae = (NewMutiArrayExpr) value;
-            StringBuilder sb = new StringBuilder();
-            sb.append("[".repeat(Math.max(0, nmae.dimension)));
-            sb.append(nmae.baseType);
-            asm.visitMultiANewArrayInsn(sb.toString(), value.ops.length);
+            String sb = "[".repeat(Math.max(0, nmae.dimension)) +
+                    nmae.baseType;
+            asm.visitMultiANewArrayInsn(sb, value.ops.length);
             break;
         case INVOKE_NEW:
             asm.visitTypeInsn(NEW, toInternal(((InvokeExpr) value).getOwner()));

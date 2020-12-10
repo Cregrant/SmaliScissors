@@ -125,7 +125,7 @@ public class ASMifierCodeV extends DexCodeVisitor implements DexConstants {
         return name;
     }
 
-    String op(Op op) {
+    static String op(Op op) {
         return op.name();
     }
 

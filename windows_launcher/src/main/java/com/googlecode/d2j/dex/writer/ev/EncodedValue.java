@@ -140,7 +140,7 @@ public class EncodedValue {
             case 'C':
                 return new EncodedValue(VALUE_CHAR, (char) 0);
             case 'I':
-                return new EncodedValue(VALUE_INT, (int) 0);
+                return new EncodedValue(VALUE_INT, 0);
             case 'F':
                 return new EncodedValue(VALUE_FLOAT, (float) 0);
             case 'D':
@@ -268,11 +268,10 @@ public class EncodedValue {
             case VALUE_NULL:
             case VALUE_ANNOTATION:
             case VALUE_ARRAY:
+            case VALUE_BYTE:
                 return 0;
             case VALUE_BOOLEAN:
                 return Boolean.TRUE.equals(value) ? 1 : 0;
-            case VALUE_BYTE:
-                return 0;
             case VALUE_SHORT:
             case VALUE_INT:
                 return lengthOfSint(((Number) value).intValue()) - 1;
@@ -353,8 +352,8 @@ public class EncodedValue {
         }
     }
 
-    private byte[] writeRightZeroExtendedValue(int requiredBytes, long value) {
-        value >>= 64 - (requiredBytes * 8);
+    private static byte[] writeRightZeroExtendedValue(int requiredBytes, long value) {
+        value >>= 64 - (requiredBytes << 3);
         byte[] s = new byte[requiredBytes];
         for (int i = 0; i < requiredBytes; i++) {
             s[i] = ((byte) value);

@@ -50,7 +50,7 @@ public class CodeItem extends BaseItem {
         prepareInsns();
         prepareTries();
 
-        offset += 16 + insn_size * 2;
+        offset += 16 + (insn_size << 1);
         if (tries != null && tries.size() > 0) {
             if ((insn_size & 0x01) != 0) {// padding
                 offset += 2;
@@ -85,7 +85,7 @@ public class CodeItem extends BaseItem {
         out.ushort("tries_size", tries == null ? 0 : tries.size());
         out.uint("debug_info_off", debugInfo == null ? 0 : debugInfo.offset);
         out.uint("insn_size", insn_size);
-        ByteBuffer b = ByteBuffer.allocate(insn_size * 2).order(ByteOrder.LITTLE_ENDIAN);
+        ByteBuffer b = ByteBuffer.allocate(insn_size << 1).order(ByteOrder.LITTLE_ENDIAN);
         for (Insn insn : insns) {
             insn.write(b);
         }
@@ -170,7 +170,7 @@ public class CodeItem extends BaseItem {
         }
     }
 
-    private void mergeExceptionHandler(EncodedCatchHandler to, EncodedCatchHandler from) {
+    private static void mergeExceptionHandler(EncodedCatchHandler to, EncodedCatchHandler from) {
         for (AddrPair pair : from.addPairs) {
             if (!to.addPairs.contains(pair)) {
                 to.addPairs.add(pair);

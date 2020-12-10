@@ -92,7 +92,7 @@ public class UnSSATransformer implements Transformer {
      * 
      * @param phiLabels
      */
-    private void fixPhi(IrMethod method, Collection<LabelStmt> phiLabels) {
+    private static void fixPhi(IrMethod method, Collection<LabelStmt> phiLabels) {
         for (LabelStmt labelStmt : phiLabels) {
             List<AssignStmt> phis = labelStmt.phis;
 
@@ -297,7 +297,7 @@ public class UnSSATransformer implements Transformer {
         method.phiLabels = null;
     }
 
-    private void genRegGraph(IrMethod method, LiveA liveA) {
+    private static void genRegGraph(IrMethod method, LiveA liveA) {
         for (Local local : method.locals) {
             local.tag = new RegAssign();
         }

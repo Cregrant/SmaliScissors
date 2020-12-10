@@ -136,7 +136,7 @@ public class FillArrayTransformer extends StatedTransformer {
         return true;
     }
 
-    private void replace(IrMethod method, Map<Local, ArrayObject> arraySizes) {
+    private static void replace(IrMethod method, Map<Local, ArrayObject> arraySizes) {
         final List<FilledArrayExpr> filledArrayExprs = new ArrayList<>();
         for (Map.Entry<Local, ArrayObject> e : arraySizes.entrySet()) {
             final Local local0 = e.getKey();
@@ -214,9 +214,7 @@ public class FillArrayTransformer extends StatedTransformer {
                         Cfg.travelMod(filledArrayExprs.get(i), tcb);
                     }
                 }
-            } else if (ao.used.size() == 0) {
-                // the array is never used, ignore
-            } else {
+            } else if (ao.used.size() != 0) {
                 throw new RuntimeException("array is used multiple times");
             }
         }
@@ -475,7 +473,7 @@ public class FillArrayTransformer extends StatedTransformer {
         return used;
     }
 
-    private void makeSureAllElementAreAssigned(Map<Local, ArrayObject> arraySizes) {
+    private static void makeSureAllElementAreAssigned(Map<Local, ArrayObject> arraySizes) {
         BitSet pos = new BitSet();
         for (Iterator<Map.Entry<Local, ArrayObject>> it = arraySizes.entrySet().iterator(); it.hasNext();) {
             Map.Entry<Local, ArrayObject> e = it.next();
@@ -509,60 +507,57 @@ public class FillArrayTransformer extends StatedTransformer {
         }
     }
 
-    private Map<Local, ArrayObject> searchForArrayObject(IrMethod method) {
+    private static Map<Local, ArrayObject> searchForArrayObject(IrMethod method) {
 
         final Map<Local, ArrayObject> arraySizes = new HashMap<>();
         if (method.locals.size() == 0) {
             return arraySizes;
         }
         Cfg.createCFG(method);
-        Cfg.dfsVisit(method, new Cfg.DfsVisitor() {
-            @Override
-            public void onVisit(Stmt p) {
-                if (p.st == Stmt.ST.ASSIGN) {
-                    if (p.getOp2().vt == Value.VT.NEW_ARRAY && p.getOp1().vt == Value.VT.LOCAL) {
-                        TypeExpr ae = (TypeExpr) p.getOp2();
-                        if (ae.getOp().vt == Value.VT.CONSTANT) {
-                            int size = ((Number) ((Constant) ae.getOp()).value).intValue();
+        Cfg.dfsVisit(method, p -> {
+            if (p.st == Stmt.ST.ASSIGN) {
+                if (p.getOp2().vt == Value.VT.NEW_ARRAY && p.getOp1().vt == Value.VT.LOCAL) {
+                    TypeExpr ae = (TypeExpr) p.getOp2();
+                    if (ae.getOp().vt == Value.VT.CONSTANT) {
+                        int size = ((Number) ((Constant) ae.getOp()).value).intValue();
 
-                            // https://bitbucket.org/pxb1988/dex2jar/issues/2/decompiler-error
-                            // the following code may used in a java
-                            // try{
-                            //   new int[-1];
-                            // } catch(Exception e) {
-                            //   ...
-                            // }
-                            if (size >= 0) {
-                                arraySizes.put((Local) p.getOp1(), new ArrayObject(size, ae.type, (AssignStmt) p));
-                            }
+                        // https://bitbucket.org/pxb1988/dex2jar/issues/2/decompiler-error
+                        // the following code may used in a java
+                        // try{
+                        //   new int[-1];
+                        // } catch(Exception e) {
+                        //   ...
+                        // }
+                        if (size >= 0) {
+                            arraySizes.put((Local) p.getOp1(), new ArrayObject(size, ae.type, (AssignStmt) p));
                         }
-                    } else if (p.getOp1().vt == Value.VT.ARRAY) {
-                        ArrayExpr ae = (ArrayExpr) p.getOp1();
-                        if (ae.getOp1().vt == Value.VT.LOCAL) {
-                            Local local = (Local) ae.getOp1();
-                            ArrayObject arrayObject = arraySizes.get(local);
-                            if (arrayObject != null) {
-                                if (ae.getOp2().vt == Value.VT.CONSTANT) {
-                                    arrayObject.putItem.add(p);
-                                } else {
-                                    arraySizes.remove(local);
-                                }
+                    }
+                } else if (p.getOp1().vt == Value.VT.ARRAY) {
+                    ArrayExpr ae = (ArrayExpr) p.getOp1();
+                    if (ae.getOp1().vt == Value.VT.LOCAL) {
+                        Local local = (Local) ae.getOp1();
+                        ArrayObject arrayObject = arraySizes.get(local);
+                        if (arrayObject != null) {
+                            if (ae.getOp2().vt == Value.VT.CONSTANT) {
+                                arrayObject.putItem.add(p);
+                            } else {
+                                arraySizes.remove(local);
                             }
                         }
                     }
-                } else if (p.st == Stmt.ST.FILL_ARRAY_DATA) {
-                    if (p.getOp1().vt == Value.VT.LOCAL) {
-                        Local local = (Local) p.getOp1();
-                        ArrayObject arrayObject = arraySizes.get(local);
-                        if (arrayObject != null) {
-                            arrayObject.putItem.add(p);
-                        }
+                }
+            } else if (p.st == Stmt.ST.FILL_ARRAY_DATA) {
+                if (p.getOp1().vt == Value.VT.LOCAL) {
+                    Local local = (Local) p.getOp1();
+                    ArrayObject arrayObject = arraySizes.get(local);
+                    if (arrayObject != null) {
+                        arrayObject.putItem.add(p);
                     }
                 }
             }
         });
         if (arraySizes.size() > 0) {
-            Set<Local> set = new HashSet<Local>();
+            Set<Local> set = new HashSet<>();
             if (method.phiLabels != null) {
                 for (LabelStmt labelStmt : method.phiLabels) {
                     if (labelStmt.phis != null) {

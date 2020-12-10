@@ -18,7 +18,7 @@ package com.googlecode.d2j.dex.writer.io;
 
 public interface DataOut {
 
-    void begin(String s);
+    void begin();
 
     void bytes(String s, byte[] bs);
 

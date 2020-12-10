@@ -213,7 +213,6 @@ public class Utils implements DexConstants {
                         i += 2;
                         break;
                     case 'u':
-                        String sub = str.substring(i + 2, i + 6);
                         i += 6;
                         break;
                     default:

@@ -35,7 +35,7 @@ import java.util.*;
  */
 public class SSATransformer implements Transformer {
 
-    private void cleanTagsAndReIndex(IrMethod method) {
+    private static void cleanTagsAndReIndex(IrMethod method) {
         int i = 0;
         for (Local local : method.locals) {
             local.tag = null;
@@ -43,7 +43,7 @@ public class SSATransformer implements Transformer {
         }
     }
 
-    private void deleteDeadCode(IrMethod method) {
+    private static void deleteDeadCode(IrMethod method) {
         for (Iterator<Stmt> it = method.stmts.iterator(); it.hasNext(); ) {
             Stmt stmt = it.next();
             if (!stmt.visited && stmt.st != ST.LABEL) {
@@ -52,7 +52,7 @@ public class SSATransformer implements Transformer {
         }
     }
 
-    private void replaceLocalsWithSSA(final IrMethod method) {
+    private static void replaceLocalsWithSSA(final IrMethod method) {
         final List<Local> locals = method.locals;
         locals.clear();
         StmtList stmts = method.stmts;
@@ -142,7 +142,7 @@ public class SSATransformer implements Transformer {
         cleanTagsAndReIndex(method);
     }
 
-    private boolean prepare(final IrMethod method) {
+    private static boolean prepare(final IrMethod method) {
         int index = Cfg.reIndexLocal(method);
 
         final int[] readCounts = new int[index];
@@ -417,7 +417,7 @@ public class SSATransformer implements Transformer {
             }
         }
 
-        private void linkParentChildren(SSAValue p, SSAValue c) {
+        private static void linkParentChildren(SSAValue p, SSAValue c) {
             if (c.parent == null) {
                 c.parent = p;
             }

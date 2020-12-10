@@ -105,12 +105,12 @@ import java.util.*;
         }
         case CONST_WIDE_32: {
             Long v = (Long) value;
-            value = (int) v.intValue();
+            value = v.intValue();
             break;
         }
         case CONST_HIGH16: {
             Integer v = (Integer) value;
-            value = (int) v >> 16;
+            value = v >> 16;
             break;
         }
         }
@@ -492,7 +492,7 @@ import java.util.*;
         }
     }
 
-    String xLabel(DexLabel d) {
+    static String xLabel(DexLabel d) {
         return ":" + d.displayName;
     }
 }

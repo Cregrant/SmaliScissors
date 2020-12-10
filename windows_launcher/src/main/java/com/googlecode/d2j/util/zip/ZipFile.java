@@ -24,10 +24,6 @@ import java.util.zip.ZipException;
  * 
  */
 public class ZipFile implements AutoCloseable, ZipConstants {
-    /**
-     * General Purpose Bit Flags, Bit 0. If set, indicates that the file is encrypted.
-     */
-    static final int GPBF_ENCRYPTED_FLAG = 1;
 
     /**
      * General Purpose Bit Flags, Bit 3. If this bit is set, the fields crc-32, compressed size and uncompressed size
@@ -42,13 +38,6 @@ public class ZipFile implements AutoCloseable, ZipConstants {
      * fields for this file must be encoded using UTF-8.
      */
     static final int GPBF_UTF8_FLAG = 1 << 11;
-
-    /**
-     * Supported General Purpose Bit Flags Mask. Bit mask of bits not supported. Note: The only bit that we will enforce
-     * at this time is the encrypted bit. Although other bits are not supported, we must not enforce them as this could
-     * break some legitimate use cases (See http://b/8617715).
-     */
-    static final int GPBF_UNSUPPORTED_MASK = GPBF_ENCRYPTED_FLAG;
 
     private List<ZipEntry> entries;
 
@@ -126,13 +115,13 @@ public class ZipFile implements AutoCloseable, ZipConstants {
      */
     public InputStream getInputStream(ZipEntry entry) {
         long entryDataStart = getEntryDataStart(entry);
-        ByteBuffer is = (ByteBuffer) raf.duplicate().position((int) entryDataStart);
+        ByteBuffer is = raf.duplicate().position((int) entryDataStart);
 
         if (entry.compressionMethod == ZipEntry.STORED) {
-            final ByteBuffer buf = (ByteBuffer) is.slice().order(ByteOrder.LITTLE_ENDIAN).limit((int) entry.size);
+            final ByteBuffer buf = is.slice().order(ByteOrder.LITTLE_ENDIAN).limit((int) entry.size);
             return new ByteBufferBackedInputStream(buf);
         } else {
-            final ByteBuffer buf = (ByteBuffer) is.slice().order(ByteOrder.LITTLE_ENDIAN)
+            final ByteBuffer buf = is.slice().order(ByteOrder.LITTLE_ENDIAN)
                     .limit((int) entry.compressedSize);
             int bufSize = Math.max(1024, (int) Math.min(entry.getSize(), 65535L));
             return new ZipInflaterInputStream(new ByteBufferBackedInputStream(buf), new Inflater(true), bufSize, entry);
@@ -216,7 +205,6 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         if (numEntries != totalNumEntries || diskNumber != 0 || diskWithCentralDir != 0) {
             throw new ZipException("Spanned archives not supported");
         }
-        boolean skipCommentsAndExtra = true;
 
         if (commentLength > 0) {
             if (commentLength > raf.remaining()) {
@@ -230,14 +218,11 @@ public class ZipFile implements AutoCloseable, ZipConstants {
         // We have to do this now (from the constructor) rather than lazily because the
         // public API doesn't allow us to throw IOException except from the constructor
         // or from getInputStream.
-        ByteBuffer buf = (ByteBuffer) raf.duplicate().order(ByteOrder.LITTLE_ENDIAN).position((int) centralDirOffset);
+        ByteBuffer buf = raf.duplicate().order(ByteOrder.LITTLE_ENDIAN).position((int) centralDirOffset);
         entries = new ArrayList<>(numEntries);
         for (int i = 0; i < numEntries; ++i) {
             ZipEntry newEntry = new ZipEntry(buf, true);
-            if (newEntry.localHeaderRelOffset >= centralDirOffset) {
-                // Ignore the entry
-                // throw new ZipException("Local file header offset is after central directory");
-            } else {
+            if (newEntry.localHeaderRelOffset < centralDirOffset) {
                 entries.add(newEntry);
             }
         }

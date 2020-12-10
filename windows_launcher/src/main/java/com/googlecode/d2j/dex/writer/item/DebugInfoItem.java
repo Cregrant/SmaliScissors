@@ -108,7 +108,6 @@ public class DebugInfoItem extends BaseItem {
     static final int DBG_SET_EPILOGUE_BEGIN = 0x08;
     static final int DBG_SET_FILE = 0x09;
     static final int DBG_FIRST_SPECIAL = 0x0a;
-    static final int DBG_LINE_BASE = -4;
     static final int DBG_LINE_RANGE = 15;
 
     @Override
@@ -181,9 +180,7 @@ public class DebugInfoItem extends BaseItem {
                 if (opNode.label.offset == 0 && lineDelta == 0 && addrDelta == 0) { // first line;
                     break;
                 }
-                if ((lineDelta >= -4 && lineDelta <= 10) && addrDelta <= 15) {
-                    // do nothing
-                } else {
+                if ((lineDelta < -4 || lineDelta > 10) || addrDelta > 15) {
                     if (addrDelta > 15) { // pc not ok, add addvance_PC
                         offset += 1;
                         offset += lengthOfUleb128(addrDelta);
@@ -193,6 +190,7 @@ public class DebugInfoItem extends BaseItem {
                         offset += lengthOfSleb128(lineDelta);
                     }
                 }
+
                 // int op = lineDelta + 4 + addrDelta * DBG_LINE_RANGE + DBG_FIRST_SPECIAL;
                 offset += 1;
                 line = opNode.line;
@@ -299,9 +297,7 @@ public class DebugInfoItem extends BaseItem {
                 if (opNode.label.offset == 0 && lineDelta == 0 && addrDelta == 0) { // first line;
                     break;
                 }
-                if ((lineDelta >= -4 && lineDelta <= 10) && addrDelta <= 15) {
-                    // do nothing
-                } else {
+                if ((lineDelta < -4 || lineDelta > 10) || addrDelta > 15) {
                     if (addrDelta > 15) { // pc not ok, add addvance_PC
                         addAdvancePC(out, addrDelta);
                         addrDelta = 0;
@@ -321,12 +317,12 @@ public class DebugInfoItem extends BaseItem {
         out.sbyte("DBG_END_SEQUENCE", DBG_END_SEQUENCE);
     }
 
-    private void addAdvanceLine(DataOut out, int lineDelta) {
+    private static void addAdvanceLine(DataOut out, int lineDelta) {
         out.sbyte("DBG_ADVANCE_LINE", DBG_ADVANCE_LINE);
         out.sleb128("offset", lineDelta);
     }
 
-    private void addAdvancePC(DataOut out, int delta) {
+    private static void addAdvancePC(DataOut out, int delta) {
         out.sbyte("DBG_ADVANCE_PC", DBG_ADVANCE_PC);
         out.uleb128("offset", delta);
     }

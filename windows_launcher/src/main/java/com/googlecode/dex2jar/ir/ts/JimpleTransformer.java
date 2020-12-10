@@ -153,7 +153,7 @@ public class JimpleTransformer implements Transformer {
             }
             break;
         case En:
-            Value[] ops = p.getOps();
+            Value[] ops = Stmt.getOps();
             for (int i = 0; i < ops.length; i++) {
                 ops[i] = convertExpr(ops[i], true, tmp);
             }

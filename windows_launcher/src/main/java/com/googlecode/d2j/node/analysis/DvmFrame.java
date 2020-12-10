@@ -1,6 +1,5 @@
 package com.googlecode.d2j.node.analysis;
 
-import com.googlecode.d2j.MethodHandle;
 import com.googlecode.d2j.Proto;
 import com.googlecode.d2j.node.insn.*;
 import com.googlecode.d2j.reader.Op;
@@ -47,7 +46,7 @@ public class DvmFrame<V> {
             case CONST_STRING_JUMBO:
             case CONST_CLASS:
                 setReg(((ConstStmtNode) insn).a, interpreter.newOperation(insn));
-                setTmp(null);
+                tmp = null;
                 break;
             case SGET:
             case SGET_BOOLEAN:
@@ -57,11 +56,11 @@ public class DvmFrame<V> {
             case SGET_SHORT:
             case SGET_WIDE:
                 setReg(((FieldStmtNode) insn).a, interpreter.newOperation(insn));
-                setTmp(null);
+                tmp = null;
                 break;
             case NEW_INSTANCE:
                 setReg(((TypeStmtNode) insn).a, interpreter.newOperation(insn));
-                setTmp(null);
+                tmp = null;
                 break;
             case MOVE:
             case MOVE_16:
@@ -74,14 +73,14 @@ public class DvmFrame<V> {
             case MOVE_WIDE_16:
                 Stmt2RNode stmt2RNode = (Stmt2RNode) insn;
                 setReg(stmt2RNode.a, interpreter.copyOperation(insn, getReg(stmt2RNode.b)));
-                setTmp(null);
+                tmp = null;
                 break;
             case MOVE_RESULT:
             case MOVE_RESULT_WIDE:
             case MOVE_RESULT_OBJECT:
             case MOVE_EXCEPTION:
-                setReg(((Stmt1RNode) insn).a, interpreter.copyOperation(insn, getTmp()));
-                setTmp(null);
+                setReg(((Stmt1RNode) insn).a, interpreter.copyOperation(insn, tmp));
+                tmp = null;
                 break;
             case NOT_INT:
             case NOT_LONG:
@@ -107,7 +106,7 @@ public class DvmFrame<V> {
             case ARRAY_LENGTH:
                 Stmt2RNode stmt2RNode1 = (Stmt2RNode) insn;
                 setReg(stmt2RNode1.a, interpreter.unaryOperation(insn, getReg(stmt2RNode1.b)));
-                setTmp(null);
+                tmp = null;
                 break;
             case IF_EQZ:
             case IF_GEZ:
@@ -116,15 +115,15 @@ public class DvmFrame<V> {
             case IF_LTZ:
             case IF_NEZ:
                 interpreter.unaryOperation(insn, getReg(((JumpStmtNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case SPARSE_SWITCH:
                 interpreter.unaryOperation(insn, getReg(((SparseSwitchStmtNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case PACKED_SWITCH:
                 interpreter.unaryOperation(insn, getReg(((PackedSwitchStmtNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case SPUT:
             case SPUT_BOOLEAN:
@@ -134,7 +133,7 @@ public class DvmFrame<V> {
             case SPUT_SHORT:
             case SPUT_WIDE:
                 interpreter.unaryOperation(insn, getReg(((FieldStmtNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case IGET:
             case IGET_BOOLEAN:
@@ -145,32 +144,32 @@ public class DvmFrame<V> {
             case IGET_WIDE:
                 FieldStmtNode fieldStmtNode = (FieldStmtNode) insn;
                 setReg(fieldStmtNode.a, interpreter.unaryOperation(insn, getReg(fieldStmtNode.b)));
-                setTmp(null);
+                tmp = null;
                 break;
             case NEW_ARRAY:
             case INSTANCE_OF: {
                 TypeStmtNode typeStmtNode = (TypeStmtNode) insn;
                 setReg(typeStmtNode.a, interpreter.unaryOperation(insn, getReg(typeStmtNode.b)));
-                setTmp(null);
+                tmp = null;
             }
             break;
             case CHECK_CAST: {
                 TypeStmtNode typeStmtNode = (TypeStmtNode) insn;
                 setReg(typeStmtNode.a, interpreter.unaryOperation(insn, getReg(typeStmtNode.a)));
-                setTmp(null);
+                tmp = null;
             }
             break;
             case MONITOR_ENTER:
             case MONITOR_EXIT:
             case THROW:
                 interpreter.unaryOperation(insn, getReg(((Stmt1RNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case RETURN:
             case RETURN_WIDE:
             case RETURN_OBJECT:
                 interpreter.returnOperation(insn, getReg(((Stmt1RNode) insn).a));
-                setTmp(null);
+                tmp = null;
                 break;
             case AGET:
             case AGET_BOOLEAN:
@@ -218,7 +217,7 @@ public class DvmFrame<V> {
             case USHR_LONG:
                 Stmt3RNode stmt3RNode = (Stmt3RNode) insn;
                 setReg(stmt3RNode.a, interpreter.binaryOperation(insn, getReg(stmt3RNode.b), getReg(stmt3RNode.c)));
-                setTmp(null);
+                tmp = null;
                 break;
             case IF_EQ:
             case IF_GE:
@@ -228,7 +227,7 @@ public class DvmFrame<V> {
             case IF_NE:
                 JumpStmtNode jumpStmtNode = (JumpStmtNode) insn;
                 interpreter.binaryOperation(insn, getReg(jumpStmtNode.a), getReg(jumpStmtNode.b));
-                setTmp(null);
+                tmp = null;
                 break;
             case IPUT:
             case IPUT_BOOLEAN:
@@ -239,7 +238,7 @@ public class DvmFrame<V> {
             case IPUT_WIDE:
                 FieldStmtNode fieldStmtNode1 = (FieldStmtNode) insn;
                 interpreter.binaryOperation(insn, getReg(fieldStmtNode1.b), getReg(fieldStmtNode1.a));
-                setTmp(null);
+                tmp = null;
                 break;
             case APUT:
             case APUT_BOOLEAN:
@@ -250,7 +249,7 @@ public class DvmFrame<V> {
             case APUT_WIDE:
                 Stmt3RNode stmt3RNode1 = (Stmt3RNode) insn;
                 interpreter.ternaryOperation(insn, getReg(stmt3RNode1.b), getReg(stmt3RNode1.c), getReg(stmt3RNode1.a));
-                setTmp(null);
+                tmp = null;
                 break;
             case INVOKE_VIRTUAL_RANGE:
             case INVOKE_VIRTUAL:
@@ -292,7 +291,7 @@ public class DvmFrame<V> {
                         i += 1;
                     }
                 }
-                setTmp(interpreter.naryOperation(insn, v));
+                tmp = interpreter.naryOperation(insn, v);
             }
             break;
             case FILLED_NEW_ARRAY:
@@ -302,7 +301,7 @@ public class DvmFrame<V> {
                 for (int i = 0; i < filledNewArrayStmtNode.args.length; i++) {
                     v.add(getReg(filledNewArrayStmtNode.args[i]));
                 }
-                setTmp(interpreter.naryOperation(insn, v));
+                tmp = interpreter.naryOperation(insn, v);
             }
             break;
 
@@ -341,7 +340,7 @@ public class DvmFrame<V> {
             case USHR_LONG_2ADDR:
                 Stmt2RNode stmt2RNode2 = (Stmt2RNode) insn;
                 setReg(stmt2RNode2.a, interpreter.binaryOperation(insn, getReg(stmt2RNode2.a), getReg(stmt2RNode2.b)));
-                setTmp(null);
+                tmp = null;
                 break;
             case ADD_INT_LIT16:
             case ADD_INT_LIT8:
@@ -364,18 +363,18 @@ public class DvmFrame<V> {
             case USHR_INT_LIT8:
                 Stmt2R1NNode stmt2R1NNode = (Stmt2R1NNode) insn;
                 setReg(stmt2R1NNode.distReg, interpreter.unaryOperation(insn, getReg(stmt2R1NNode.srcReg)));
-                setTmp(null);
+                tmp = null;
                 break;
             case FILL_ARRAY_DATA:
                 interpreter.unaryOperation(insn,getReg(((FillArrayDataStmtNode)insn).ra));
-                setTmp(null);
+                tmp = null;
                 break;
             case GOTO:
             case GOTO_16:
             case GOTO_32:
             case RETURN_VOID:
             case BAD_OP:
-                setTmp(null);
+                tmp = null;
                 break;
             default:
                 throw new RuntimeException();

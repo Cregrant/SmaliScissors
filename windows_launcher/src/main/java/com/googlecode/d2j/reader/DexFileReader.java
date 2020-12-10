@@ -231,14 +231,14 @@ public class DexFileReader implements BaseDexFileReader {
         this.call_site_ids_size = call_site_ids_size;
         this.method_handle_ids_size = method_handle_ids_size;
 
-        stringIdIn = slice(in, string_ids_off, string_ids_size * 4);
-        typeIdIn = slice(in, type_ids_off, type_ids_size * 4);
+        stringIdIn = slice(in, string_ids_off, string_ids_size << 2);
+        typeIdIn = slice(in, type_ids_off, type_ids_size << 2);
         protoIdIn = slice(in, proto_ids_off, proto_ids_size * 12);
-        fieldIdIn = slice(in, field_ids_off, field_ids_size * 8);
-        methoIdIn = slice(in, method_ids_off, method_ids_size * 8);
-        classDefIn = slice(in, class_defs_off, class_defs_size * 32);
-        callSiteIdIn = slice(in, call_site_ids_off, call_site_ids_size * 4);
-        methodHandleIdIn = slice(in, method_handle_ids_off, method_handle_ids_size * 8);
+        fieldIdIn = slice(in, field_ids_off, field_ids_size << 3);
+        methoIdIn = slice(in, method_ids_off, method_ids_size << 3);
+        classDefIn = slice(in, class_defs_off, class_defs_size << 5);
+        callSiteIdIn = slice(in, call_site_ids_off, call_site_ids_size << 2);
+        methodHandleIdIn = slice(in, method_handle_ids_off, method_handle_ids_size << 3);
 
         in.position(0);
         annotationsDirectoryItemIn = in.duplicate().order(ByteOrder.LITTLE_ENDIAN);
@@ -335,9 +335,9 @@ public class DexFileReader implements BaseDexFileReader {
         int length = ((before >> 5) & 0x7) + 1;
         long value = 0;
         for (int j = 0; j < length; j++) {
-            value |= ((long) (0xFF & in.get())) << (j * 8);
+            value |= ((long) (0xFF & in.get())) << (j << 3);
         }
-        int shift = (8 - length) * 8;
+        int shift = (8 - length) << 3;
         return value << shift >> shift;
     }
 
@@ -345,7 +345,7 @@ public class DexFileReader implements BaseDexFileReader {
         int length = ((before >> 5) & 0x7) + 1;
         long value = 0;
         for (int j = 0; j < length; j++) {
-            value |= ((long) (0xFF & in.get())) << (j * 8);
+            value |= ((long) (0xFF & in.get())) << (j << 3);
         }
         return value;
     }
@@ -354,9 +354,9 @@ public class DexFileReader implements BaseDexFileReader {
         int bytes = ((before >> 5) & 0x7) + 1;
         long result = 0L;
         for (int i = 0; i < bytes; ++i) {
-            result |= ((long) (0xFF & in.get())) << (i * 8);
+            result |= ((long) (0xFF & in.get())) << (i << 3);
         }
-        result <<= (8 - bytes) * 8;
+        result <<= (8 - bytes) << 3;
         return result;
     }
 
@@ -575,7 +575,7 @@ public class DexFileReader implements BaseDexFileReader {
         List<String> names = new ArrayList<>(class_defs_size);
         ByteBuffer in = classDefIn;
         for (int cid = 0; cid < class_defs_size; cid++) {
-            in.position(cid * 32);
+            in.position(cid << 5);
             String className = this.getType(in.getInt());
             names.add(className);
         }
@@ -614,7 +614,7 @@ public class DexFileReader implements BaseDexFileReader {
      */
     @Override
     public void accept(DexFileVisitor dv, int classIdx, int config) {
-        classDefIn.position(classIdx * 32);
+        classDefIn.position(classIdx << 5);
         int class_idx = classDefIn.getInt();
         int access_flags = classDefIn.getInt();
         int superclass_idx = classDefIn.getInt();
@@ -645,7 +645,7 @@ public class DexFileReader implements BaseDexFileReader {
         }
     }
 
-    public Boolean ignoreClass(String className){
+    public static Boolean ignoreClass(String className){
        return false;
     }
 
@@ -713,7 +713,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     private MethodHandle getMethodHandle(int i) {
-        methodHandleIdIn.position(i * 8);
+        methodHandleIdIn.position(i << 3);
         int method_handle_type = methodHandleIdIn.getShort() & 0xFFFF;
         methodHandleIdIn.getShort();//unused
         int field_or_method_id = methodHandleIdIn.getShort() & 0xFFFF;
@@ -882,7 +882,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     private Field getField(int id) {
-        fieldIdIn.position(id * 8);
+        fieldIdIn.position(id << 3);
         int owner_idx = 0xFFFF & fieldIdIn.getShort();
         int type_idx = 0xFFFF & fieldIdIn.getShort();
         int name_idx = fieldIdIn.getInt();
@@ -918,7 +918,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     private Method getMethod(int id) {
-        methoIdIn.position(id * 8);
+        methoIdIn.position(id << 3);
         int owner_idx = 0xFFFF & methoIdIn.getShort();
         int proto_idx = 0xFFFF & methoIdIn.getShort();
         int name_idx = methoIdIn.getInt();
@@ -929,7 +929,7 @@ public class DexFileReader implements BaseDexFileReader {
         if (id == -1) {
             return null;
         }
-        int offset = stringIdIn.getInt(id * 4);
+        int offset = stringIdIn.getInt(id << 2);
         stringDataIn.position(offset);
         int length = readULeb128i(stringDataIn);
         try {
@@ -944,7 +944,7 @@ public class DexFileReader implements BaseDexFileReader {
         if (id == -1) {
             return null;
         }
-        return getString(typeIdIn.getInt(id * 4));
+        return getString(typeIdIn.getInt(id << 2));
     }
 
     private int acceptField(ByteBuffer in, int lastIndex, DexClassVisitor dcv,
@@ -1107,7 +1107,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     private void travelInsn(Map<Integer, DexLabel> labelsMap, Queue<Integer> q, byte[] insns, int offset) {
-        int u1offset = offset * 2;
+        int u1offset = offset << 1;
         if (u1offset >= insns.length) {
             throw new IndexOutOfBoundsException();
         }
@@ -1122,7 +1122,7 @@ public class DexFileReader implements BaseDexFileReader {
             switch (op.format) {
             case kFmt10t:
                 target = offset + insns[u1offset + 1];
-                if (target < 0 || target * 2 > insns.length ) {
+                if (target < 0 || target << 1 > insns.length ) {
                     throw new BadOpException("jump out of insns %s -> %04x", op, target);
                 }
                 q.add(target);
@@ -1131,7 +1131,7 @@ public class DexFileReader implements BaseDexFileReader {
             case kFmt20t:
             case kFmt21t:
                 target = offset + sshort(insns, u1offset + 2);
-                if (target < 0 || target * 2 > insns.length ) {
+                if (target < 0 || target << 1 > insns.length ) {
                     throw new BadOpException("jump out of insns %s -> %04x", op, target);
                 }
                 q.add(target);
@@ -1162,7 +1162,7 @@ public class DexFileReader implements BaseDexFileReader {
                     }
                 }
                 if (!skipTarget) {
-                    if (target < 0 || target * 2 > insns.length ) {
+                    if (target < 0 || target << 1 > insns.length ) {
                         throw new BadOpException("jump out of insns %s -> %04x", op, target);
                     }
                     q.add(target);
@@ -1172,7 +1172,7 @@ public class DexFileReader implements BaseDexFileReader {
             case kFmt30t:
             case kFmt31t:
                 target = offset + sint(insns, u1offset + 2);
-                if (target < 0 || target * 2 > insns.length ) {
+                if (target < 0 || target << 1 > insns.length ) {
                     throw new BadOpException("jump out of insns %s -> %04x", op, target);
                 }
                 q.add(target);
@@ -1193,8 +1193,8 @@ public class DexFileReader implements BaseDexFileReader {
                             int size = ushort(insns, u1SwitchData + 2);
                             int b = u1SwitchData + 8;// targets
                             for (int i = 0; i < size; i++) {
-                                target = offset + sint(insns, b + i * 4);
-                                if (target < 0 || target * 2 > insns.length ) {
+                                target = offset + sint(insns, b + (i << 2));
+                                if (target < 0 || target << 1 > insns.length ) {
                                     throw new BadOpException("jump out of insns %s -> %04x", op, target);
                                 }
                                 q.add(target);
@@ -1207,8 +1207,8 @@ public class DexFileReader implements BaseDexFileReader {
                             int size = ushort(insns, u1SwitchData + 2);
                             int b = u1SwitchData + 4 + 4 * size;// targets
                             for (int i = 0; i < size; i++) {
-                                target = offset + sint(insns, b + i * 4);
-                                if (target < 0 || target * 2 > insns.length ) {
+                                target = offset + sint(insns, b + (i << 2));
+                                if (target < 0 || target << 1 > insns.length ) {
                                     throw new BadOpException("jump out of insns %s -> %04x", op, target);
                                 }
                                 q.add(target);
@@ -1271,12 +1271,12 @@ public class DexFileReader implements BaseDexFileReader {
                     break;
                 case 0x01: {
                     int size = ushort(insns, u1offset + 2);
-                    q.add(offset + (size * 2) + 4);
+                    q.add(offset + (size << 1) + 4);
                     break;
                 }
                 case 0x02: {
                     int size = ushort(insns, u1offset + 2);
-                    q.add(offset + (size * 4) + 2);
+                    q.add(offset + (size << 2) + 2);
                     break;
                 }
                 case 0x03: {
@@ -1294,7 +1294,7 @@ public class DexFileReader implements BaseDexFileReader {
 
     private void findTryCatch(ByteBuffer in, DexCodeVisitor dcv, int tries_size, int insn_size,
             Map<Integer, DexLabel> labelsMap, Set<Integer> handlers) {
-        int encoded_catch_handler_list = in.position() + tries_size * 8;
+        int encoded_catch_handler_list = in.position() + (tries_size << 3);
         ByteBuffer handlerIn = in.duplicate().order(ByteOrder.LITTLE_ENDIAN);
         for (int i = 0; i < tries_size; i++) { // try_item
             int start_addr = in.getInt();
@@ -1347,7 +1347,7 @@ public class DexFileReader implements BaseDexFileReader {
         int debug_info_off = in.getInt();
         int insns = in.getInt();
 
-        byte[] insnsArray = new byte[insns * 2];
+        byte[] insnsArray = new byte[(insns << 1)];
         in.get(insnsArray);
         dcv.visitRegister(registers_size);
         BitSet nextInsn = new BitSet();
@@ -1397,7 +1397,7 @@ public class DexFileReader implements BaseDexFileReader {
                 continue;
             }
 
-            int u1offset = offset * 2;
+            int u1offset = offset << 1;
             int opcode = 0xFF & insns[u1offset];
 
             Op op = values[opcode];
@@ -1513,11 +1513,11 @@ public class DexFileReader implements BaseDexFileReader {
                     DexLabel[] labels = new DexLabel[size];
                     int z = u1SwitchData + 4;
                     for (int i = 0; i < size; i++) {
-                        keys[i] = sint(insns, z + i * 4);
+                        keys[i] = sint(insns, z + (i << 2));
                     }
-                    z += size * 4;
+                    z += size << 2;
                     for (int i = 0; i < size; i++) {
-                        labels[i] = labelsMap.get(offset + sint(insns, z + i * 4));
+                        labels[i] = labelsMap.get(offset + sint(insns, z + (i << 2)));
                     }
                     dcv.visitSparseSwitchStmt(op, a, keys, labels);
                 } else {
@@ -1740,7 +1740,7 @@ public class DexFileReader implements BaseDexFileReader {
     }
 
     private Object[] getCallSite(int b) {
-        callSiteIdIn.position(b * 4);
+        callSiteIdIn.position(b << 2);
         int call_site_off = callSiteIdIn.getInt();
 
         return read_encoded_array_item(call_site_off);

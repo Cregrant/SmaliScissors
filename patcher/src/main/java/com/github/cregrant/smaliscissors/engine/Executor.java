@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import static java.lang.System.currentTimeMillis;
 
 class Executor {
-    String executePatches(ArrayList<String> zipArr) {
+    static String executePatches(ArrayList<String> zipArr) {
         long startTime = currentTimeMillis();
         for (String zipFile : zipArr) {
             if (zipFile.equals("cancel"))
@@ -32,7 +32,7 @@ class Executor {
         return "ok";
     }
 
-    private void preProcessRule(Rule rule, Patch patch) {
+    private static void preProcessRule(Rule rule, Patch patch) {
         if (Prefs.verbose_level == 0)
             Main.out.println(rule.toString());
 

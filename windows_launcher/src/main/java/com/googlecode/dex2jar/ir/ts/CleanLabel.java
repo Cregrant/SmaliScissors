@@ -47,7 +47,7 @@ public class CleanLabel implements Transformer {
         rmUnused(irMethod.stmts, uselabels);
     }
 
-    private void addVars(List<LocalVar> vars, Set<LabelStmt> uselabels) {
+    private static void addVars(List<LocalVar> vars, Set<LabelStmt> uselabels) {
         if (vars != null) {
             for (LocalVar var : vars) {
                 uselabels.add(var.start);
@@ -57,7 +57,7 @@ public class CleanLabel implements Transformer {
 
     }
 
-    private void rmUnused(StmtList stmts, Set<LabelStmt> uselabels) {
+    private static void rmUnused(StmtList stmts, Set<LabelStmt> uselabels) {
         for (Stmt p = stmts.getFirst(); p != null;) {
             if (p.st == ST.LABEL) {
                 if (!uselabels.contains(p)) {
@@ -71,7 +71,7 @@ public class CleanLabel implements Transformer {
         }
     }
 
-    private void addStmt(StmtList stmts, Set<LabelStmt> labels) {
+    private static void addStmt(StmtList stmts, Set<LabelStmt> labels) {
         for (Stmt p = stmts.getFirst(); p != null; p = p.getNext()) {
             if (p instanceof JumpStmt) {
                 labels.add(((JumpStmt) p).getTarget());
@@ -83,7 +83,7 @@ public class CleanLabel implements Transformer {
         }
     }
 
-    private void addTrap(List<Trap> traps, Set<LabelStmt> labels) {
+    private static void addTrap(List<Trap> traps, Set<LabelStmt> labels) {
         if (traps != null) {
             for (Trap trap : traps) {
                 labels.add(trap.start);

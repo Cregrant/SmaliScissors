@@ -20,7 +20,7 @@ public class Prefs {
     static final String[] smaliFoldersToSkip = new String[]{"android", "androidx", "kotlin", "kotlinx"};
     //todo move to main
 
-    public void loadConf() {
+    public static void loadConf() {
         Properties props = new Properties();
         String settingsFilename = System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt";
         try {
@@ -49,7 +49,7 @@ public class Prefs {
         }
     }
 
-    void saveConf() {
+    private static void saveConf() {
         try {
             FileOutputStream output = new FileOutputStream(System.getProperty("user.dir") + File.separator + "config" + File.separator + "conf.txt");
             Properties props = new Properties();
@@ -69,7 +69,7 @@ public class Prefs {
         Main.out.println("Upgrading config file...");
         Main.out.println(versionConf + " --> 0.01");
         versionConf = 0.01f;
-        this.saveConf();
+        Prefs.saveConf();
         Main.out.println("Upgraded.");
     }
 }

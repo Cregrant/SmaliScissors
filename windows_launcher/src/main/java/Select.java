@@ -26,7 +26,7 @@ public class Select {
         ArrayList<String> outArr = new ArrayList<>();
         while (outArr.size() == 0) {
             String inputString = br.nextLine();
-            if (inputString.equals("")) {
+            if (inputString.isEmpty()) {
                 return stringsList;
             }
             if (inputString.equals("X") | inputString.equals("x") | inputString.equals("х") | inputString.equals("Х")) {

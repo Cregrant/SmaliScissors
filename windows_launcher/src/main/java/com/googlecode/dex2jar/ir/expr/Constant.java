@@ -82,6 +82,6 @@ public class Constant extends E0Expr {
             sb.append("]");
             return sb.toString();
         }
-        return "" + value;
+        return String.valueOf(value);
     }
 }

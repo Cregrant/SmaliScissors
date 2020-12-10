@@ -29,7 +29,7 @@ public class AnnotationSetRefListItem extends BaseItem {
 
     @Override
     public int place(int offset) {
-        return offset + 4 + annotationSets.length * 4;
+        return offset + 4 + (annotationSets.length << 2);
     }
 
     @Override

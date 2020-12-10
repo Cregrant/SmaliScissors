@@ -56,7 +56,7 @@ public class TypeListItem extends BaseItem implements Comparable<TypeListItem> {
 
     @Override
     public int place(int offset) {
-        return offset + 4 + items.size() * 2;
+        return offset + 4 + (items.size() << 1);
     }
 
     @Override

@@ -175,14 +175,14 @@ public class CodeWriter extends DexCodeVisitor {
         checkRegAA(op, "vAA", vAA);
         int realV;
         if (op == CONST_HIGH16) { // op vAA, #+BBBB0000
-            int v = ((Number) value).intValue();
+            int v = value.intValue();
             if ((v & 0xFFFF) != 0) {
                 throw new CantNotFixContentException(op, "#+BBBB0000", v);
             }
             realV = v >> 16;
 
         } else { // CONST_WIDE_HIGH16 //op vAA, #+BBBB000000000000
-            long v = ((Number) value).longValue();
+            long v = value.longValue();
             if ((v & 0x0000FFFFffffFFFFL) != 0) {
                 throw new CantNotFixContentException(op, "#+BBBB000000000000", v);
             }
@@ -310,7 +310,7 @@ public class CodeWriter extends DexCodeVisitor {
             byte[] data = (byte[]) value;
             int size = data.length;
             int element_width = 1;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -319,7 +319,7 @@ public class CodeWriter extends DexCodeVisitor {
             short[] data = (short[]) value;
             int size = data.length;
             int element_width = 2;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -330,7 +330,7 @@ public class CodeWriter extends DexCodeVisitor {
             int[] data = (int[]) value;
             int size = data.length;
             int element_width = 4;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -341,7 +341,7 @@ public class CodeWriter extends DexCodeVisitor {
             float[] data = (float[]) value;
             int size = data.length;
             int element_width = 4;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -352,7 +352,7 @@ public class CodeWriter extends DexCodeVisitor {
             long[] data = (long[]) value;
             int size = data.length;
             int element_width = 8;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -363,7 +363,7 @@ public class CodeWriter extends DexCodeVisitor {
             double[] data = (double[]) value;
             int size = data.length;
             int element_width = 8;
-            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) * 2).order(ByteOrder.LITTLE_ENDIAN);
+            b = ByteBuffer.allocate(((size * element_width + 1) / 2 + 4) << 1).order(ByteOrder.LITTLE_ENDIAN);
             b.putShort((short) 0x0300);
             b.putShort((short) element_width);
             b.putInt(size);
@@ -489,7 +489,7 @@ public class CodeWriter extends DexCodeVisitor {
 
             @Override
             public int getCodeUnitSize() {
-                return (labels.length * 2) + 4;
+                return (labels.length << 1) + 4;
             }
 
             @Override
@@ -519,7 +519,7 @@ public class CodeWriter extends DexCodeVisitor {
 
             @Override
             public int getCodeUnitSize() {
-                return (cases.length * 4) + 2;
+                return (cases.length << 2) + 2;
             }
 
             @Override

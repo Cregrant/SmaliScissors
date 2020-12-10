@@ -33,7 +33,7 @@ public class StmtTraveler {
                 stmt.setOp2(travel(stmt.getOp2()));
                 break;
             case En:
-                Value[] ops = stmt.getOps();
+                Value[] ops = Stmt.getOps();
                 for (int i = 0; i < ops.length; i++) {
                     ops[i] = travel(ops[i]);
                 }

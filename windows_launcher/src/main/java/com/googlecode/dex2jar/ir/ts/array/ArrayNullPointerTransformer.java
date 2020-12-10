@@ -158,7 +158,8 @@ public class ArrayNullPointerTransformer implements Transformer {
     private boolean arrayNPE(Stmt p) {
         switch (p.et) {
         case E0:
-            return false;
+            case En:
+                return false;
         case E1:
             if (p.st == ST.GOTO) {
                 return false;
@@ -173,8 +174,6 @@ public class ArrayNullPointerTransformer implements Transformer {
             default:
                 return arrayNPE(e2.op2.trim()) || arrayNPE(e2.op1.trim());
             }
-        case En:
-            return false;
         }
         return false;
     }

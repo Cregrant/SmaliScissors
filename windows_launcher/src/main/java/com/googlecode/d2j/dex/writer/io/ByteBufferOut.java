@@ -28,7 +28,7 @@ public class ByteBufferOut implements DataOut {
     }
 
     @Override
-    public void begin(String s) {
+    public void begin() {
     }
 
     @Override

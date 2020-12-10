@@ -72,7 +72,7 @@ public class ConstPool {
         classDefs.clear();
     }
 
-    private String buildShorty(String ret, String[] types2) {
+    private static String buildShorty(String ret, String[] types2) {
         StringBuilder sb = new StringBuilder();
         if (ret.length() == 1) {
             sb.append(ret);
@@ -89,7 +89,7 @@ public class ConstPool {
         return sb.toString();
     }
 
-    PE iterateParent(ClassDefItem p) {
+    static PE iterateParent(ClassDefItem p) {
         List<TypeIdItem> list = new ArrayList<>(6);
         list.add(p.superclazz);
         if (p.interfaces != null) {
