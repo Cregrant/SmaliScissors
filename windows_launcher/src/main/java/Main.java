@@ -4,8 +4,6 @@ import com.github.cregrant.smaliscissors.engine.Prefs;
 import com.googlecode.dex2jar.tools.Dex2jarCmd;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -14,8 +12,8 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public class Main {
-    public static OutStream out = System.out::println;
-    public static DexExecutor dex = (dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param) -> {
+    public static final OutStream out = System.out::println;
+    public static final DexExecutor dex = (dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param, tempDir) -> {
         new Dex2jarCmd().doMain(dexPath);
         try {
             URL jarUrl = Paths.get(dexPath.replace(".dex", ".jar")).toUri().toURL();
@@ -24,13 +22,12 @@ public class Main {
             Object instance = loadedClass.getDeclaredConstructor().newInstance();
             Method method = loadedClass.getMethod(entrance, String.class, String.class, String.class, String.class);
             method.invoke(instance, apkPath, zipPath, projectPath, param);
-        } catch (IOException | ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Main.out.println(e.getMessage());
         }
     };
 
     public static void main(String[] args) {
-        Prefs.run_type = "pc";
         File patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
         File projectsHome = new File("C:\\BAT\\_INPUT_APK");
         Prefs.loadConf();

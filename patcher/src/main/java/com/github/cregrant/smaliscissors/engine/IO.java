@@ -4,7 +4,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -13,24 +13,25 @@ import java.util.zip.ZipInputStream;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 class IO {
 
-    private static String currentProjectPathCached = "";
+    private static String loadedProject = "";
+    private static final Pattern patRule = Pattern.compile("(\\[.+?](?:\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET):)[\\s\\S]*?\\[/.+?])");
 
     static Patch loadRules(String zipFile) {
-        Pattern patRule = Pattern.compile("(\\[.+?](?:\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET):)[\\s\\S]*?\\[/.+?])");
         deleteAll(Prefs.tempDir);
+        //noinspection ResultOfMethodCallIgnored
         Prefs.tempDir.mkdirs();
-        String txtFile = Prefs.tempDir + File.separator + "patch.txt";
         zipExtract(zipFile, Prefs.tempDir.toString());
+        Patch patch = new Patch();
+        String txtFile = Prefs.tempDir + File.separator + "patch.txt";
         if (!new File(txtFile).exists()) {
             Main.out.println("No patch.txt file in patch!");
-            System.exit(1);
+            return patch;
         }
 
         ArrayList<String> rulesListArr = Regex.matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
         RuleParser parser = new RuleParser();
-        Patch patch = new Patch();
-        for (String ruleString : rulesListArr) {
-            Rule rule = parser.parseRule(ruleString);
+        for (String singleRule : rulesListArr) {
+            Rule rule = parser.parseRule(singleRule);
             if (rule.isSmali)
                 patch.smaliNeeded = true;
             else if (rule.isXml)
@@ -54,32 +55,15 @@ class IO {
             resultString = os.toString();
             os.close();
             is.close();
+        } catch (FileNotFoundException e) {
+            Main.out.println(path + ':' + " not found.");
+            return "";
         } catch (IOException e) {
             e.printStackTrace();
             Main.out.println("Exiting to prevent file corruption");
             System.exit(1);
         }
         return resultString;
-    }
-
-    static byte[] readBytes(String path) {
-        final FileInputStream is;
-        byte[] result = null;
-        try {
-            is = new FileInputStream(path);
-            byte[] buffer = new byte[is.available()];
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            is.read(buffer);
-            os.write(buffer);
-            os.close();
-            result = os.toByteArray();
-            is.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Main.out.println("Exiting to prevent file corruption");
-            System.exit(1);
-        }
-        return result;
     }
 
     static void write(String path, String content) {
@@ -115,9 +99,13 @@ class IO {
     }
 
     static void copy(String src, String dst) {
-        src.trim(); dst.trim();
-        File dstFolder = new File(dst).getParentFile();
+        File dstFile = new File(dst);
+        if (dstFile.exists())
+            dstFile.delete();
+        src = src.trim(); dst = dst.trim();
+        File dstFolder = dstFile.getParentFile();
         dstFolder.mkdirs();
+
         try (FileInputStream is = new FileInputStream(src);
              FileOutputStream os = new FileOutputStream(dst)){
             byte[] buffer = new byte[is.available()];
@@ -136,7 +124,9 @@ class IO {
             ZipEntry zipEntry;
             while ((zipEntry = zip.getNextEntry()) != null) {
                 File filePath = mergePath(dst, zipEntry.getName());  //fix path with merge
-                if (!zipEntry.isDirectory()) {
+                if (zipEntry.isDirectory())
+                    filePath.mkdirs();
+                else {  //file
                     filePath.getParentFile().mkdirs();
                     FileOutputStream fout = new FileOutputStream(filePath);
                     int len;
@@ -145,7 +135,6 @@ class IO {
                     fout.flush();
                     fout.close();
                 }
-                else filePath.mkdirs();
                 zip.closeEntry();
             }
         }catch (FileNotFoundException e) {
@@ -169,7 +158,7 @@ class IO {
             srcTree = toMerge.split("/");
         else
             srcTree = toMerge.split("\\\\");
-        List<String> fullTree = new ArrayList<>();
+        Collection<String> fullTree = new ArrayList<>();
         fullTree.addAll(Arrays.asList(dstTree));
         fullTree.addAll(Arrays.asList(srcTree));
         StringBuilder sb = new StringBuilder();
@@ -201,15 +190,16 @@ class IO {
     }
 
     static void loadProjectFiles(boolean xmlNeeded, boolean smaliNeeded) {
-        if (!Prefs.projectPath.equals(currentProjectPathCached) || (xmlNeeded && smaliNeeded)) {
+        if (Prefs.projectPath.equals(loadedProject) && (xmlNeeded || smaliNeeded)) {
+            //new patch requires smali or xml
+            Scan.scanProject(xmlNeeded, smaliNeeded);
+        }
+        else if (smaliNeeded || xmlNeeded) {
             //other project (multiple patching available on pc) or empty files arrays
             ProcessRule.smaliList.clear();
             ProcessRule.xmlList.clear();
             Scan.scanProject(xmlNeeded, smaliNeeded);
-            currentProjectPathCached = Prefs.projectPath;
+            loadedProject = Prefs.projectPath;
         }
-        else if (smaliNeeded || xmlNeeded)      //new patch requires smali or xml
-            Scan.scanProject(xmlNeeded, smaliNeeded);
     }
-
 }

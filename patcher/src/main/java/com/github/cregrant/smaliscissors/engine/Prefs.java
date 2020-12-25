@@ -6,9 +6,8 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 
 public class Prefs {
-    public static String run_type = "";
+    public static boolean isWindows = System.getProperty("os.name").startsWith("Windows");
     public static String projectPath;
-    public static String apkPath;
     public static File patchesDir;
     public static String zipName;
     public static File tempDir;
@@ -67,8 +66,8 @@ public class Prefs {
 
     private void upgradeConf() {
         Main.out.println("Upgrading config file...");
-        Main.out.println(versionConf + " --> 0.01");
-        versionConf = 0.01f;
+        Main.out.println(versionConf + " --> " + Main.version);
+        versionConf = Main.version;
         Prefs.saveConf();
         Main.out.println("Upgraded.");
     }

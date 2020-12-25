@@ -1,10 +1,7 @@
 package com.github.cregrant.smaliscissors.engine;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -14,9 +11,8 @@ import java.util.regex.Pattern;
 class Scan {
     static void scanProject(boolean xmlNeeded, boolean smaliNeeded) {
         long startTime = System.currentTimeMillis();
-        List<Future<ArrayList<DecompiledFile>>> results = new ArrayList<>();
+        Collection<Future<ArrayList<DecompiledFile>>> results = new ArrayList<>();
         Future<ArrayList<DecompiledFile>> task;
-        BackgroundWorker.createIfTerminated();
 
         if (smaliNeeded) {         //add smali folders
             File[] list = new File(Prefs.projectPath).listFiles();
@@ -75,6 +71,7 @@ class Scan {
         ProcessRule.smaliList = bigSmaliList;
         ProcessRule.xmlList = bigXmlList;
 
+        BackgroundWorker.createIfTerminated();
         if (Prefs.keepSmaliFilesInRAM) {
             int totalNum = ProcessRule.smaliList.size();
             AtomicInteger currentNum = new AtomicInteger(0);
@@ -110,7 +107,7 @@ class Scan {
                 System.exit(0);
             }
         }
-        Main.out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.");
+        Main.out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
     }
 
     static ArrayList<DecompiledFile> scanFolder(File folder) {
@@ -124,7 +121,7 @@ class Scan {
                         boolean doNotSkip = true;
                         if (Prefs.skipSomeSmaliFiles) {                  //skip some folders
                             for (String str : Prefs.smaliFoldersToSkip)
-                                if (file.getPath().contains(str)) {
+                                if (file.getPath().startsWith(str)) {
                                     doNotSkip = false;
                                     break;
                                 }
@@ -142,7 +139,7 @@ class Scan {
                 }
             }
             else
-                scanFile(stack.pop());
+                decompiledFiles.add(scanFile(stack.pop()));
         }
         return decompiledFiles;
     }
@@ -164,19 +161,19 @@ class Scan {
         }
         boolean isXml = shortPath.endsWith(".xml");
         int size;
-        if (isXml)
+        ArrayList<DecompiledFile> files;
+        if (isXml) {
+            files = ProcessRule.xmlList;
             size = ProcessRule.xmlList.size();
-        else
+        }
+        else {
+            files = ProcessRule.smaliList;
             size = ProcessRule.smaliList.size();
+        }
 
         for (int i = 0; i < size; i++) {
-            if (isXml && ProcessRule.xmlList.get(i).getPath().equals(shortPath)) {
-                ProcessRule.xmlList.remove(i);
-                i--;
-                size--;
-            }
-            else if (ProcessRule.smaliList.get(i).getPath().equals(shortPath)) {
-                ProcessRule.smaliList.remove(i);
+            if (files.get(i).getPath().equals(shortPath)) {
+                files.remove(i);
                 i--;
                 size--;
             }

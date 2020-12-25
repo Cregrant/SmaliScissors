@@ -6,7 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class Regex {
-    static ArrayList<String> matchMultiLines(Pattern readyPattern, String content, String mode) {
+    static ArrayList<String> matchMultiLines(Pattern readyPattern, CharSequence content, String mode) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
         while (matcher.find()) {
@@ -24,7 +24,7 @@ class Regex {
                     case "target":
                         for (String str : textMatched.split("\\R")) {
                             str = str.replace("*/*", "*");
-                            if (Prefs.run_type.equals("pc"))
+                            if (Prefs.isWindows)
                                 str = str.replace("/", "\\\\");
                             matchedArr.add(globToRegex(str));
                         }
@@ -35,7 +35,7 @@ class Regex {
         return matchedArr;
     }
 
-    static String matchSingleLine(Pattern readyPattern, String content) {
+    static String matchSingleLine(Pattern readyPattern, CharSequence content) {
         Matcher matcher = readyPattern.matcher(content);
         if (matcher.find()) {
             if (matcher.groupCount()==0)
@@ -47,7 +47,7 @@ class Regex {
 
     static String getEndOfPath(String path) {
         int last;
-        if (Prefs.run_type.equals("pc"))
+        if (Prefs.isWindows)
             last = path.lastIndexOf('\\')+1;
         else
             last = path.lastIndexOf('/')+1;
