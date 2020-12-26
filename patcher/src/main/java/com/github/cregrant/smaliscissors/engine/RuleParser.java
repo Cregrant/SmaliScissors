@@ -82,7 +82,7 @@ class RuleParser {
 
     private void matchRule() {
         rule.name = Regex.matchSingleLine(patName, patch);
-        getTargets(false);
+        getTargets();
         rule.match = Regex.matchSingleLine(patMatch, patch);
         rule.replacement = Regex.matchSingleLine(patReplacement, patch);
         rule.isRegex = Objects.requireNonNull(Regex.matchSingleLine(patRegexEnabled, patch)).trim().equalsIgnoreCase("true");
@@ -90,7 +90,7 @@ class RuleParser {
 
     private void assignRule() {
         rule.name = Regex.matchSingleLine(patName, patch);
-        getTargets(false);
+        getTargets();
         rule.match = Regex.matchSingleLine(patMatch, patch);
         rule.isRegex = Objects.requireNonNull(Regex.matchSingleLine(patRegexEnabled, patch)).trim().equalsIgnoreCase("true");
         rule.assignments = Regex.matchMultiLines(patAssignment, patch, "assign");
@@ -102,12 +102,12 @@ class RuleParser {
         try {
             rule.extract = Objects.requireNonNull(Regex.matchSingleLine(patExtract, patch)).trim().equalsIgnoreCase("true");
         } catch (NullPointerException ignored) {}
-        getTargets(true);
+        getTargets();
     }
 
     private void removeRule() {
         rule.name = Regex.matchSingleLine(patName, patch);
-        getTargets(true);
+        getTargets();
     }
 
     private void dummyRule() {
@@ -130,26 +130,19 @@ class RuleParser {
 
     private void matchGotoRule() {
         rule.name = Regex.matchSingleLine(patName, patch);
-        getTargets(false);
+        getTargets();
         rule.match = Regex.matchSingleLine(patMatch, patch);
         rule.isRegex = Boolean.getBoolean(Objects.requireNonNull(Regex.matchSingleLine(patRegexEnabled, patch)).trim());
         rule.goTo = Regex.matchSingleLine(patGoto, patch);
     }
 
-    private void getTargets(boolean addOrRemoveRule) {
+    private void getTargets() {
         ArrayList<String> targetsRaw = Regex.matchMultiLines(patTarget, patch, "target");
         String first = targetsRaw.get(0);
         if (first.endsWith("xml"))
             rule.isXml = true;
         else if (first.endsWith("smali"))
             rule.isSmali = true;
-
-        if (addOrRemoveRule && Prefs.isWindows) {
-            ArrayList<String> fixedArr = new ArrayList<>(targetsRaw.size());
-            for (String target : targetsRaw)
-                fixedArr.add(target.replace("\\\\", "\\"));
-            targetsRaw = fixedArr;
-        }
 
         if (targetsRaw.size() == 1) {
             rule.target = first;

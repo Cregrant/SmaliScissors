@@ -36,7 +36,6 @@ public class Main {
                 out.println("Error loading projects folder\n" + projectsHome);
                 System.exit(1);
             }
-
             File[] projectsArr = null;
             try {
                 projectsArr = projectsHome.listFiles();
@@ -49,8 +48,15 @@ public class Main {
                 if (project.isDirectory())
                     projectsList.add(project.toString());
             }
-            String msg = "\nSelect project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
-            ArrayList<String> projectsToPatch = Select.select(projectsList, msg, "No decompiled projects found");
+
+            ArrayList<String> projectsToPatch;
+            if (projectsList.size()>1) {
+                String msg = "\nSelect project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
+                projectsToPatch = Select.select(projectsList, msg, "No decompiled projects found");
+            }
+            else
+                projectsToPatch = projectsList;
+
             if (projectsToPatch.get(0).equals("cancel")) break;
             ArrayList<String> zipFilesArr = new ArrayList<>();
             for (File zip : Objects.requireNonNull(patchesDir.listFiles())) {

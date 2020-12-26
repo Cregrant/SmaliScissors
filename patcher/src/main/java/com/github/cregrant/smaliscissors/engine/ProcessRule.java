@@ -8,8 +8,6 @@ import java.util.regex.Pattern;
 
 
 class ProcessRule {
-    static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
-    static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
     private static int patchedFilesNum;
     private static final Map<String, String> assignMap = new HashMap<>();
 
@@ -24,9 +22,9 @@ class ProcessRule {
 
         ArrayList<DecompiledFile> files;
         if (rule.isXml)
-            files = xmlList;
+            files = Scan.xmlList;
         else
-            files = smaliList;
+            files = Scan.smaliList;
         int totalNum = files.size();
 
         for (int num=0; num<totalNum; num++) {
@@ -35,6 +33,7 @@ class ProcessRule {
                 DecompiledFile dFile = files.get(finalNum);
                 replace(dFile, rule);
                 if (dFile.isModified()) {
+                    dFile.setModified(false);
                     if (Prefs.verbose_level == 0)
                         Main.out.println(dFile.getPath() + " patched.");
                     synchronized (lock) {
@@ -62,7 +61,6 @@ class ProcessRule {
     }
 
     private static void replace(DecompiledFile dFile, Rule rule) {
-        //todo add file body preloading
         if (dFile.getPath().matches(rule.target)) {
             if (dFile.getPath().contains("smali/android/p.smali"))
                 Main.out.println("ffff");
@@ -84,13 +82,13 @@ class ProcessRule {
         DecompiledFile dFile;
         int end;
         if (rule.isXml)
-            end = xmlList.size();
+            end = Scan.xmlList.size();
         else
-            end = smaliList.size();
+            end = Scan.smaliList.size();
         for (int k=0; k<end; k++) {
             if (rule.isXml)
-                dFile = xmlList.get(k);
-            else dFile = smaliList.get(k);
+                dFile = Scan.xmlList.get(k);
+            else dFile = Scan.smaliList.get(k);
             if (!dFile.getPath().matches(rule.target))
                 continue;
             for (String variable : rule.assignments) {
@@ -139,11 +137,11 @@ class ProcessRule {
         for (DecompiledFile df : newFiles) {
             if (df.isXML()) {
                 Scan.removeLoadedFile(df.getPath());
-                xmlList.add(df);
+                Scan.xmlList.add(df);
             }
             else {
                 Scan.removeLoadedFile(df.getPath());
-                smaliList.add(df);
+                Scan.smaliList.add(df);
             }
         }
     }
@@ -167,7 +165,7 @@ class ProcessRule {
         Pattern pattern = Pattern.compile(rule.match);
         BackgroundWorker.createIfTerminated();
 
-        List<DecompiledFile> files = rule.isXml ? xmlList : smaliList;
+        List<DecompiledFile> files = rule.isXml ? Scan.xmlList : Scan.smaliList;
         int totalNum = files.size();
         try {
             for (int num=0; num<totalNum; num++) {

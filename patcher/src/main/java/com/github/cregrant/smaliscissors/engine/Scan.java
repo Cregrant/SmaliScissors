@@ -1,18 +1,24 @@
 package com.github.cregrant.smaliscissors.engine;
 
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 class Scan {
+    static ArrayList<DecompiledFile> smaliList = new ArrayList<>();
+    static ArrayList<DecompiledFile> xmlList = new ArrayList<>();
+
     static void scanProject(boolean xmlNeeded, boolean smaliNeeded) {
         long startTime = System.currentTimeMillis();
         Collection<Future<ArrayList<DecompiledFile>>> results = new ArrayList<>();
         Future<ArrayList<DecompiledFile>> task;
+        BackgroundWorker.createIfTerminated();
 
         if (smaliNeeded) {         //add smali folders
             File[] list = new File(Prefs.projectPath).listFiles();
@@ -30,7 +36,7 @@ class Scan {
         if (xmlNeeded) {
             if (new File(Prefs.projectPath + File.separator + "AndroidManifest.xml").exists()) {
                 DecompiledFile manifest = new DecompiledFile(true, "AndroidManifest.xml");
-                ProcessRule.xmlList.add(manifest);
+                xmlList.add(manifest);
             }
             File resFolder = new File(Prefs.projectPath + File.separator + "res");
             if (resFolder.exists() || Objects.requireNonNull(resFolder.list()).length != 0) {
@@ -50,13 +56,13 @@ class Scan {
                         if (scannedFile.isBigSize())
                             bigXmlList.add(scannedFile);            //grab big xml
                         else
-                            ProcessRule.xmlList.add(scannedFile);   //grab tiny xml
+                            xmlList.add(scannedFile);   //grab tiny xml
                     }
                     else {
                         if (scannedFile.isBigSize())
                             bigSmaliList.add(scannedFile);          //grab big smali
                         else
-                            ProcessRule.smaliList.add(scannedFile); //grab tiny smali
+                            smaliList.add(scannedFile); //grab tiny smali
                     }
                 }
             }
@@ -66,48 +72,32 @@ class Scan {
         }
 
         //moving large files to the beginning to load more cores at the end
-        bigXmlList.addAll(ProcessRule.xmlList);
-        bigSmaliList.addAll(ProcessRule.smaliList);
-        ProcessRule.smaliList = bigSmaliList;
-        ProcessRule.xmlList = bigXmlList;
+        bigXmlList.addAll(xmlList);
+        bigSmaliList.addAll(smaliList);
+        smaliList = bigSmaliList;
+        xmlList = bigXmlList;
 
-        BackgroundWorker.createIfTerminated();
-        if (Prefs.keepSmaliFilesInRAM) {
-            int totalNum = ProcessRule.smaliList.size();
-            AtomicInteger currentNum = new AtomicInteger(0);
-            int num;
-            while ((num = currentNum.getAndIncrement()) < totalNum) {
-                int finalNum = num;
-                Runnable r = () -> {
-                    DecompiledFile dFile = ProcessRule.smaliList.get(finalNum);
-                    dFile.setBody(IO.read(Prefs.projectPath + File.separator + dFile.getPath()));
-                };
-                BackgroundWorker.executor.submit(r);
-            }
+        if (Prefs.keepSmaliFilesInRAM)
+            loadToRam(smaliList);
+
+        if (Prefs.keepXmlFilesInRAM)
+            loadToRam(xmlList);
+
+        try {
+            BackgroundWorker.executor.shutdown();
+            BackgroundWorker.executor.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            System.exit(0);
         }
+        Main.out.println(smaliList.size() + " smali & " + xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
+    }
 
-        if (Prefs.keepXmlFilesInRAM) {
-            int totalNum = ProcessRule.xmlList.size();
-            AtomicInteger currentNum = new AtomicInteger(0);
-            int num;
-            while ((num = currentNum.getAndIncrement()) < totalNum) {
-                int finalNum = num;
-                Runnable r = () -> {
-                    DecompiledFile dFile = ProcessRule.xmlList.get(finalNum);
-                    dFile.setBody(IO.read(Prefs.projectPath + File.separator + dFile.getPath()));
-                };
-                BackgroundWorker.executor.submit(r);
-            }
-
-            try {
-                BackgroundWorker.executor.shutdown();
-                BackgroundWorker.executor.awaitTermination(60, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.exit(0);
-            }
+    private static void loadToRam(ArrayList<DecompiledFile> array) {
+        for (DecompiledFile dFile : array) {
+            Runnable r = () -> dFile.setBody(IO.read(Prefs.projectPath + File.separator + dFile.getPath()));
+            BackgroundWorker.executor.submit(r);
         }
-        Main.out.println(ProcessRule.smaliList.size() + " smali & " + ProcessRule.xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
     }
 
     static ArrayList<DecompiledFile> scanFolder(File folder) {
@@ -156,6 +146,8 @@ class Scan {
     }
 
     static void removeLoadedFile(String shortPath) {
+        if (Prefs.isWindows)
+            shortPath = shortPath.replace("\\\\", "\\");  //simple regex-to-path convert
         if (Prefs.verbose_level == 0) {
             Main.out.println(shortPath + " removed.");
         }
@@ -163,12 +155,12 @@ class Scan {
         int size;
         ArrayList<DecompiledFile> files;
         if (isXml) {
-            files = ProcessRule.xmlList;
-            size = ProcessRule.xmlList.size();
+            files = xmlList;
+            size = xmlList.size();
         }
         else {
-            files = ProcessRule.smaliList;
-            size = ProcessRule.smaliList.size();
+            files = smaliList;
+            size = smaliList.size();
         }
 
         for (int i = 0; i < size; i++) {

@@ -14,8 +14,8 @@ class Executor {
             Main.out.println("\nPatch - " + Prefs.zipName);
 
             Patch patch = IO.loadRules(zipFile);
-            boolean scanXml = patch.xmlNeeded && ProcessRule.xmlList.isEmpty();
-            boolean scanSmali = patch.smaliNeeded && ProcessRule.smaliList.isEmpty();
+            boolean scanXml = patch.xmlNeeded && Scan.xmlList.isEmpty();
+            boolean scanSmali = patch.smaliNeeded && Scan.smaliList.isEmpty();
             IO.loadProjectFiles(scanXml, scanSmali);
 
             try {

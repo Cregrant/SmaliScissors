@@ -81,16 +81,16 @@ class IO {
 
     static void writeChanges() {
         if (Prefs.keepSmaliFilesInRAM) {
-            for (int j = 0; j < ProcessRule.smaliList.size(); ++j) {
-                DecompiledFile tmpSmali = ProcessRule.smaliList.get(j);
+            for (int j = 0; j < Scan.smaliList.size(); ++j) {
+                DecompiledFile tmpSmali = Scan.smaliList.get(j);
                 if (!tmpSmali.isModified()) continue;
                 tmpSmali.setModified(false);
                 write(Prefs.projectPath + File.separator + tmpSmali.getPath(), tmpSmali.getBody());
             }
         }
         if (Prefs.keepXmlFilesInRAM) {
-            for (int j = 0; j < ProcessRule.xmlList.size(); ++j) {
-                DecompiledFile dFile = ProcessRule.xmlList.get(j);
+            for (int j = 0; j < Scan.xmlList.size(); ++j) {
+                DecompiledFile dFile = Scan.xmlList.get(j);
                 if (!dFile.isModified()) continue;
                 dFile.setModified(false);
                 write(Prefs.projectPath + File.separator + dFile.getPath(), dFile.getBody());
@@ -196,8 +196,8 @@ class IO {
         }
         else if (smaliNeeded || xmlNeeded) {
             //other project (multiple patching available on pc) or empty files arrays
-            ProcessRule.smaliList.clear();
-            ProcessRule.xmlList.clear();
+            Scan.smaliList.clear();
+            Scan.xmlList.clear();
             Scan.scanProject(xmlNeeded, smaliNeeded);
             loadedProject = Prefs.projectPath;
         }
