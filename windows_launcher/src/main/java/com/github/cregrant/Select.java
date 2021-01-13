@@ -1,3 +1,5 @@
+package com.github.cregrant;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 

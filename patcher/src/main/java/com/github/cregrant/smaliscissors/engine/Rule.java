@@ -21,6 +21,7 @@ class Rule {
     boolean extract = false;
     ArrayList<String> targetArr;
     ArrayList<String> assignments;
+    ArrayList<Rule> mergedRules = new ArrayList<>(1);
 
     boolean checkRuleIntegrity() {
         switch (type) {
@@ -116,5 +117,11 @@ class Rule {
                 break;
         }
         return sb.toString();
+    }
+
+    boolean canBeMerged(Rule OtherRule) {
+        return this.isXml==OtherRule.isXml
+                && this.isSmali==OtherRule.isSmali
+                && this.isRegex==OtherRule.isRegex;
     }
 }

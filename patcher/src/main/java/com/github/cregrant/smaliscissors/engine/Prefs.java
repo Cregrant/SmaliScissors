@@ -13,6 +13,7 @@ public class Prefs {
     public static File tempDir;
     private static double versionConf = 0.01;
     static int verbose_level = 1;
+    static boolean optimizeRules = true;
     static boolean keepSmaliFilesInRAM = false;
     static boolean keepXmlFilesInRAM = false;
     static final boolean skipSomeSmaliFiles = true;

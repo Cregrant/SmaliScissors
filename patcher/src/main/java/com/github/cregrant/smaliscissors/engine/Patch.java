@@ -8,12 +8,12 @@ class Patch {
     boolean smaliNeeded = false;
     boolean xmlNeeded = false;
 
-    public void addRule(Rule rule) {
+    void addRule(Rule rule) {
         if (rule!=null)
             rules.add(rule);
     }
 
-    public void setRuleName(String someName) {
+    void setRuleName(String someName) {
         for (Rule r : rules) {
             if (r.name!=null && r.name.equalsIgnoreCase(someName)) {
                 currentRuleNum = r.num;
@@ -29,5 +29,9 @@ class Patch {
             return rule;
         }
         return null;
+    }
+
+    int getRulesCount() {
+        return rules.size();
     }
 }
