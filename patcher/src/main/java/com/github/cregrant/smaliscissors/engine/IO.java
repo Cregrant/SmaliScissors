@@ -1,7 +1,6 @@
 package com.github.cregrant.smaliscissors.engine;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,10 +27,32 @@ class IO {
             return patch;
         }
 
-        ArrayList<String> rulesListArr = Regex.matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
         RuleParser parser = new RuleParser();
-        for (String singleRule : rulesListArr) {
-            Rule rule = parser.parseRule(singleRule);
+        ArrayList<String> tempArr = Regex.matchMultiLines(Objects.requireNonNull(patRule), read(txtFile), "rules");
+        ArrayList<Rule> rawRulesArr = new ArrayList<>(tempArr.size());
+
+        for (String singleRule : tempArr) {
+            rawRulesArr.add(parser.parseRule(singleRule));
+        }
+
+        for (int i = 0; i < rawRulesArr.size(); i++) {
+            Rule rule = rawRulesArr.get(i);
+            int next = i + 1;
+            while (true) {
+                if (next < rawRulesArr.size() && Prefs.optimizeRules) {  //check if next rule exists and optimization enabled
+                    Rule nextRule = rawRulesArr.get(next);
+                    if (nextRule.type.equals("MATCH_REPLACE") && rule.canBeMerged(nextRule)) {   //check for next rule type
+                        rule.mergedRules.add(nextRule);
+                        next += 1;
+                        //fixme TEST
+                         i++;
+                    }
+                    else
+                        break;
+                }
+                else
+                    break;
+            }
             if (rule.isSmali)
                 patch.smaliNeeded = true;
             else if (rule.isXml)
@@ -39,7 +60,11 @@ class IO {
             patch.addRule(rule);
         }
 
-        Main.out.println(rulesListArr.size() + " rules found\n");
+        if (Prefs.optimizeRules && (rawRulesArr.size()!=patch.getRulesCount()))
+            Main.out.println(rawRulesArr.size() + " rules " + "shrunk to " + patch.getRulesCount() + ".\n");
+        else
+            Main.out.println(rawRulesArr.size() + " rules found.\n");
+
         return patch;
     }
 
@@ -67,9 +92,9 @@ class IO {
     }
 
     static void write(String path, String content) {
+        deleteAll(new File(path));
         try {
-            deleteAll(new File(path));
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path, StandardCharsets.UTF_8));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path));
             bufferedWriter.write(content);
             bufferedWriter.flush();
             bufferedWriter.close();

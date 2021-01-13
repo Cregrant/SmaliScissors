@@ -12,16 +12,25 @@ class ProcessRule {
     private static final Map<String, String> assignMap = new HashMap<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
-    static void matchReplace(Rule rule) {
+    static void matchReplace(Rule replaceRule) {
+        ArrayList<Rule> mergedRules = new ArrayList<>();
+        mergedRules.add(replaceRule);
+
+        if (!replaceRule.mergedRules.isEmpty()) {
+            mergedRules.addAll(replaceRule.mergedRules);
+        }
+
+        for (Rule rule : mergedRules) {
+            applyAssign(rule);
+            //important escape for android
+            rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
+        }
         BackgroundWorker.createIfTerminated();
         patchedFilesNum = 0;
-        applyAssign(rule);
-        //important escape for android
-        rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
         Object lock = new Object();
 
         ArrayList<DecompiledFile> files;
-        if (rule.isXml)
+        if (replaceRule.isXml)
             files = Scan.xmlList;
         else
             files = Scan.smaliList;
@@ -31,7 +40,7 @@ class ProcessRule {
             int finalNum = num;
             Runnable r = () -> {
                 DecompiledFile dFile = files.get(finalNum);
-                replace(dFile, rule);
+                replace(dFile, mergedRules);
                 if (dFile.isModified()) {
                     dFile.setModified(false);
                     if (Prefs.verbose_level == 0)
@@ -53,28 +62,38 @@ class ProcessRule {
         }
 
         if (Prefs.verbose_level <= 2) {
-            if (rule.isSmali)
+            if (replaceRule.isSmali)
                 Main.out.println(patchedFilesNum + " smali files patched.");
             else
                 Main.out.println(patchedFilesNum + " xml files patched.");
         }
     }
 
-    private static void replace(DecompiledFile dFile, Rule rule) {
-        if (dFile.getPath().matches(rule.target)) {
-            if (dFile.getPath().contains("smali/android/p.smali"))
-                Main.out.println("ffff");
-            String smaliBody = dFile.getBody();
-            String smaliBodyNew;
-            if (rule.isRegex)
-                smaliBodyNew = smaliBody.replaceAll(rule.match, rule.replacement);
-            else
-                smaliBodyNew = smaliBody.replace(rule.match, rule.replacement);
-            if (!smaliBodyNew.equals(smaliBody)) {
-                dFile.setBody(smaliBodyNew);
-                dFile.setModified(true);
+    private static void replace(DecompiledFile dFile, ArrayList<Rule> rules) {
+        String smaliBody = null;
+        String smaliBodyNew = null;
+        for (Rule rule : rules) {
+            if (dFile.getPath().matches(rule.target)) {
+                if (dFile.getPath().contains("smali/android/p.smali")) //test
+                    Main.out.println("ffff");
+
+                if (smaliBody==null)
+                    smaliBody = dFile.getBody();  //loading file body for a first time
+                else
+                    smaliBody = smaliBodyNew;     //get body from RAM
+
+                if (rule.isRegex)
+                    smaliBodyNew = smaliBody.replaceAll(rule.match, rule.replacement);
+                else
+                    smaliBodyNew = smaliBody.replace(rule.match, rule.replacement);
+
+                if (!smaliBodyNew.equals(smaliBody)) {
+                    dFile.setModified(true);
+                }
             }
         }
+        if (dFile.isModified())
+            dFile.setBody(smaliBodyNew);
     }
 
     static void assign(Rule rule) {

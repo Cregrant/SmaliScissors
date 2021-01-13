@@ -1,3 +1,5 @@
+package com.github.cregrant;
+
 import com.github.cregrant.smaliscissors.engine.DexExecutor;
 import com.github.cregrant.smaliscissors.engine.OutStream;
 import com.github.cregrant.smaliscissors.engine.Prefs;
@@ -51,7 +53,7 @@ public class Main {
 
             ArrayList<String> projectsToPatch;
             if (projectsList.size()>1) {
-                String msg = "\nSelect project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
+                String msg = "\ncom.github.cregrant.Select project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
                 projectsToPatch = Select.select(projectsList, msg, "No decompiled projects found");
             }
             else
@@ -69,6 +71,7 @@ public class Main {
             for (String sh : zipArr)
                 fullZipArr.add(patchesDir + File.separator + sh);
             projectsToPatch.addAll(fullZipArr);
+            //new Frame().MainFrame();
             com.github.cregrant.smaliscissors.engine.Main.main(projectsToPatch.toArray(new String[0]), out, dex);
         }
     }
