@@ -44,6 +44,7 @@ class IO {
                     if (nextRule.type.equals("MATCH_REPLACE") && rule.canBeMerged(nextRule)) {   //check for next rule type
                         rule.mergedRules.add(nextRule);
                         next += 1;
+                        //fixme TEST
                          i++;
                     }
                     else
