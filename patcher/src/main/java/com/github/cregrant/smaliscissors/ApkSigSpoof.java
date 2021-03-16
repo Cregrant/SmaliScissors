@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.engine;
+package com.github.cregrant.smaliscissors;
 
 import java.io.*;
 import java.security.cert.Certificate;

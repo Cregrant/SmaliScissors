@@ -1,8 +1,8 @@
 package com.github.cregrant;
 
-import com.github.cregrant.smaliscissors.engine.DexExecutor;
-import com.github.cregrant.smaliscissors.engine.OutStream;
-import com.github.cregrant.smaliscissors.engine.Prefs;
+import com.github.cregrant.smaliscissors.DexExecutor;
+import com.github.cregrant.smaliscissors.OutStream;
+import com.github.cregrant.smaliscissors.Prefs;
 import com.googlecode.dex2jar.tools.Dex2jarCmd;
 
 import java.io.File;
@@ -31,7 +31,7 @@ public class Main {
 
     public static void main(String[] args) {
         File patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
-        File projectsHome = new File("C:\\BAT\\_INPUT_APK");
+        File projectsHome = new File("C:/BAT/_INPUT_APK");
         Prefs.loadConf();
         while (true) {
             if (!projectsHome.isDirectory()) {
@@ -72,7 +72,7 @@ public class Main {
                 fullZipArr.add(patchesDir + File.separator + sh);
             projectsToPatch.addAll(fullZipArr);
             //new Frame().MainFrame();
-            com.github.cregrant.smaliscissors.engine.Main.main(projectsToPatch.toArray(new String[0]), out, dex);
+            com.github.cregrant.smaliscissors.Main.main(projectsToPatch.toArray(new String[0]), out, dex);
         }
     }
 }
