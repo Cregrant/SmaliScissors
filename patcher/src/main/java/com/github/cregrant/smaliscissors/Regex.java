@@ -2,6 +2,8 @@ package com.github.cregrant.smaliscissors;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -9,14 +11,15 @@ class Regex {
     enum MatchType {
         Full,
         Split,
-        SplitFixGlob,
+        SplitPath,
     }
 
     static ArrayList<String> matchMultiLines(Pattern readyPattern, CharSequence content, MatchType mode) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
         while (matcher.find()) {
-            for (int i = 1; i <= matcher.groupCount(); ++i) {
+            int size = matcher.groupCount();
+            for (int i = 1; i <= size; ++i) {
                 String textMatched = matcher.group(i);
                 switch (mode) {
                     case Full:
@@ -25,9 +28,9 @@ class Regex {
                     case Split:
                         matchedArr.addAll(Arrays.asList(textMatched.split("\\R")));
                         break;
-                    case SplitFixGlob:
+                    case SplitPath:
                         for (String str : textMatched.split("\\R")) {
-                            matchedArr.add(str.replace("*/*", "*"));
+                            matchedArr.add(str.replace("*/*", "*").trim());
                         }
                         break;
                 }
@@ -64,8 +67,8 @@ class Regex {
                     if (escaping)
                         sb.append("\\*");
                     else
-                        if (currentChar != prevChar)
-                            sb.append(".*");
+                    if (currentChar != prevChar)
+                        sb.append(".*");
                     escaping = false;
                     break;
                 case '?':
@@ -131,5 +134,51 @@ class Regex {
             prevChar = currentChar;
         }
         return sb.toString();
+    }
+
+    static String replaceAll(String body, String replacement, Pattern pattern) {
+        Matcher matcher = pattern.matcher(body);
+
+        if (replacement.length()==0) {
+            StringBuffer newBodyBuffer = new StringBuffer();
+            while(matcher.find()) {
+                matcher.appendReplacement(newBodyBuffer, replacement);
+            }
+            matcher.appendTail(newBodyBuffer);
+            return newBodyBuffer.toString();
+        }
+
+        ArrayList<Integer> numArr = new ArrayList<>(5);
+        int endPos = 0;
+        int pos;
+        while ((pos = replacement.indexOf("${GROUP", endPos))!=-1) {
+            endPos = replacement.indexOf('}', pos+7);
+            String s = replacement.substring(pos+7, endPos);
+            numArr.add(Integer.decode(s));
+        }
+
+        StringBuilder newBodyBuilder = new StringBuilder(body);  //little bit faster than StringBuffer
+        HashMap<Integer, Integer> offsetMap = new HashMap<>();
+        int realOffset = 0;
+
+        while (matcher.find()) {
+            StringBuilder replacementBuilder = new StringBuilder(replacement);
+            String s = matcher.group(0);
+            int start = matcher.start(0);
+            for (int i : numArr) {
+                String group = "${GROUP"+i+"}";
+                int index = replacementBuilder.indexOf(group);
+                replacementBuilder.replace(index, index+group.length(), matcher.group(i));
+            }
+
+            if (!offsetMap.isEmpty())  //the previous replacement changes the real position
+                for (Map.Entry<Integer, Integer> entry : offsetMap.entrySet()) {
+                    if (entry.getKey()<start)
+                        realOffset += entry.getValue();
+                }
+            offsetMap.put(start, replacementBuilder.length() - s.length());
+            newBodyBuilder.replace(start+realOffset, matcher.end(0)+realOffset, replacementBuilder.toString());
+        }
+        return newBodyBuilder.toString();
     }
 }

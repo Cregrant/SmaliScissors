@@ -34,7 +34,8 @@ public class Main {
         patchProjects(projectsList, zipArr);
         Scan.smaliList = new ArrayList<>(1);
         Scan.xmlList = new ArrayList<>(1);
-        Main.out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
+        if (projectsList.size() > 1)
+            Main.out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
         Main.out.println("Good bye Sir.");
     }
 
@@ -44,9 +45,20 @@ public class Main {
             throw new IndexOutOfBoundsException();
         }
 
-        for (String currentProjectPath : projectsList) {
-            Prefs.projectPath = currentProjectPath;
-            Executor.executePatches(zipArr);
+        try {
+            for (String currentProjectPath : projectsList) {
+                Prefs.projectPath = currentProjectPath;
+                Executor.executePatches(zipArr);
+            }
+        } catch (Exception e) {
+            StackTraceElement[] stack = e.getStackTrace();
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nUnexpected error occured:\n\n");
+            for (int i=0; i<6; i++) {
+                sb.append(stack[i].toString()).append('\n');
+            }
+            Main.out.println(sb.toString());
         }
+
     }
 }

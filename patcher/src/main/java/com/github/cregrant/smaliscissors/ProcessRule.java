@@ -19,32 +19,41 @@ class ProcessRule {
     static void matchReplace(Rule replaceRule) {
         ArrayList<Rule> mergedRules = new ArrayList<>();
         mergedRules.add(replaceRule);
-
-        if (!replaceRule.mergedRules.isEmpty()) {
+        if (!replaceRule.mergedRules.isEmpty())
             mergedRules.addAll(replaceRule.mergedRules);
-        }
 
+        ArrayList<Batch> batchLoad = new ArrayList<>(mergedRules.size());
+        Pattern path = Pattern.compile(Regex.globToRegex(mergedRules.get(0).target));
         for (Rule rule : mergedRules) {
             applyAssign(rule);
-            //important escape for android
-            rule.replacement = rule.replacement.replaceAll("\\$\\{GROUP(\\d{1,2})\\}", "\\$$1");
+            Batch batch = new Batch();
+            batch.match = Pattern.compile(rule.match);
+            batch.replacement = rule.replacement;
+            batch.isRegex = rule.isRegex;
+            batchLoad.add(batch);
         }
+
         BackgroundWorker.createIfTerminated();
         patchedFilesNum = 0;
         Object lock = new Object();
         ArrayList<DecompiledFile> files = replaceRule.isXml ? Scan.xmlList : Scan.smaliList;
-
         for (DecompiledFile dFile : files) {
             Runnable r = () -> {
-                replace(dFile, mergedRules);
-                if (dFile.isModified()) {
-                    dFile.setModified(false);
-                    if (Prefs.verbose_level == 0)
-                        Main.out.println(dFile.getPath() + " patched.");
-                    synchronized (lock) {
-                        patchedFilesNum++;
+                try {
+                    replace(dFile, path, batchLoad);
+                    if (dFile.isModified()) {
+                        dFile.setModified(false);
+                        if (Prefs.verbose_level == 0)
+                            Main.out.println(dFile.getPath() + " patched.");
+                        synchronized (lock) {
+                            patchedFilesNum++;
+                        }
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.exit(1);
                 }
+
             };
             BackgroundWorker.executor.submit(r);
         }
@@ -58,29 +67,23 @@ class ProcessRule {
         }
     }
 
-    private static void replace(DecompiledFile dFile, ArrayList<Rule> rules) {
-        String smaliBody = null;
-        String smaliBodyNew = null;
-        for (Rule rule : rules) {
-            String target = Regex.globToRegex(rule.target);
-            if (dFile.getPath().matches(target)) {
-                if (smaliBody==null)
-                    smaliBody = dFile.getBody();  //loading file body for a first time
-                else
-                    smaliBody = smaliBodyNew;     //get body from RAM
+    private static void replace(DecompiledFile dFile, Pattern path, ArrayList<Batch> batchLoad) {
+        if (path.matcher(dFile.getPath()).matches()) {
+            String smaliBody = dFile.getBody();
+            int oldHashcode = smaliBody.hashCode();
 
-                if (rule.isRegex)
-                    smaliBodyNew = smaliBody.replaceAll(rule.match, rule.replacement);
-                else
-                    smaliBodyNew = smaliBody.replace(rule.match, rule.replacement);
+            for (Batch batch : batchLoad) {
+                if (batch.isRegex) {
+                    smaliBody = Regex.replaceAll(smaliBody, batch.replacement, batch.match);
+                } else
+                    smaliBody = smaliBody.replace(batch.match.pattern(), batch.replacement);
+            }
 
-                if (!dFile.isModified() && !smaliBodyNew.equals(smaliBody)) {
-                    dFile.setModified(true);
-                }
+            if (!dFile.isModified() && smaliBody.hashCode()!=oldHashcode) {
+                dFile.setModified(true);
+                dFile.setBody(smaliBody);
             }
         }
-        if (dFile.isModified())
-            dFile.setBody(smaliBodyNew);
     }
 
     static void assign(Rule rule) {
@@ -92,17 +95,17 @@ class ProcessRule {
             files = Scan.smaliList;
 
         for (DecompiledFile dFile : files) {
-            if (!dFile.getPath().contains(rule.target))
+            if (!dFile.getPath().matches(rule.target))
                 continue;
 
             for (String variable : rule.assignments) {
                 assignArr.add(variable.substring(0, variable.indexOf('=')));
             }
-            ArrayList<String> valuesArr = Regex.matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), Regex.MatchType.Split);
-            if (assignArr.size() > valuesArr.size())
+            ArrayList<String> valuesArr = Regex.matchMultiLines(Pattern.compile(rule.match), dFile.getBody(), Regex.MatchType.Full);
+            if (assignArr.size() < valuesArr.size())
                 Main.out.println("WARNING: MATCH_ASSIGN found multiple results...");
-            else if (assignArr.size() < valuesArr.size())
-                Main.out.println("WARNING: MATCH_ASSIGN not found enough results...");
+            else if (assignArr.size() > valuesArr.size())
+                Main.out.println("WARNING: MATCH_ASSIGN found not enough results...");
             for (int j = 0; j < assignArr.size(); ++j) {
                 String value = valuesArr.get(j);
                 assignMap.put(assignArr.get(j), value);
@@ -228,5 +231,11 @@ class ProcessRule {
         String projectPath = Prefs.projectPath;
         String dexPath = Prefs.tempDir + File.separator + rule.script;
         Main.dex.runDex(dexPath, rule.entrance, rule.mainClass, apkPath, zipPath, projectPath, rule.param, Prefs.tempDir.toString());
+    }
+
+    static class Batch {
+        Pattern match;
+        String replacement;
+        boolean isRegex;
     }
 }
