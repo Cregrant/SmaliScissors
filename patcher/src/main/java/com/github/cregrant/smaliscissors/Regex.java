@@ -136,8 +136,8 @@ class Regex {
         return sb.toString();
     }
 
-    static String replaceAll(String body, String replacement, Pattern pattern) {
-        Matcher matcher = pattern.matcher(body);
+    static String replaceAll(String body, String replacement, Matcher matcher) {
+        matcher.reset(body);
 
         if (replacement.length()==0) {
             StringBuffer newBodyBuffer = new StringBuffer();

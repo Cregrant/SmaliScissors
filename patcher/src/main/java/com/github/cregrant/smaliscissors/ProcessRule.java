@@ -8,12 +8,14 @@ import com.github.cregrant.smaliscissors.structures.Rule;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 class ProcessRule {
     private static int patchedFilesNum;
     private static final Map<String, String> assignMap = new HashMap<>();
+    private static final ThreadLocal<Matcher> matcher = new ThreadLocal<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
     static void matchReplace(Rule replaceRule) {
@@ -27,7 +29,7 @@ class ProcessRule {
         for (Rule rule : mergedRules) {
             applyAssign(rule);
             Batch batch = new Batch();
-            batch.match = Pattern.compile(rule.match);
+            batch.matchPattern = Pattern.compile(rule.match);
             batch.replacement = rule.replacement;
             batch.isRegex = rule.isRegex;
             batchLoad.add(batch);
@@ -73,10 +75,11 @@ class ProcessRule {
             int oldHashcode = smaliBody.hashCode();
 
             for (Batch batch : batchLoad) {
+                matcher.set(batch.matchPattern.matcher(""));
                 if (batch.isRegex) {
-                    smaliBody = Regex.replaceAll(smaliBody, batch.replacement, batch.match);
+                    smaliBody = Regex.replaceAll(smaliBody, batch.replacement, matcher.get());
                 } else
-                    smaliBody = smaliBody.replace(batch.match.pattern(), batch.replacement);
+                    smaliBody = smaliBody.replace(batch.matchPattern.pattern(), batch.replacement);
             }
 
             if (!dFile.isModified() && smaliBody.hashCode()!=oldHashcode) {
@@ -234,7 +237,7 @@ class ProcessRule {
     }
 
     static class Batch {
-        Pattern match;
+        Pattern matchPattern;
         String replacement;
         boolean isRegex;
     }
