@@ -4,13 +4,12 @@ import com.github.cregrant.smaliscissors.smali.SmaliAnalyzer;
 import com.github.cregrant.smaliscissors.structures.DecompiledFile;
 import com.github.cregrant.smaliscissors.structures.Patch;
 import com.github.cregrant.smaliscissors.structures.Rule;
-
+import com.google.re2j.Matcher;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import static com.google.re2j.Pattern.*;
 
 class ProcessRule {
     private static int patchedFilesNum;
@@ -29,7 +28,7 @@ class ProcessRule {
         for (Rule rule : mergedRules) {
             applyAssign(rule);
             Batch batch = new Batch();
-            batch.matchPattern = Pattern.compile(rule.match);
+            batch.matchPattern = compile(rule.match);
             batch.replacement = rule.replacement;
             batch.isRegex = rule.isRegex;
             batchLoad.add(batch);
@@ -75,9 +74,9 @@ class ProcessRule {
             int oldHashcode = smaliBody.hashCode();
 
             for (Batch batch : batchLoad) {
-                matcher.set(batch.matchPattern.matcher(""));
                 if (batch.isRegex) {
-                    smaliBody = Regex.replaceAll(smaliBody, batch.replacement, matcher.get());
+                    matcher.set(batch.matchPattern.matcher(smaliBody));
+                    smaliBody = matcher.get().replaceAll(batch.replacement);
                 } else
                     smaliBody = smaliBody.replace(batch.matchPattern.pattern(), batch.replacement);
             }
@@ -237,7 +236,7 @@ class ProcessRule {
     }
 
     static class Batch {
-        Pattern matchPattern;
+        com.google.re2j.Pattern matchPattern;
         String replacement;
         boolean isRegex;
     }

@@ -173,7 +173,7 @@ class RuleParser {
 
     private void fixRegex() {   //add compatibility with non-ApkEditor xml style
         if (rule.match!=null)
-            rule.match = rule.match.replace("\\n", "\\R");
+            rule.match = rule.match.replace("\\n", "\\[\r\n]").replace("\\R", "\\[\r\n]");
         if (rule.isXml) {
             if (rule.match!=null)
                 rule.match = rule.match.replace("><", ">\\s*?<").replace(" ", "\\s*?");

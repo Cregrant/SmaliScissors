@@ -37,28 +37,48 @@ public class Utils implements DexConstants {
     }
 
     public static int getAcc(String name) {
-        return switch (name) {
-            case "public" -> ACC_PUBLIC;
-            case "private" -> ACC_PRIVATE;
-            case "protected" -> ACC_PROTECTED;
-            case "static" -> ACC_STATIC;
-            case "final" -> ACC_FINAL;
-            case "synchronized" -> ACC_SYNCHRONIZED;
-            case "volatile" -> ACC_VOLATILE;
-            case "bridge" -> ACC_BRIDGE;
-            case "varargs" -> ACC_VARARGS;
-            case "transient" -> ACC_TRANSIENT;
-            case "native" -> ACC_NATIVE;
-            case "interface" -> ACC_INTERFACE;
-            case "abstract" -> ACC_ABSTRACT;
-            case "strict" -> ACC_STRICT;
-            case "synthetic" -> ACC_SYNTHETIC;
-            case "annotation" -> ACC_ANNOTATION;
-            case "enum" -> ACC_ENUM;
-            case "constructor" -> ACC_CONSTRUCTOR;
-            case "declared-synchronized" -> ACC_DECLARED_SYNCHRONIZED;
-            default -> 0;
-        };
+        switch (name) {
+            case "public":
+                return ACC_PUBLIC;
+            case "private":
+                return ACC_PRIVATE;
+            case "protected":
+                return ACC_PROTECTED;
+            case "static":
+                return ACC_STATIC;
+            case "final":
+                return ACC_FINAL;
+            case "synchronized":
+                return ACC_SYNCHRONIZED;
+            case "volatile":
+                return ACC_VOLATILE;
+            case "bridge":
+                return ACC_BRIDGE;
+            case "varargs":
+                return ACC_VARARGS;
+            case "transient":
+                return ACC_TRANSIENT;
+            case "native":
+                return ACC_NATIVE;
+            case "interface":
+                return ACC_INTERFACE;
+            case "abstract":
+                return ACC_ABSTRACT;
+            case "strict":
+                return ACC_STRICT;
+            case "synthetic":
+                return ACC_SYNTHETIC;
+            case "annotation":
+                return ACC_ANNOTATION;
+            case "enum":
+                return ACC_ENUM;
+            case "constructor":
+                return ACC_CONSTRUCTOR;
+            case "declared-synchronized":
+                return ACC_DECLARED_SYNCHRONIZED;
+            default:
+                return 0;
+        }
     }
 
     public static List<String> listDesc(String desc) {
