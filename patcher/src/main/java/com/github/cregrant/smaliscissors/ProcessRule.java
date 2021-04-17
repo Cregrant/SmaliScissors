@@ -4,17 +4,16 @@ import com.github.cregrant.smaliscissors.smali.SmaliAnalyzer;
 import com.github.cregrant.smaliscissors.structures.DecompiledFile;
 import com.github.cregrant.smaliscissors.structures.Patch;
 import com.github.cregrant.smaliscissors.structures.Rule;
-import com.google.re2j.Matcher;
+
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static com.google.re2j.Pattern.*;
 
 class ProcessRule {
     private static int patchedFilesNum;
     private static final Map<String, String> assignMap = new HashMap<>();
-    private static final ThreadLocal<Matcher> matcher = new ThreadLocal<>();
 
     @SuppressWarnings("RegExpRedundantEscape")
     static void matchReplace(Rule replaceRule) {
@@ -28,7 +27,7 @@ class ProcessRule {
         for (Rule rule : mergedRules) {
             applyAssign(rule);
             Batch batch = new Batch();
-            batch.matchPattern = compile(rule.match);
+            batch.pattern = Pattern.compile(rule.match);
             batch.replacement = rule.replacement;
             batch.isRegex = rule.isRegex;
             batchLoad.add(batch);
@@ -74,11 +73,13 @@ class ProcessRule {
             int oldHashcode = smaliBody.hashCode();
 
             for (Batch batch : batchLoad) {
+                if (batch.match.get()==null)
+                    batch.match.set(batch.pattern.matcher(""));
+
                 if (batch.isRegex) {
-                    matcher.set(batch.matchPattern.matcher(smaliBody));
-                    smaliBody = matcher.get().replaceAll(batch.replacement);
+                    smaliBody = Regex.replaceAll(smaliBody, batch.replacement, batch.match.get());
                 } else
-                    smaliBody = smaliBody.replace(batch.matchPattern.pattern(), batch.replacement);
+                    smaliBody = smaliBody.replace(batch.pattern.pattern(), batch.replacement);
             }
 
             if (!dFile.isModified() && smaliBody.hashCode()!=oldHashcode) {
@@ -236,7 +237,8 @@ class ProcessRule {
     }
 
     static class Batch {
-        com.google.re2j.Pattern matchPattern;
+        ThreadLocal<Matcher> match = new ThreadLocal<>();
+        Pattern pattern;
         String replacement;
         boolean isRegex;
     }

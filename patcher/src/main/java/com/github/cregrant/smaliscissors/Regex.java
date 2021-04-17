@@ -138,7 +138,6 @@ class Regex {
 
     static String replaceAll(String body, String replacement, Matcher matcher) {
         matcher.reset(body);
-
         if (replacement.length()==0) {
             StringBuffer newBodyBuffer = new StringBuffer();
             while(matcher.find()) {
@@ -157,27 +156,34 @@ class Regex {
             numArr.add(Integer.decode(s));
         }
 
-        StringBuilder newBodyBuilder = new StringBuilder(body);  //little bit faster than StringBuffer
+        StringBuilder newBodyBuilder = new StringBuilder(body);
         HashMap<Integer, Integer> offsetMap = new HashMap<>();
-        int realOffset = 0;
 
-        while (matcher.find()) {
-            StringBuilder replacementBuilder = new StringBuilder(replacement);
-            String s = matcher.group(0);
-            int start = matcher.start(0);
-            for (int i : numArr) {
-                String group = "${GROUP"+i+"}";
-                int index = replacementBuilder.indexOf(group);
-                replacementBuilder.replace(index, index+group.length(), matcher.group(i));
-            }
-
-            if (!offsetMap.isEmpty())  //the previous replacement changes the real position
-                for (Map.Entry<Integer, Integer> entry : offsetMap.entrySet()) {
-                    if (entry.getKey()<start)
-                        realOffset += entry.getValue();
+        try {
+            while (matcher.find()) {
+                StringBuilder replacementBuilder = new StringBuilder(replacement);
+                String s = matcher.group(0);
+                int start = matcher.start(0);
+                if (start==-1)
+                    continue;
+                for (int i : numArr) {
+                    String group = "${GROUP"+i+"}";
+                    int index = replacementBuilder.indexOf(group);
+                    replacementBuilder.replace(index, index+group.length(), matcher.group(i));
                 }
-            offsetMap.put(start, replacementBuilder.length() - s.length());
-            newBodyBuilder.replace(start+realOffset, matcher.end(0)+realOffset, replacementBuilder.toString());
+
+                int realOffset = 0;
+                if (!offsetMap.isEmpty())  //the previous replacement changes the real position
+                    for (Map.Entry<Integer, Integer> entry : offsetMap.entrySet()) {
+                        if (entry.getKey()<start)
+                            realOffset += entry.getValue();
+                    }
+                offsetMap.put(start, replacementBuilder.length() - s.length());
+                newBodyBuilder.replace(start+realOffset, matcher.end(0)+realOffset, replacementBuilder.toString());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println(body.length() + " " + newBodyBuilder.toString().length());
         }
         return newBodyBuilder.toString();
     }
