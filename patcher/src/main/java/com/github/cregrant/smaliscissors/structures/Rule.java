@@ -19,7 +19,6 @@ public class Rule {
     public Type type;
     public String source;
     public String match;
-    public String target;
     public String replacement;
     public String ruleName;
     public String script;
@@ -31,26 +30,27 @@ public class Rule {
     public boolean isSmali = false;
     public boolean isRegex = false;
     public boolean extract = false;
-    public ArrayList<String> targetArr;
+    public boolean singleTarget = false;
+    public ArrayList<String> targets;
     public ArrayList<String> assignments;
     public ArrayList<Rule> mergedRules = new ArrayList<>(3);
 
     public boolean ruleIntegrityPassed() {
         switch (type) {
             case MATCH_ASSIGN:
-                if (target == null || match == null || assignments == null)
+                if (targets == null || match == null || assignments == null)
                     return false;
                 break;
             case ADD_FILES:
-                if (target == null || source == null)
+                if (targets == null || source == null)
                     return false;
                 break;
             case MATCH_REPLACE:
-                if (target == null || match == null || replacement == null)
+                if (targets == null || match == null || replacement == null)
                     return false;
                 break;
             case REMOVE_FILES:
-                if (target == null && targetArr == null)
+                if (targets == null)
                     return false;
                 break;
             case DUMMY:
@@ -66,7 +66,7 @@ public class Rule {
                     return false;
                 break;
             case MATCH_GOTO:
-                if (target == null || match == null || goTo == null)
+                if (targets == null || match == null || goTo == null)
                     return false;
                 break;
         }
@@ -77,12 +77,12 @@ public class Rule {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:    ").append(type).append('\n');
 
-        if (target != null) {
-            sb.append("Target:    ").append(target).append('\n');
+        if (singleTarget) {
+            sb.append("Target:    ").append(targets.get(0)).append('\n');
         }
         else {
             sb.append("Targets:\n");
-            for (String target : targetArr) sb.append("    ").append(target).append("\n");
+            for (String target : targets) sb.append("    ").append(target).append("\n");
         }
         switch (type) {
             case MATCH_ASSIGN:
@@ -131,10 +131,10 @@ public class Rule {
         return sb.toString();
     }
 
-    public boolean canBeMerged(Rule OtherRule) {
-        return this.isXml==OtherRule.isXml
-                && this.isSmali==OtherRule.isSmali
+    public boolean canBeMerged(Rule otherRule) {
+        return this.isXml==otherRule.isXml
+                && this.isSmali==otherRule.isSmali
 
-                && this.target.equals(OtherRule.target);
+                && this.targets.containsAll(otherRule.targets);
     }
 }

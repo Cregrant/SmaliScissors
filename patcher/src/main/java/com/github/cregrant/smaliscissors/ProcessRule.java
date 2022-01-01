@@ -7,6 +7,7 @@ import com.github.cregrant.smaliscissors.structures.Rule;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -23,7 +24,7 @@ class ProcessRule {
             mergedRules.addAll(replaceRule.mergedRules);
 
         ArrayList<Batch> batchLoad = new ArrayList<>(mergedRules.size());
-        Pattern path = Pattern.compile(Regex.globToRegex(mergedRules.get(0).target));
+        Pattern path = Pattern.compile(Regex.globToRegex(mergedRules.get(0).targets.get(0)));
         for (Rule rule : mergedRules) {
             applyAssign(rule);
             Batch batch = new Batch();
@@ -33,10 +34,11 @@ class ProcessRule {
             batchLoad.add(batch);
         }
 
-        BackgroundWorker.createIfTerminated();
         patchedFilesNum = 0;
         Object lock = new Object();
+        BackgroundWorker.createIfTerminated();
         ArrayList<DecompiledFile> files = replaceRule.isXml ? Scan.xmlList : Scan.smaliList;
+        ArrayList<Future<?>> futures = new ArrayList<>(files.size());
         for (DecompiledFile dFile : files) {
             Runnable r = () -> {
                 try {
@@ -55,9 +57,9 @@ class ProcessRule {
                 }
 
             };
-            BackgroundWorker.executor.submit(r);
+            futures.add(BackgroundWorker.executor.submit(r));
         }
-        BackgroundWorker.computeAndDestroy();
+        BackgroundWorker.compute(futures);
 
         if (Prefs.verbose_level <= 2) {
             if (replaceRule.isSmali)
@@ -98,7 +100,7 @@ class ProcessRule {
             files = Scan.smaliList;
 
         for (DecompiledFile dFile : files) {
-            if (!dFile.getPath().matches(rule.target))
+            if (!dFile.getPath().matches(rule.targets.get(0)))
                 continue;
 
             for (String variable : rule.assignments) {
@@ -126,15 +128,13 @@ class ProcessRule {
 
     static void add(Rule rule) {
         String src = Prefs.tempDir + File.separator + rule.source;
-        String dst = Prefs.projectPath + File.separator + rule.target;
+        String dst = Prefs.projectPath + File.separator + rule.targets.get(0);
         if (rule.extract)
             IO.zipExtract(src, dst);
         else
             IO.copy(src, dst);
 
-        BackgroundWorker.createIfTerminated();
-        Iterable<DecompiledFile> newFiles = Scan.scanFolder(new File(Prefs.projectPath + File.separator + rule.target));
-        BackgroundWorker.computeAndDestroy();
+        Iterable<DecompiledFile> newFiles = Scan.scanFolder(new File(Prefs.projectPath + File.separator + rule.targets.get(0)));
 
         for (DecompiledFile df : newFiles) {
             Scan.removeLoadedFile(df.getPath(), false, false);
@@ -146,13 +146,10 @@ class ProcessRule {
     }
 
     static void remove(Rule rule) {
-        ArrayList<String> forRemove = new ArrayList<>(4);
-        if (rule.targetArr!=null)
-            forRemove.addAll(rule.targetArr);
-        if (rule.target!=null)
-            forRemove.add(rule.target);
+        if (rule.targets==null)
+            Main.out.println("No targets specified! Removing cancelled.");
 
-        for (String target : forRemove) {
+        for (String target : rule.targets) {
             if (target.startsWith("L"))
                 target = target.substring(1);
 

@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.util.Properties;
 
 public class Prefs {
-    public static boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+    //public static boolean isWindows = System.getProperty("os.name").startsWith("Windows");
     public static String projectPath;
     public static File patchesDir;
     public static String zipPath;

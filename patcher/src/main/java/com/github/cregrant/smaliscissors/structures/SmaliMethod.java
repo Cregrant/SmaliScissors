@@ -89,7 +89,7 @@ public class SmaliMethod {
         for (String obj : input) {
             sb.append(obj);
         }
-        return modifiers + name + '('+sb.toString()+')' + outputObject;
+        return modifiers + name + '('+ sb +')' + outputObject;
     }
 
     public String getPath() {

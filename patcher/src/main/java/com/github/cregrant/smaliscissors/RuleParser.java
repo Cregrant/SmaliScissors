@@ -3,7 +3,6 @@ package com.github.cregrant.smaliscissors;
 import com.github.cregrant.smaliscissors.Regex.MatchType;
 import com.github.cregrant.smaliscissors.structures.Rule;
 
-import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import static com.github.cregrant.smaliscissors.Regex.matchMultiLines;
@@ -141,18 +140,15 @@ class RuleParser {
     }
 
     private void getTargets() {
-        ArrayList<String> targetsRaw = matchMultiLines(patTarget, patch, MatchType.SplitPath);
-        String first = targetsRaw.get(0);
-        if (first.endsWith("xml"))
+        rule.targets = matchMultiLines(patTarget, patch, MatchType.SplitPath);
+        String sample = rule.targets.get(0);
+        if (sample.endsWith("xml"))
             rule.isXml = true;
-        else if (first.endsWith("smali"))
+        else if (sample.endsWith("smali"))
             rule.isSmali = true;
 
-        if (targetsRaw.size() == 1) {
-            rule.target = first;
-            rule.targetArr = null;
-        }
-        else rule.targetArr = targetsRaw;
+        if (rule.targets.size() == 1)
+            rule.singleTarget = true;
     }
 
     private String parseString(Pattern pattern) {       //removes some whitespace
@@ -165,10 +161,7 @@ class RuleParser {
 
     private boolean parseBoolean(Pattern pattern) {
         String text = matchSingleLine(pattern, patch);
-        if (text!=null && text.trim().equalsIgnoreCase("true"))
-            return true;
-        else
-            return false;
+        return text != null && text.trim().equalsIgnoreCase("true");
     }
 
     private void fixRegex() {   //add compatibility with non-ApkEditor xml style

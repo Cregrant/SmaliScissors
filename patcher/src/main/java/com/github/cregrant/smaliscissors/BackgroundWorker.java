@@ -1,16 +1,16 @@
 package com.github.cregrant.smaliscissors;
 
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.concurrent.*;
 
 public class BackgroundWorker {
-    public static ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private static final int cpuCount = Runtime.getRuntime().availableProcessors()>1 ? Runtime.getRuntime().availableProcessors()-1 : Runtime.getRuntime().availableProcessors();
+    public static ExecutorService executor = Executors.newFixedThreadPool(cpuCount);
 
     public static void createIfTerminated() {
         if (BackgroundWorker.executor.isTerminated())
-            BackgroundWorker.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+            BackgroundWorker.executor = Executors.newFixedThreadPool(cpuCount);
     }
 
     public static void computeAndDestroy() {
@@ -19,6 +19,16 @@ public class BackgroundWorker {
             BackgroundWorker.executor.awaitTermination(15, TimeUnit.MINUTES);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void compute(ArrayList<Future<?>> futures) {
+        for (Future<?> future : futures) {
+            try {
+                future.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

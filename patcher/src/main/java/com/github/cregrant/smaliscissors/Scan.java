@@ -145,7 +145,7 @@ class Scan {
         boolean isXml = shortPath.startsWith("res");
         boolean isInnerPath = !isXml && !shortPath.startsWith("smali");
         if (isInnerPath && isRegexEnabled)
-            shortPath = "smali.*?/" + shortPath;    //an inner path is given
+            shortPath = "smali.*?" + shortPath;    //an inner path is given
 
         ArrayList<DecompiledFile> files;
         int size;

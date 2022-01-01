@@ -1,8 +1,6 @@
 package com.github.cregrant;
 
-import com.github.cregrant.smaliscissors.DexExecutor;
-import com.github.cregrant.smaliscissors.OutStream;
-import com.github.cregrant.smaliscissors.Prefs;
+import com.github.cregrant.smaliscissors.*;
 import com.googlecode.dex2jar.tools.Dex2jarCmd;
 
 import java.io.File;

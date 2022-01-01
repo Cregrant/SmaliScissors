@@ -80,15 +80,15 @@ class Executor {
         else if (Prefs.verbose_level == 1) {
             Main.out.println("Type - " + rule.type);
             if (rule.type != Rule.Type.EXECUTE_DEX && rule.type != Rule.Type.DUMMY) {
-                if (rule.target != null)
-                    Main.out.println("Target - " + rule.target);
-                else if (rule.targetArr != null) {
+                if (rule.singleTarget)
+                    Main.out.println("Target - " + rule.targets.get(0));
+                else if (rule.targets != null) {
                     Main.out.println("Targets:");
-                    if (rule.targetArr.size() < 100) {
-                        for (String target : rule.targetArr)
+                    if (rule.targets.size() < 100) {
+                        for (String target : rule.targets)
                             Main.out.println("    " + target);
                     }
-                    else Main.out.println("    " + rule.targetArr.size() + " items");
+                    else Main.out.println("    " + rule.targets.size() + " items");
                 }
             }
         }
