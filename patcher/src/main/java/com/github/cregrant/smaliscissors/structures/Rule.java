@@ -17,6 +17,7 @@ public class Rule {
 
     public int num;
     public Type type;
+
     public String source;
     public String match;
     public String replacement;

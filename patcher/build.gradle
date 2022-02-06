@@ -2,25 +2,16 @@ plugins {
     id 'java'
 }
 
-apply plugin: 'antlr'
-
 repositories {
     mavenCentral()
 }
 
 dependencies {
     //compile group: 'com.google.re2j', name: 're2j', version: '1.6'
-    compile 'org.antlr:antlr4-runtime:4.9.2'
-    antlr 'org.antlr:antlr4:4.9.2'
-    compile 'org.ow2.asm:asm-debug-all:5.2'
-}
-
-
-generateGrammarSource {
-    arguments += ['-no-listener', '-visitor','-package','com.googlecode.d2j.smali.antlr4']
 }
 
 sourceSets {
-    test.output.resourcesDir = "build/classes/test"
-    main.antlr.srcDirs = ['src/main/antlr4']
+
 }
+sourceCompatibility = JavaVersion.VERSION_1_9
+targetCompatibility = JavaVersion.VERSION_1_9

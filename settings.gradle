@@ -2,4 +2,5 @@ rootProject.name = 'SmaliScissors'
 include 'patcher'
 include 'jmh'
 include 'windows_launcher'
+include 'Benchmark'
 

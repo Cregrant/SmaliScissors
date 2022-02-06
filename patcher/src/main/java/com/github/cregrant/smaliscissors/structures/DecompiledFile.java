@@ -6,15 +6,18 @@ import com.github.cregrant.smaliscissors.Prefs;
 import java.io.File;
 
 public class DecompiledFile {
-    private String path;
-    private String body;
-    private boolean isModified = false;
+    private final String projectPath;
+    private final String path;
     private final boolean isXML;
-    private boolean isBigSize = false;
 
-    public DecompiledFile(boolean isXmlFile, String filePath) {
-        isXML = isXmlFile;
+    private String body;
+    private int size;
+    private boolean isModified = false;
+
+    public DecompiledFile(String projectPath, String filePath, boolean isXmlFile) {
+        this.projectPath = projectPath;
         path = filePath;
+        isXML = isXmlFile;
     }
 
     public boolean isXML() {
@@ -37,22 +40,22 @@ public class DecompiledFile {
         if (isXML ? Prefs.keepXmlFilesInRAM : Prefs.keepSmaliFilesInRAM)
             return this.body;
         else
-            return IO.read(Prefs.projectPath + File.separator + path);
+            return IO.read(projectPath + File.separator + path);
     }
 
     public void setBody(String newBody) {
         if (isXML ? Prefs.keepXmlFilesInRAM : Prefs.keepSmaliFilesInRAM)
             this.body = newBody;
         else
-            IO.write(Prefs.projectPath + File.separator + path, newBody);
+            IO.write(projectPath + File.separator + path, newBody);
     }
 
-    public void setBigSize(boolean state) {
-        this.isBigSize = state;
+    public void setSize(int newSize) {
+        size = newSize;
     }
 
-    public boolean isBigSize() {
-        return !this.isBigSize;
+    public int getSize() {
+        return size;
     }
 
     public boolean equals(Object obj) {

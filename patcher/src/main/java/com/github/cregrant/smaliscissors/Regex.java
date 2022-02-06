@@ -7,14 +7,14 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class Regex {
-    enum MatchType {
-        Full,
-        Split,
-        SplitPath,
+public class Regex {
+    public enum MatchType {
+        FULL,
+        SPLIT,
+        SPLIT_PATH,
     }
 
-    static ArrayList<String> matchMultiLines(Pattern readyPattern, CharSequence content, MatchType mode) {
+    public static ArrayList<String> matchMultiLines(CharSequence content, Pattern readyPattern, MatchType mode) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
         while (matcher.find()) {
@@ -22,13 +22,13 @@ class Regex {
             for (int i = 1; i <= size; ++i) {
                 String textMatched = matcher.group(i);
                 switch (mode) {
-                    case Full:
+                    case FULL:
                         matchedArr.add(textMatched);
                         break;
-                    case Split:
+                    case SPLIT:
                         matchedArr.addAll(Arrays.asList(textMatched.split("\\R")));
                         break;
-                    case SplitPath:
+                    case SPLIT_PATH:
                         for (String str : textMatched.split("\\R")) {
                             matchedArr.add(str.replace("*/*", "*").trim());
                         }
@@ -39,7 +39,7 @@ class Regex {
         return matchedArr;
     }
 
-    static String matchSingleLine(Pattern readyPattern, CharSequence content) {
+    public static String matchSingleLine(CharSequence content, Pattern readyPattern) {
         Matcher matcher = readyPattern.matcher(content);
         if (matcher.find()) {
             if (matcher.groupCount()==0)
@@ -49,12 +49,14 @@ class Regex {
         return null;
     }
 
-    static String getEndOfPath(String path) {
+    static String getFilename(String path) {
         int last = path.lastIndexOf('/')+1;
+        if (last == 0)
+            last = path.lastIndexOf('\\')+1;
         return path.substring(last);
     }
 
-    static String globToRegex(String line) {
+    public static String globToRegex(String line) {
         line = line.trim();
         int strLen = line.length();
         StringBuilder sb = new StringBuilder(strLen);
@@ -136,15 +138,15 @@ class Regex {
         return sb.toString();
     }
 
-    static String replaceAll(String body, String replacement, Matcher matcher) {
-        matcher.reset(body);
+    public static String replaceAll(String body, String replacement, Matcher matcher) {
+        //matcher.reset(body);  //fixme
         if (replacement.length()==0) {
-            StringBuffer newBodyBuffer = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while(matcher.find()) {
-                matcher.appendReplacement(newBodyBuffer, replacement);
+                matcher.appendReplacement(sb, replacement);
             }
-            matcher.appendTail(newBodyBuffer);
-            return newBodyBuffer.toString();
+            matcher.appendTail(sb);
+            return sb.toString();
         }
 
         ArrayList<Integer> numArr = new ArrayList<>(5);

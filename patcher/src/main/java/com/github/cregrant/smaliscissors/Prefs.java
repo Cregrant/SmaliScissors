@@ -7,15 +7,16 @@ import java.util.Properties;
 
 public class Prefs {
     //public static boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-    public static String projectPath;
     public static File patchesDir;
-    public static String zipPath;
     public static File tempDir;
+
     private static double versionConf = 0.01;
-    static int verbose_level = 1;
+    public static int verbose_level = 0;
+
     static boolean optimizeRules = true;
     public static boolean keepSmaliFilesInRAM = false;
     public static boolean keepXmlFilesInRAM = false;
+    public static boolean reduceMemoryUsage = false;
     static final boolean skipSomeSmaliFiles = true;
     static final String[] smaliFoldersToSkip = new String[]{"android", "androidx", "kotlin", "kotlinx"};
     //todo move to main
