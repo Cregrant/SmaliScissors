@@ -18,13 +18,18 @@ public class Goto implements IRule {
     }
 
     @Override
-    public String nextRuleName() {
-        return goTo;
+    public boolean smaliNeeded() {
+        return false;
     }
 
     @Override
-    public boolean canBeMerged(IRule otherRule) {
+    public boolean xmlNeeded() {
         return false;
+    }
+
+    @Override
+    public String nextRuleName() {
+        return goTo;
     }
 
     @Override
@@ -37,7 +42,7 @@ public class Goto implements IRule {
         sb.append("Type: GOTO.\n");
         if (name != null)
             sb.append("Name: ").append(name).append('\n');
-        sb.append("Goto: ").append(goTo).append('\n');
+        sb.append("Goto: ").append(goTo);
         return sb.toString();
     }
 }

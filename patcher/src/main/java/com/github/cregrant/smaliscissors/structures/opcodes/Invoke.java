@@ -3,13 +3,16 @@ package com.github.cregrant.smaliscissors.structures.opcodes;
 import java.util.ArrayList;
 
 public class Invoke extends Opcode {
-    public boolean softRemove = false;
-    private ArrayList<String> linkArguments;
+    private ArrayList<String> replacedRegisters;
+    private ArrayList<String> argumentsList;
+    private boolean softRemove;
+    private final boolean constructor;
 
     public Invoke(String target, String[] bodyLines, int i) {
         super(bodyLines, i);
         scanInputRegisters();
         scanTargetSignatures(target);
+        constructor = lines[i].contains(";-><init>");
         if (lines[i + 2].startsWith("move-result", 4))
             outputRegister = lines[num + 2].substring(lines[num + 2].lastIndexOf(' ') + 1);
     }
@@ -18,7 +21,7 @@ public class Invoke extends Opcode {
         String line = lines[num];
         int startIndex = line.indexOf("(", 26) + 1;
         assert startIndex != 0;
-        int firstMatch = line.indexOf(target);      //link to deleted class
+        int firstMatch = line.indexOf(target);
         if (firstMatch < startIndex)
             return;
 
@@ -26,16 +29,20 @@ public class Invoke extends Opcode {
         if (line.indexOf(target, endIndex) != -1)
             return;
 
-        linkArguments = new ArrayList<>(3);
+        prepareSoftRemove(line, startIndex, target);
+    }
+
+    private void prepareSoftRemove(String line, int startIndex, String target) {
+        argumentsList = new ArrayList<>(3);
         char[] chars = line.toCharArray();
         char prevChar = '(';
         if (line.charAt(14) != 't')     //stub if invoke is not static
-            linkArguments.add("");
+            argumentsList.add("");
 
         int start = startIndex;
         boolean processingObject = false;
         outer:
-        for (int i = startIndex; i < chars.length; i++) {
+        for (int i = startIndex; i < chars.length; i++) {       //todo move this parser somewhere
             char currentChar = chars[i];
             switch (currentChar) {
                 case '[':
@@ -59,14 +66,14 @@ public class Invoke extends Opcode {
                 case 'J':
                     if (!processingObject) {
                         if (prevChar == '[')
-                            linkArguments.add(line.substring(start, i));
+                            argumentsList.add(line.substring(start, i + 1));
                         else
-                            linkArguments.add(String.valueOf(currentChar));
+                            argumentsList.add(String.valueOf(currentChar));
                     }
                     break;
 
                 case ';':
-                    linkArguments.add(line.substring(start, i + 1));
+                    argumentsList.add(line.substring(start, i + 1));
                     processingObject = false;
                     break;
                 case ')':
@@ -74,15 +81,13 @@ public class Invoke extends Opcode {
             }
             prevChar = currentChar;
         }
-        if (linkArguments.contains("D") || linkArguments.contains("J"))
-            replacedRegisters = replacedRegisters;
 
         replacedRegisters = new ArrayList<>(3);
-        for (int i = 0; i < linkArguments.size(); i++) {
-            String link = linkArguments.get(i);
+        for (int i = 0; i < argumentsList.size(); i++) {
+            String link = argumentsList.get(i);
             if (link.contains(target)) {
-                replacedRegisters.add(inputRegisters.get(i));
-                linkArguments.set(i, "Z");
+                replacedRegisters.add(getInputRegisters().get(i));
+                argumentsList.set(i, "Z");
             }
         }
         softRemove = true;
@@ -91,11 +96,9 @@ public class Invoke extends Opcode {
     @Override
     public void scanInputRegisters() {
         String line = lines[num];
-        int beginPosition = line.indexOf("{", 18) + 1;
-        if (beginPosition == 0) {
-            System.err.println("scanInputRegisters failed!");
-            return;
-        }
+        int beginPosition = line.indexOf("{", 17) + 1;
+        if (beginPosition == 0)
+            throw new IllegalArgumentException("scanInputRegisters failed!");
 
         if (line.charAt(beginPosition + 4) == '.') {     //range call like {v1 .. v5}
             int dotsPosition = line.indexOf("..", beginPosition);
@@ -106,9 +109,9 @@ public class Invoke extends Opcode {
             int to = Integer.parseInt(line.substring(dotsPosition + 4, endPosition));
             String type = line.substring(beginPosition, beginPosition + 1);
             for (int i = from; i <= to; i++)
-                inputRegisters.add(type + i);
+                getInputRegisters().add(type + i);
         } else {
-            int end = line.indexOf("}", 18) + 1;
+            int end = line.indexOf("}", beginPosition) + 1;
 
             char[] chars = line.substring(beginPosition, end).toCharArray();
             StringBuilder sb = new StringBuilder(3);
@@ -121,7 +124,7 @@ public class Invoke extends Opcode {
                     sb.append(ch);
                 else if (started && ch == ',' || ch == '}') {
                     assert sb.length() <= 3;
-                    inputRegisters.add(sb.toString());
+                    getInputRegisters().add(sb.toString());
                     sb = new StringBuilder(3);
                 }
             }
@@ -132,28 +135,36 @@ public class Invoke extends Opcode {
     public void deleteLine() {
         if (softRemove) {
             lines[num] = generateFixedCall();
-        } else {
+        } else if (!deleted) {
             lines[num] = "#" + lines[num];
             if (!outputRegister.isEmpty())
                 lines[num + 2] = "#" + lines[num + 2];
+            deleted = true;
         }
     }
 
     private String generateFixedCall() {
         String line = lines[num];
         StringBuilder sb = new StringBuilder();
-        for (String reg : replacedRegisters) {
-            sb.append("    const/4 ").append(reg).append(", 0x0").append("   #stub\n\n");
-        }
+        for (String reg : replacedRegisters)
+            sb.append("    const/16 ").append(reg).append(", 0x0   #stub\n\n");
 
         int startIndex = line.indexOf("(", 26) + 1;
         sb.append(line, 0, startIndex);
-        for (String arg : linkArguments) {
+        for (String arg : argumentsList) {
             if (!arg.isEmpty())
                 sb.append(arg);
         }
         int endIndex = line.lastIndexOf(")");
         sb.append(line.substring(endIndex));
         return sb.toString();
+    }
+
+    public boolean isConstructor() {
+        return constructor;
+    }
+
+    public boolean isSoftRemove() {
+        return softRemove;
     }
 }

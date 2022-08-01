@@ -1,13 +1,20 @@
 package com.github.cregrant.smaliscissors.structures.rules;
 
-import com.github.cregrant.smaliscissors.*;
+import com.github.cregrant.smaliscissors.Main;
+import com.github.cregrant.smaliscissors.Patch;
+import com.github.cregrant.smaliscissors.Prefs;
+import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.utils.IO;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 
 public class RemoveFiles implements IRule {
     private String name;
-    private ArrayList<String> targets;
+    private Collection<String> targets;
 
     @Override
     public String getName() {
@@ -20,25 +27,47 @@ public class RemoveFiles implements IRule {
     }
 
     @Override
+    public boolean smaliNeeded() {
+        return false;
+    }
+
+    @Override
+    public boolean xmlNeeded() {
+        return false;
+    }
+
+    @Override
     public String nextRuleName() {
         return null;
     }
 
     @Override
-    public boolean canBeMerged(IRule otherRule) {
-        return false;
-    }
+    public void apply(Project project, Patch patch) throws IOException {
+        HashSet<File> possibleEmptyFolders = new HashSet<>();
+        int deletedCount = 0;
 
-    @Override
-    public void apply(Project project, Patch patch) {
         for (String target : targets) {
-            if (target.startsWith("L"))
-                target = target.substring(1);
-
-            ArrayList<String> deleted = Scanner.removeLoadedFile(project, target, true);
-            for (String str : deleted)
-                IO.delete(new File(project.getPath() + File.separator + str));
+            List<String> removed = project.removeLoadedFile(project, target);
+            deletedCount += removed.size();
+            for (String str : removed) {
+                File file = new File(project.getPath() + File.separator + str);
+                IO.delete(file);
+                possibleEmptyFolders.add(file.getParentFile());
+                if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel())
+                    Main.out.println(file + " deleted");
+            }
         }
+
+        for (File file : possibleEmptyFolders) {
+            String[] subs = file.list();
+            while (subs != null && subs.length == 0) {
+                file.delete();
+                file = file.getParentFile();     //delete parent folder if it is empty
+                subs = file.list();
+            }
+        }
+        if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel())
+            Main.out.println(deletedCount + " files deleted");
     }
 
     @Override
@@ -57,11 +86,11 @@ public class RemoveFiles implements IRule {
         this.name = name;
     }
 
-    public ArrayList<String> getTargets() {
+    public Collection<String> getTargets() {
         return targets;
     }
 
-    public void setTargets(ArrayList<String> targets) {
+    public void setTargets(Collection<String> targets) {
         this.targets = targets;
     }
 }

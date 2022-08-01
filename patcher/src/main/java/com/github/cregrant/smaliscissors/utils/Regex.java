@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors;
+package com.github.cregrant.smaliscissors.utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,30 +8,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Regex {
-    public enum MatchType {
+    public enum ResultFormat {
         FULL,
         SPLIT,
-        SPLIT_PATH,
+        SPLIT_TRIM,
     }
 
-    public static ArrayList<String> matchMultiLines(CharSequence content, Pattern readyPattern, MatchType mode) {
+    public static ArrayList<String> matchMultiLines(CharSequence content, Pattern readyPattern, ResultFormat format) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
         while (matcher.find()) {
             int size = matcher.groupCount();
             for (int i = 1; i <= size; ++i) {
                 String textMatched = matcher.group(i);
-                switch (mode) {
+                switch (format) {
                     case FULL:
                         matchedArr.add(textMatched);
                         break;
                     case SPLIT:
                         matchedArr.addAll(Arrays.asList(textMatched.split("\\R")));
                         break;
-                    case SPLIT_PATH:
-                        for (String str : textMatched.split("\\R")) {
-                            matchedArr.add(str.replace("*/*", "*").trim());
-                        }
+                    case SPLIT_TRIM:
+                        for (String str : textMatched.split("\\R"))
+                            matchedArr.add(str.trim());
                         break;
                 }
             }
@@ -49,7 +48,7 @@ public class Regex {
         return null;
     }
 
-    static String getFilename(String path) {
+    public static String getFilename(String path) {
         int last = path.lastIndexOf('/')+1;
         if (last == 0)
             last = path.lastIndexOf('\\')+1;
@@ -58,8 +57,7 @@ public class Regex {
 
     public static String globToRegex(String line) {
         line = line.trim();
-        int strLen = line.length();
-        StringBuilder sb = new StringBuilder(strLen);
+        StringBuilder sb = new StringBuilder(line.length());
         boolean escaping = false;
         int inBraces = 0;
         char prevChar = 0;
@@ -138,10 +136,14 @@ public class Regex {
         return sb.toString();
     }
 
-    public static String replaceAll(String body, String replacement, Matcher matcher) {
-        //matcher.reset(body);  //fixme
+    /**
+     * Custom implementation of matcher.replaceAll()
+     * because android skip ${GROUP10} and nextPart.
+     */
+    public static String replaceAll(String body, Pattern match, String replacement) {
+        Matcher matcher = match.matcher(body);
         if (replacement.length()==0) {
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer(body.length());
             while(matcher.find()) {
                 matcher.appendReplacement(sb, replacement);
             }

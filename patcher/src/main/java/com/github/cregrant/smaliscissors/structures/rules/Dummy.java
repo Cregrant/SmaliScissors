@@ -17,13 +17,18 @@ public class Dummy implements IRule {
     }
 
     @Override
-    public String nextRuleName() {
-        return null;
+    public boolean smaliNeeded() {
+        return false;
     }
 
     @Override
-    public boolean canBeMerged(IRule otherRule) {
+    public boolean xmlNeeded() {
         return false;
+    }
+
+    @Override
+    public String nextRuleName() {
+        return null;
     }
 
     @Override

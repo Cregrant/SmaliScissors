@@ -31,3 +31,5 @@ run.bat
 /patches/temp/
 /patcher/build/
 /windows_launcher/build/
+/Benchmark/src/main/generated/
+/Benchmark/out/

@@ -1,28 +1,11 @@
 package com.github.cregrant.smaliscissors.structures.opcodes;
 
-import com.github.cregrant.smaliscissors.Main;
-
 public class Return extends Opcode {
-    public Return(String[] bodyLines, int i) {
-        super(bodyLines, i);
+    public Return(String[] lines, int i) {
+        super(lines, i);
         end = true;
-    }
-
-    @Override
-    public boolean inputRegisterUsed(String register) {
-        if (inputRegisters.contains(register)) {
-            addHelpMark();
-            //todo breaks return v0
-            return true;
-        }
-        else
-            return false;
-    }
-
-    void addHelpMark() {
-        if (!lines[num].endsWith("    #HELP")) {
-            lines[num] = lines[num] + "    #HELP";
-            Main.out.println("Problem detected. Search \"#HELP\"");
-        }
+        String line = lines[i];
+        outputRegister = line.substring(line.indexOf(' ', 10) + 1);
+        getInputRegisters().add(outputRegister);
     }
 }

@@ -13,6 +13,6 @@ public class Move extends Opcode {
     @Override
     public void scanInputRegisters() {
         String line = lines[num];
-        inputRegisters.add(line.substring(line.lastIndexOf(' ') + 1));
+        getInputRegisters().add(line.substring(line.lastIndexOf(' ') + 1));
     }
 }

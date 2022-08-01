@@ -1,22 +1,22 @@
 package com.github.cregrant.smaliscissors.structures.rules;
 
 import com.github.cregrant.smaliscissors.*;
-import com.github.cregrant.smaliscissors.structures.DecompiledFile;
+import com.github.cregrant.smaliscissors.structures.common.DecompiledFile;
+import com.github.cregrant.smaliscissors.utils.Regex;
 
 import java.util.ArrayList;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 
 public class MatchGoto implements IRule {
     public String name;
+    public String target;
     public String match;
     public String goTo;
     public boolean isRegex;
-    private boolean found;
-    public boolean isSmali = false;
-    public boolean isXml = false;
-    public ArrayList<String> targets;
+    public boolean isSmali;
+    public boolean isXml;
+    private volatile boolean found;
 
     @Override
     public String getName() {
@@ -25,7 +25,17 @@ public class MatchGoto implements IRule {
 
     @Override
     public boolean integrityCheckPassed() {
-        return targets != null && !targets.isEmpty() && match != null && goTo != null;
+        return target != null && match != null && goTo != null;
+    }
+
+    @Override
+    public boolean smaliNeeded() {
+        return isSmali;
+    }
+
+    @Override
+    public boolean xmlNeeded() {
+        return isXml;
     }
 
     @Override
@@ -34,14 +44,9 @@ public class MatchGoto implements IRule {
     }
 
     @Override
-    public boolean canBeMerged(IRule otherRule) {
-        return false;
-    }
-
-    @Override
     public void apply(Project project, Patch patch) {
-        AtomicBoolean running = new AtomicBoolean(true);
-        Pattern pattern = Pattern.compile(patch.applyAssign(match));
+        Pattern matchPattern = Pattern.compile(patch.applyAssign(match));
+        Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
 
         ArrayList<DecompiledFile> files = new ArrayList<>(0);
         if (isSmali)
@@ -49,22 +54,23 @@ public class MatchGoto implements IRule {
         else if (isXml)
             files.addAll(project.getXmlList());
 
-        int totalNum = files.size();
         try {
-            ArrayList<Future<?>> futures = new ArrayList<>(totalNum);
-            for (int num = 0; num < totalNum; num++) {
-                int finalNum = num;
+            ArrayList<Future<?>> futures = new ArrayList<>(files.size());
+            for (DecompiledFile df : files) {
                 Runnable r = () -> {
-                    if (running.get()) {
-                        String body = files.get(finalNum).getBody();
-                        if (Regex.matchSingleLine(body, pattern) != null) {
+                    if (!found) {
+                        if (!targetPattern.matcher(df.getPath()).matches())
+                            return;
+
+                        String body = df.getBody();
+                        if (Regex.matchSingleLine(body, matchPattern) != null) {
                             found = true;
-                            running.set(false);
-                            Main.out.println("Match found!");
+                            if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel())
+                                Main.out.println("Match found!");
                         }
                     }
                 };
-                futures.add(BackgroundWorker.executor.submit(r));
+                futures.add(BackgroundWorker.submit(r));
             }
             BackgroundWorker.compute(futures);
         } catch (Exception e) {
@@ -75,14 +81,12 @@ public class MatchGoto implements IRule {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type:  MATCH_GOTO.\n");
+        sb.append("Type:   MATCH_GOTO.\n");
         if (name != null)
-            sb.append("Name:  ").append(name).append('\n');
-        sb.append("Targets:\n");
-        for (String target : targets)
-            sb.append("    ").append(target).append("\n");
-        sb.append("Match: ").append(match).append('\n');
-        sb.append("Goto:  ").append(goTo).append('\n');
+            sb.append("Name:   ").append(name).append('\n');
+        sb.append("Target: ").append(target).append("\n");
+        sb.append("Match:  ").append(match).append('\n');
+        sb.append("Goto:   ").append(goTo);
         return sb.toString();
     }
 }

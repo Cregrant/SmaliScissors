@@ -1,30 +1,35 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.structures.rules.IRule;
+import com.github.cregrant.smaliscissors.utils.IO;
+import com.github.cregrant.smaliscissors.utils.RuleParser;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Patch {
     private final File file;
+    private final File tempDir;
     private final String name;
     private ArrayList<IRule> rules;
     private int currentRuleNum;
     public boolean smaliNeeded = false;
     public boolean xmlNeeded = false;
-    private static Map<String, String> assignMap = new HashMap<>();
+    private Map<String, String> assignMap = new HashMap<>();
 
     public Patch(String path) {
-        this.file = new File(path);
+        file = new File(path);
         name = file.getName();
+        tempDir = new File(file.getParentFile() + File.separator + "temp");
         parseRules();
-    }
-
-    public void addRule(IRule rule) {
-        rules.add(rule);
     }
 
     public void jumpToRuleName(String someName) {
@@ -57,12 +62,25 @@ public class Patch {
         return name;
     }
 
-    public int getRulesCount() {
-        return rules.size();
-    }
-
     public void addAssignment(String key, String value) {
         assignMap.put(key, value);
+    }
+
+    public void createTempDir() {
+        tempDir.delete();
+        tempDir.mkdirs();
+    }
+
+    public File getTempDir() {
+        return tempDir;
+    }
+
+    public void deleteTempDir() throws IOException {
+        try {
+            IO.delete(tempDir);
+        } catch (IOException e) {
+            throw new IOException(e.getCause() + " Temp directory is not deleted.");
+        }
     }
 
     public String applyAssign(String string) {        //replace ${blah-blah} to some text
@@ -70,7 +88,7 @@ public class Patch {
             return string;
 
         Set<Map.Entry<String, String>> set = assignMap.entrySet();
-        if (Prefs.verbose_level == 0)
+        if (Prefs.logLevel == Prefs.Log.DEBUG)
             Main.out.println("Replacing variables to text:\n" + set);
 
         for (Map.Entry<String, String> entry : set) {
@@ -78,7 +96,7 @@ public class Patch {
             if (string.contains(key)) {
                 String value = entry.getValue();
                 string = string.replace(key, value);
-                if (Prefs.verbose_level == 0)
+                if (Prefs.logLevel == Prefs.Log.DEBUG)
                     Main.out.println(key + " -> " + value);
             }
         }
@@ -108,20 +126,17 @@ public class Patch {
                 if (!zipEntry.getName().equals("patch.txt"))
                     continue;
 
-                byte[] buffer = new byte[8192];
-                while (zis.read(buffer) != -1)
-                    buffer = Arrays.copyOf(buffer, buffer.length * 2);
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                int b;
+                while ((b = zis.read()) != -1) {
+                    bos.write(b);
+                }
 
-                result = new String(buffer, StandardCharsets.UTF_8);
+                result = bos.toString();
                 zis.close();
                 break;
             }
-        } catch (FileNotFoundException e) {
-            Main.out.println("File not found!");
-            if (Prefs.verbose_level == 0) e.printStackTrace();
-        } catch (IOException e) {
-            Main.out.println("Error during extracting zip file.");
-            if (Prefs.verbose_level == 0) e.printStackTrace();
+        } catch (IOException ignored) {
         }
         return result;
     }

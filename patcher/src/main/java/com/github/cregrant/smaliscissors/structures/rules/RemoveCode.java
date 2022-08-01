@@ -2,8 +2,9 @@ package com.github.cregrant.smaliscissors.structures.rules;
 
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
-import com.github.cregrant.smaliscissors.smali.SmaliAnalyzer;
+import com.github.cregrant.smaliscissors.smali.SmaliWorker;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class RemoveCode implements IRule {
@@ -21,22 +22,24 @@ public class RemoveCode implements IRule {
     }
 
     @Override
+    public boolean smaliNeeded() {
+        return true;
+    }
+
+    @Override
+    public boolean xmlNeeded() {
+        return false;
+    }
+
+    @Override
     public String nextRuleName() {
         return null;
     }
 
     @Override
-    public boolean canBeMerged(IRule otherRule) {
-        return false;
-    }
-
-    @Override
-    public void apply(Project project, Patch patch) {
-        RemoveFiles removeFiles = new RemoveFiles();
-        removeFiles.setTargets(targets);
-        removeFiles.apply(project, patch);
-
-        new SmaliAnalyzer().clear(project.getSmaliList(), this);
+    public void apply(Project project, Patch patch) throws IOException {
+        SmaliWorker smaliWorker = new SmaliWorker(project, patch, this);
+        smaliWorker.run();
     }
 
     @Override

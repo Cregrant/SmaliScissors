@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.structures;
+package com.github.cregrant.smaliscissors.structures.common;
 
 import java.util.ArrayList;
 

@@ -1,8 +1,7 @@
 package com.github.cregrant;
 
-import com.github.cregrant.smaliscissors.DexExecutor;
-import com.github.cregrant.smaliscissors.OutStream;
-import com.github.cregrant.smaliscissors.Prefs;
+import com.github.cregrant.smaliscissors.structures.interfaces.IDexExecutor;
+import com.github.cregrant.smaliscissors.structures.interfaces.IOutStream;
 import com.googlecode.dex2jar.tools.Dex2jarCmd;
 
 import java.io.File;
@@ -13,12 +12,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class Main {
-    public static final OutStream out = System.out::println;
+    public static final IOutStream out = System.out::println;
 
     public static void main(String[] args) {
         File patchesDir = new File(System.getProperty("user.dir") + File.separator + "patches");
         File projectsDir = new File("C:/BAT/_INPUT_APK");
-        Prefs.loadConf();
 
         while (true) {
             Scanner scanner = new Scanner(projectsDir, patchesDir);
@@ -40,11 +38,12 @@ public class Main {
             //new Frame().MainFrame();
             ArrayList<String> strings = new ArrayList<>(selectedProjects);
             strings.addAll(selectedPatches);
+            strings.add(Config.verboseLevel);
             com.github.cregrant.smaliscissors.Main.main(strings.toArray(new String[0]), out, new DexExecutorWindows());
         }
     }
 
-    static class DexExecutorWindows implements DexExecutor {
+    static class DexExecutorWindows implements IDexExecutor {
 
         @Override
         public void runDex(String dexPath, String entrance, String mainClass, String apkPath, String zipPath, String projectPath, String param, String tempDir) {

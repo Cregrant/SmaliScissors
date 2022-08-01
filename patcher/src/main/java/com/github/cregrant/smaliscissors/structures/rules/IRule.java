@@ -3,6 +3,8 @@ package com.github.cregrant.smaliscissors.structures.rules;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 
+import java.io.IOException;
+
 public interface IRule {
     enum Type {
         MATCH_ASSIGN,
@@ -20,9 +22,11 @@ public interface IRule {
 
     boolean integrityCheckPassed();
 
+    boolean smaliNeeded();
+
+    boolean xmlNeeded();
+
     String nextRuleName();
 
-    boolean canBeMerged(IRule otherRule);
-
-    void apply(Project project, Patch patch);
+    void apply(Project project, Patch patch) throws IOException;
 }

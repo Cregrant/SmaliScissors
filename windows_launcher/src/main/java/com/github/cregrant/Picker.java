@@ -44,11 +44,13 @@ public class Picker {
         ArrayList<String> outArr = new ArrayList<>();
         while (outArr.size() == 0) {
             String inputString = br.nextLine();
+            if (inputString == null)
+                continue;
 
             if (inputString.isEmpty())
                 return stringsList;
 
-            if (inputString.equals("X") | inputString.equals("x") | inputString.equals("х") | inputString.equals("Х"))
+            if (inputString.equals("X") || inputString.equals("x") || inputString.equals("х") || inputString.equals("Х"))
                 return outArr;      //empty
 
             for (String o : inputString.split(" ")) {

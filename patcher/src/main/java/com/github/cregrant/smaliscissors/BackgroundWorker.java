@@ -1,14 +1,20 @@
 package com.github.cregrant.smaliscissors;
 
 
-import java.util.ArrayList;
-import java.util.concurrent.*;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class BackgroundWorker {
-    private static final int cpuCount = Runtime.getRuntime().availableProcessors() > 1 ? Runtime.getRuntime().availableProcessors() - 1 : 1;
-    public static ExecutorService executor = Executors.newFixedThreadPool(cpuCount);
+    public static final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
 
-    public static void compute(ArrayList<Future<?>> futures) {
+    public static Future<?> submit(Runnable task) {
+        return executor.submit(task);
+    }
+
+    public static void compute(List<Future<?>> futures) {
         for (Future<?> future : futures) {
             try {
                 future.get();
