@@ -185,7 +185,7 @@ public abstract class BaseAnalyze<T extends AnalyzeValue> implements FrameVisito
                 }
                 sb.append(" | ");
             }
-            sb.append(stmt.toString()).append('\n');
+            sb.append(stmt).append('\n');
         }
         return sb.toString();
     }

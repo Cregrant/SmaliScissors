@@ -103,7 +103,7 @@ public class UnSSATransformer implements Transformer {
                 boolean introduceNewLocal = false;
                 RegAssign aReg = (RegAssign) a.tag;
                 for (Value op : b.getOps()) {
-                    RegAssign bReg = (RegAssign) ((Local) op).tag;
+                    RegAssign bReg = (RegAssign) op.tag;
                     if (aReg.excludes.contains(bReg)) {
                         introduceNewLocal = true;
                         break;
@@ -228,7 +228,7 @@ public class UnSSATransformer implements Transformer {
                 }
             }
             for (AssignStmt as2 : buff) {
-                RegAssign assign = (RegAssign) ((Local) as2.getOp1()).tag;
+                RegAssign assign = (RegAssign) as2.getOp1().tag;
                 assign.excludes.add(leftRegAssign);
                 leftRegAssign.excludes.add(assign);
             }

@@ -319,13 +319,13 @@ public class DexFileReader implements BaseDexFileReader {
         sb.append(' ');
         if (t instanceof DexException) {
             sb.append(t.getMessage());
-            System.err.println(sb.toString());
+            System.err.println(sb);
             if (t.getCause() != null) {
                 niceExceptionMessage(t.getCause(), deep + 1);
             }
         } else {
             if (t != null) {
-                System.err.println(sb.append("ROOT cause:").toString());
+                System.err.println(sb.append("ROOT cause:"));
                 t.printStackTrace(System.err);
             }
         }

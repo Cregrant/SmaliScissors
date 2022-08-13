@@ -1,6 +1,6 @@
 package com.github.cregrant.smaliscissors;
 
-import com.github.cregrant.smaliscissors.utils.IO;
+import com.github.cregrant.smaliscissors.util.IO;
 
 import java.io.*;
 import java.security.cert.Certificate;
@@ -16,10 +16,12 @@ public class ApkSigSpoof {
         //todo add PmsHookApplication.smali before call spoof()
         try {
             String smali = IO.read(projectPath + File.separator + "/smali/cc/binmt/signature/PmsHookApplication.smali");
-            String[] ss = new String[1]; ss[0] = apkPath;
+            String[] ss = new String[1];
+            ss[0] = apkPath;
             byte[] cert = ApkSigSpoof.getEncodedSig(ss);
-            if (cert==null)
+            if (cert == null) {
                 throw new Exception();
+            }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
             dataOutputStream.write(1);

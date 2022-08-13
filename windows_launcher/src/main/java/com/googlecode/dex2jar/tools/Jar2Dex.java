@@ -35,7 +35,7 @@ public class Jar2Dex extends BaseCmd {
 
         Class<?> c = Class.forName("com.android.dx.command.Main");
         Method m = c.getMethod("main", String[].class);
-        List<String> ps = new ArrayList<>(Arrays.asList("--dex", "--no-strict", "--output=" + outDex.toAbsolutePath().toString(), jar.toAbsolutePath().toString()));
+        List<String> ps = new ArrayList<>(Arrays.asList("--dex", "--no-strict", "--output=" + outDex.toAbsolutePath(), jar.toAbsolutePath().toString()));
         System.out.println("call com.android.dx.command.Main.main" + ps);
         m.invoke(null, new Object[] { ps.toArray(new String[0]) });
     }

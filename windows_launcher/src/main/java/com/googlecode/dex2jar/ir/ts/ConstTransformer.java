@@ -161,7 +161,7 @@ public class ConstTransformer implements Transformer {
                 Value op1 = e2.op1.trim();
                 Value op2 = e2.op2.trim();
                 if (op1.vt == VT.LOCAL) {
-                    ConstAnalyzeValue cav = (ConstAnalyzeValue) ((Local) op1).tag;
+                    ConstAnalyzeValue cav = (ConstAnalyzeValue) op1.tag;
                     if (op2.vt == VT.CONSTANT) {
                         Constant c = (Constant) op2;
                         cav.isConst = true;
@@ -174,7 +174,7 @@ public class ConstTransformer implements Transformer {
                     } else if (op2.vt == VT.PHI) {
                         PhiExpr pe = (PhiExpr) op2;
                         for (Value v : pe.ops) {
-                            ConstAnalyzeValue zaf2 = (ConstAnalyzeValue) ((Local) v.trim()).tag;
+                            ConstAnalyzeValue zaf2 = (ConstAnalyzeValue) v.trim().tag;
                             cav.assignFrom.add(zaf2);
                             zaf2.assignTo.add(cav);
                         }

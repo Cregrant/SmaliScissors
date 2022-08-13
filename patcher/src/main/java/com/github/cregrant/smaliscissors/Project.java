@@ -1,71 +1,87 @@
 package com.github.cregrant.smaliscissors;
 
-import com.github.cregrant.smaliscissors.structures.common.DecompiledFile;
-import com.github.cregrant.smaliscissors.structures.common.SmaliFile;
-import com.github.cregrant.smaliscissors.structures.common.XmlFile;
-import com.github.cregrant.smaliscissors.structures.rules.IRule;
-import com.github.cregrant.smaliscissors.utils.Regex;
-import com.github.cregrant.smaliscissors.utils.Scanner;
+import com.github.cregrant.smaliscissors.common.ApkLocator;
+import com.github.cregrant.smaliscissors.common.BackgroundWorker;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
+import com.github.cregrant.smaliscissors.removecode.XmlParser;
+import com.github.cregrant.smaliscissors.removecode.XmlParserRaw;
+import com.github.cregrant.smaliscissors.rule.types.Rule;
+import com.github.cregrant.smaliscissors.util.IO;
+import com.github.cregrant.smaliscissors.util.Regex;
+import com.github.cregrant.smaliscissors.util.Scanner;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 public class Project {
+    private final MemoryManager memoryManager;
+    private final BackgroundWorker executor;
+    private final String apkPath;
     private final String path;
     private final String name;
-    private ArrayList<SmaliFile> smaliList = new ArrayList<>(0);
-    private ArrayList<XmlFile> xmlList = new ArrayList<>(0);
+    private ArrayList<SmaliFile> smaliList = new ArrayList<>();
+    private ArrayList<XmlFile> xmlList = new ArrayList<>();
+    private HashSet<String> protectedClasses;
     private boolean smaliScanned;
     private boolean xmlScanned;
     private boolean smaliCacheEnabled;
     private boolean xmlCacheEnabled;
 
-    public Project(String path) {
+    public Project(String path, BackgroundWorker executor) {
         this.path = path;
+        this.executor = executor;
         name = Regex.getFilename(path);
+        memoryManager = new MemoryManager(this);
+        apkPath = new ApkLocator().getApkPath(this);
+        getProtectedClasses();
     }
 
     void scan(boolean scanSmali, boolean scanXml) throws FileNotFoundException {
         Scanner scanner = new Scanner(this);
-        if (scanSmali && !smaliScanned) {
+        if (scanSmali && !isSmaliScanned()) {
             smaliList = scanner.scanSmali();
             smaliScanned = true;
         }
-        if (scanXml && !xmlScanned) {
-            xmlList = scanner.scanSXml();
+        if (scanXml && !isXmlScanned()) {
+            xmlList = scanner.scanXml();
             xmlScanned = true;
         }
-        tryEnableCache();
+        getMemoryManager().tryEnableCache();
     }
 
     public void scan(ArrayList<String> files) {
         Scanner scanner = new Scanner(this);
         ArrayList<DecompiledFile> decompiledFiles = scanner.scanFiles(files);
         for (DecompiledFile df : decompiledFiles) {
-            if (df instanceof SmaliFile)
+            if (df instanceof SmaliFile) {
                 smaliList.add(((SmaliFile) df));
-            else
+            } else {
                 xmlList.add(((XmlFile) df));
+            }
         }
     }
 
     void applyPatch(Patch patch) {
         try {
             while (true) {
-                IRule rule = patch.getNextRule();
-                if (rule == null)
+                Rule rule = patch.getNextRule();
+                if (rule == null) {
                     break;
-                Main.out.println(rule.toString());
+                }
 
+                Main.out.println("\n" + rule);
                 rule.apply(this, patch);
-
-                Main.out.println("");
-                if (rule.nextRuleName() != null)
+                if (rule.nextRuleName() != null) {
                     patch.jumpToRuleName(rule.nextRuleName());
+                }
             }
             patch.reset();
         } catch (IOException e) {
@@ -75,17 +91,24 @@ public class Project {
     }
 
     void writeChanges() {
-        if (!xmlCacheEnabled && !smaliCacheEnabled)
+        if (!isXmlCacheEnabled() && !isSmaliCacheEnabled()) {
             return;
-        if (Prefs.logLevel == Prefs.Log.DEBUG)
+        }
+        if (Prefs.logLevel == Prefs.Log.DEBUG) {
             Main.out.println("Writing changes to disk...");
-        ArrayList<DecompiledFile> list = new ArrayList<>(smaliList);
+        }
+        ArrayList<DecompiledFile> list = new ArrayList<DecompiledFile>(smaliList);
         list.addAll(xmlList);
         ArrayList<Future<?>> futures = new ArrayList<>(list.size());
-        for (DecompiledFile dFile : list) {
-            futures.add(BackgroundWorker.executor.submit(dFile::save));
+        for (final DecompiledFile dFile : list) {
+            futures.add(executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    dFile.save();
+                }
+            }));
         }
-        BackgroundWorker.compute(futures);
+        executor.compute(futures);
     }
 
 
@@ -94,10 +117,11 @@ public class Project {
         boolean isFile = shortPath.endsWith(".smali") || shortPath.endsWith(".xml");
         ArrayList<String> deleted = new ArrayList<>();
         List<? extends DecompiledFile> files;
-        if (isXml)
+        if (isXml) {
             files = project.getXmlList();
-        else
+        } else {
             files = project.getSmaliList();
+        }
 
         int size = files.size();
         if (shortPath.contains("*") || shortPath.contains("?") || shortPath.contains("{") || shortPath.contains("[")) {   //remove by regex
@@ -113,11 +137,12 @@ public class Project {
         } else {
             for (int i = 0; i < size; i++) {
                 String filePath = files.get(i).getPath();
-                if (isFile && filePath.equals(shortPath) || filePath.startsWith(shortPath)) {
+                if ((isFile && filePath.equals(shortPath)) || filePath.startsWith(shortPath)) {
                     deleted.add(filePath);
                     files.remove(i);
-                    if (isFile)
+                    if (isFile) {
                         break;
+                    }
                     i--;
                     size--;
                 }
@@ -126,24 +151,33 @@ public class Project {
         return deleted;
     }
 
-    private void tryEnableCache() {
-        long max = Runtime.getRuntime().maxMemory() - 30000000;     //max heap size - 30MB
-        if (smaliScanned) {
-            long smaliSize = 0;
-            for (DecompiledFile df : smaliList)
-                smaliSize += df.getSize();
-            if ((float) smaliSize / max < 0.7f) {
-                smaliCacheEnabled = true;
-                max -= smaliSize;
+    public HashSet<String> getProtectedClasses() {
+        if (protectedClasses == null) {
+            protectedClasses = parseProtectedClasses();
+        }
+        return protectedClasses;
+    }
+
+    private HashSet<String> parseProtectedClasses() {
+        File manifest = new File(path + File.separator + "AndroidManifest.xml");
+        if (manifest.exists())
+            return new XmlParser(IO.read(manifest.getPath())).parse();
+
+        for (XmlFile file : xmlList) {
+            if (file.getPath().equals("AndroidManifest.xml")) {
+                return new XmlParser(file.getBody()).parse();
             }
         }
-        if (xmlScanned) {
-            long xmlSize = 0;
-            for (DecompiledFile df : xmlList)
-                xmlSize += df.getSize();
-            if ((float) xmlSize / max < 0.7f)
-                xmlCacheEnabled = true;
+
+        if (apkPath != null) {
+            return XmlParserRaw.parse(apkPath);
         }
+
+        return new HashSet<>();
+    }
+
+    public String getApkPath() {
+        return apkPath;
     }
 
     public String getName() {
@@ -166,7 +200,31 @@ public class Project {
         return smaliCacheEnabled;
     }
 
+    public void setSmaliCacheEnabled(boolean smaliCacheEnabled) {
+        this.smaliCacheEnabled = smaliCacheEnabled;
+    }
+
     public boolean isXmlCacheEnabled() {
         return xmlCacheEnabled;
+    }
+
+    public void setXmlCacheEnabled(boolean xmlCacheEnabled) {
+        this.xmlCacheEnabled = xmlCacheEnabled;
+    }
+
+    public boolean isSmaliScanned() {
+        return smaliScanned;
+    }
+
+    public boolean isXmlScanned() {
+        return xmlScanned;
+    }
+
+    public MemoryManager getMemoryManager() {
+        return memoryManager;
+    }
+
+    public BackgroundWorker getExecutor() {
+        return executor;
     }
 }
