@@ -58,7 +58,7 @@ public class XmlParserRaw {
                 }
 
             } else if (tag0 == endTag) {
-                continue;
+                off += 6 * 4; // Skip over 6 words of endTag data
             } else if (tag0 == endDocTag) {
                 break;
             }
