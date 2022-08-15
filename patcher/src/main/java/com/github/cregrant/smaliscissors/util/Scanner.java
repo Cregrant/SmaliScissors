@@ -6,13 +6,12 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
+import com.github.cregrant.smaliscissors.removecode.SmaliClass;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Stack;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -33,6 +32,7 @@ public class Scanner {
             throw new FileNotFoundException("Error: incorrect path - " + project.getPath());
         }
 
+        fixApktoolIssue(list);
         for (File file : list) {
             if (file.isDirectory() && file.getName().startsWith("smali")) {
                 File[] subfolders = file.listFiles();
@@ -170,5 +170,53 @@ public class Scanner {
 
         df.setSize((int) file.length());
         return df;
+    }
+
+    private void fixApktoolIssue(File[] list) {    //apktool bug fix https://github.com/iBotPeaches/Apktool/issues/1364
+        ArrayList<File> filtered = new ArrayList<>();
+        for (File file : list) {
+            String name = file.getName();
+            if (name.startsWith("smali_") && !name.startsWith("smali_classes")) {
+                filtered.add(file);
+            }
+        }
+
+        ArrayList<File> deleted = new ArrayList<>(1);
+        for (File file : filtered) {
+            File[] subfolders = file.listFiles();
+            if (subfolders == null || subfolders.length == 0) {
+                continue;
+            }
+
+            for (File subfolder : subfolders) {
+                File current = subfolder;
+                while (true) {
+                    File[] files = current.listFiles();
+                    if (files == null || files.length == 0) {
+                        break;
+                    }
+
+                    File someFile = files[0];
+                    if (someFile.isFile()) {
+                        SmaliFile smaliFile = (SmaliFile) scanFile(someFile);
+                        try {
+                            new SmaliClass(project, smaliFile, smaliFile.getBody().replace("\r", ""));
+                        } catch (IllegalArgumentException e) {
+                            deleted.add(subfolder);
+                        }
+                        break;
+                    } else {
+                        current = files[0];
+                    }
+                }
+            }
+        }
+        for (File file : deleted) {
+            try {
+                IO.delete(file);
+            } catch (IOException e) {
+                Main.out.println("ERROR: unable to delete " + file.getPath() + ". Build may fail.");
+            }
+        }
     }
 }

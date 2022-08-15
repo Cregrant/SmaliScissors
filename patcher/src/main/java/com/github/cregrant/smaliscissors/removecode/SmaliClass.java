@@ -30,6 +30,9 @@ public class SmaliClass {
         if (project.getProtectedClasses().contains(shortPath)) {
             keepClass = true;
         }
+        if (!parts.get(0).getText().contains(shortPath)) {  //header do not contain valid path? Welcome to apktool.
+            throw new IllegalArgumentException("Class header and filesystem path mismatch!");
+        }
     }
 
     public List<SmaliTarget> clean(SmaliTarget target) {
