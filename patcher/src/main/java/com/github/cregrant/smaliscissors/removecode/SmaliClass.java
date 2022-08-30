@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.removecode;
 import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassHeader;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
 import com.github.cregrant.smaliscissors.removecode.method.MethodParser;
@@ -18,7 +19,6 @@ public class SmaliClass {
     private final SmaliFile file;
     private final String ref;
     private final ArrayList<ClassPart> parts;
-    private boolean keepClass;      //keep activities, services anf other AndroidManifest.xml things
     private String newBody;
 
     public SmaliClass(Project project, SmaliFile df, String body) {
@@ -27,12 +27,7 @@ public class SmaliClass {
         String shortPath = temp.substring(temp.indexOf('/') + 1, temp.lastIndexOf(".smali"));
         ref = 'L' + shortPath + ';';
         parts = new ClassParser(this, body).parseParts();
-        if (project.getProtectedClasses().contains(shortPath)) {
-            keepClass = true;
-        }
-        if (!parts.get(0).getText().contains(shortPath)) {  //header do not contain valid path? Welcome to apktool.
-            throw new IllegalArgumentException("Class header and filesystem path mismatch!");
-        }
+        newBody = body;
     }
 
     public List<SmaliTarget> clean(SmaliTarget target) {
@@ -46,25 +41,27 @@ public class SmaliClass {
             }
         }
         newBody = builder.toString();
-        if (keepClass) {
-            dependencies.clear();
-            SmaliTarget dep = new SmaliTarget();
-            dep.setRef(ref);
-            dep.denyDeletion();
-            dependencies.add(dep);
-        }
         return dependencies;
+    }
+
+    public void makeStub() {
+        StringBuilder builder = new StringBuilder();
+        for (ClassPart part : parts) {
+            part.makeStub(this);
+            builder.append(part.getText());
+        }
+        newBody = builder.toString();
     }
 
     public String getNewBody() {
         return newBody;
     }
 
-    public boolean deleteSuperclass(String classRef) {
+    public boolean changeSuperclass(String classRef) {
         for (ClassPart part : parts) {
             if (part instanceof ClassMethod) {
                 ClassMethod method = ((ClassMethod) part);
-                if (method.getName().equals("<init>")) {
+                if (method.isConstructor()) {
                     if (method.getModifiers().contains(" synthetic ")) {
                         return false;
                     }
@@ -130,16 +127,21 @@ public class SmaliClass {
         return null;
     }
 
+    public String getSuperclass() {
+        ClassHeader header = ((ClassHeader) parts.get(0));
+        return header.getSuperclass();
+    }
+
+    public boolean isPathValid() {
+        return parts.get(0).getText().contains(ref);    //header do not contain valid path? Welcome to apktool.
+    }
+
     public String getRef() {
         return ref;
     }
 
     public SmaliFile getFile() {
         return file;
-    }
-
-    public boolean isKeepClass() {
-        return keepClass;
     }
 
     @Override

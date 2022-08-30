@@ -7,6 +7,8 @@ public interface ClassPart {
 
     SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass);
 
+    void makeStub(SmaliClass smaliClass);     //save the class signature and delete other unnecessary things
+
     int getEndPos();
 
     String getText();

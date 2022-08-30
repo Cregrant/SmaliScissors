@@ -1,11 +1,11 @@
-package com.github.cregrant.smaliscissors.removecode;
+package com.github.cregrant.smaliscissors.removecode.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.zip.ZipFile;
 
-public class XmlParserRaw {
+public class ManifestScannerRaw {
     public static int endDocTag = 0x00100101;
     public static int startTag = 0x00100102;
     public static int endTag = 0x00100103;
@@ -24,44 +24,48 @@ public class XmlParserRaw {
 
         int off = xmlTagOff;
         HashSet<String> classes = new HashSet<>();
-        while (off < xml.length) {
-            int tag0 = LEW(xml, off);
-            int nameSi = LEW(xml, off + 5 * 4);
+        try {
+            while (off < xml.length) {
+                int tag0 = LEW(xml, off);
 
-            if (tag0 == startTag) { // XML START TAG
-                int numbAttrs = LEW(xml, off + 7 * 4); // Number of Attributes
-                off += 9 * 4; // Skip over 6+3 words of startTag data
-                String name = compXmlString(xml, sitOff, stOff, nameSi);
+                if (tag0 == startTag) { // XML START TAG
+                    int nameSi = LEW(xml, off + 5 * 4);
+                    int numbAttrs = LEW(xml, off + 7 * 4); // Number of Attributes
+                    off += 9 * 4; // Skip over 6+3 words of startTag data
+                    String name = compXmlString(xml, sitOff, stOff, nameSi);
 
-                for (int ii = 0; ii < numbAttrs; ii++) {
-                    int attrNameSi = LEW(xml, off + 4); // AttrName String
-                    int attrValueSi = LEW(xml, off + 8); // AttrValue Str
-                    off += 5 * 4; // Skip over the 5 words of an attribute
+                    for (int ii = 0; ii < numbAttrs; ii++) {
+                        int attrNameSi = LEW(xml, off + 4); // AttrName String
+                        int attrValueSi = LEW(xml, off + 8); // AttrValue Str
+                        off += 5 * 4; // Skip over the 5 words of an attribute
+                        String attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
 
-                    String attrName = compXmlString(xml, sitOff, stOff, attrNameSi);
+                        if (name == null || attrName == null || !attrName.equals("name") || attrValueSi == -1) {
+                            continue;
+                        }
 
-                    if (name == null || attrName == null) {
-                        continue;
-                    }
-
-                    if (name.equals("activity") || name.equals("provider") || name.equals("service") || name.equals("receiver")) {
-                        if (attrName.equals("name")) {
-                            if (attrValueSi != -1) {
-                                String tmp = compXmlString(xml, sitOff, stOff, attrValueSi);
-                                if (tmp != null) {
-                                    classes.add(tmp.replace('.', '/'));
-                                }
+                        if (name.equals("activity") || name.equals("provider") || name.equals("service") ||
+                                        name.equals("receiver") || name.equals("meta-data")) {
+                            String tmp = compXmlString(xml, sitOff, stOff, attrValueSi);
+                            if (tmp != null) {
+                                classes.add(tmp.replace('.', '/'));
                             }
                         }
+
                     }
 
+                } else if (tag0 == endTag) {
+                    off += 6 * 4; // Skip over 6 words of endTag data
+                } else if (tag0 == endDocTag) {
+                    break;
+                } else {
+                    off++;
                 }
-
-            } else if (tag0 == endTag) {
-                off += 6 * 4; // Skip over 6 words of endTag data
-            } else if (tag0 == endDocTag) {
-                break;
             }
+        } catch (Exception ignored) {
+        }
+        if (classes.isEmpty()) {
+            throw new IllegalStateException("Binary AndroidManifest.xml has not been parsed. Suggestion: decompile with resources and try again.");
         }
         return classes;
     }
@@ -98,6 +102,6 @@ public class XmlParserRaw {
             return null;
         }
 
-        return XmlParserRaw.decompressXML(buf);
+        return ManifestScannerRaw.decompressXML(buf);
     }
 }

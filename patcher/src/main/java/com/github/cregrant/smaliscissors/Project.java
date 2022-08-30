@@ -5,10 +5,11 @@ import com.github.cregrant.smaliscissors.common.BackgroundWorker;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
-import com.github.cregrant.smaliscissors.removecode.XmlParser;
-import com.github.cregrant.smaliscissors.removecode.XmlParserRaw;
+import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
+import com.github.cregrant.smaliscissors.removecode.xml.Mainfest;
+import com.github.cregrant.smaliscissors.removecode.xml.ManifestScanner;
+import com.github.cregrant.smaliscissors.removecode.xml.ManifestScannerRaw;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
-import com.github.cregrant.smaliscissors.util.IO;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Scanner;
 
@@ -24,9 +25,11 @@ import java.util.regex.Pattern;
 public class Project {
     private final MemoryManager memoryManager;
     private final BackgroundWorker executor;
+    private final SmaliKeeper smaliKeeper;
     private final String apkPath;
     private final String path;
     private final String name;
+    private Mainfest manifest;
     private ArrayList<SmaliFile> smaliList = new ArrayList<>();
     private ArrayList<XmlFile> xmlList = new ArrayList<>();
     private HashSet<String> protectedClasses;
@@ -41,7 +44,7 @@ public class Project {
         name = Regex.getFilename(path);
         memoryManager = new MemoryManager(this);
         apkPath = new ApkLocator().getApkPath(this);
-        getProtectedClasses();
+        smaliKeeper = new SmaliKeeper(this);
     }
 
     void scan(boolean scanSmali, boolean scanXml) throws FileNotFoundException {
@@ -91,11 +94,14 @@ public class Project {
     }
 
     void writeChanges() {
+        if (Prefs.logLevel == Prefs.Log.DEBUG) {
+            Main.out.println("Writing changes...");
+        }
+        if (manifest != null) {
+            manifest.save();
+        }
         if (!isXmlCacheEnabled() && !isSmaliCacheEnabled()) {
             return;
-        }
-        if (Prefs.logLevel == Prefs.Log.DEBUG) {
-            Main.out.println("Writing changes to disk...");
         }
         ArrayList<DecompiledFile> list = new ArrayList<DecompiledFile>(smaliList);
         list.addAll(xmlList);
@@ -159,21 +165,29 @@ public class Project {
     }
 
     private HashSet<String> parseProtectedClasses() {
-        File manifest = new File(path + File.separator + "AndroidManifest.xml");
-        if (manifest.exists())
-            return new XmlParser(IO.read(manifest.getPath())).parse();
+        if (getManifest() != null) {
+            return new ManifestScanner(manifest.getFile().getBody()).parse();
+        }
+        if (apkPath != null) {
+            return ManifestScannerRaw.parse(apkPath);
+        }
+        return new HashSet<>();
+    }
 
-        for (XmlFile file : xmlList) {
-            if (file.getPath().equals("AndroidManifest.xml")) {
-                return new XmlParser(file.getBody()).parse();
+    public Mainfest getManifest() {
+        if (manifest == null) {
+            for (XmlFile file : xmlList) {
+                if (file.getPath().equals("AndroidManifest.xml")) {
+                    manifest = new Mainfest(file);
+                    return manifest;
+                }
+            }
+            File manifestFile = new File(path + File.separator + "AndroidManifest.xml");
+            if (manifestFile.exists()) {
+                manifest = new Mainfest(new XmlFile(this, "AndroidManifest.xml"));
             }
         }
-
-        if (apkPath != null) {
-            return XmlParserRaw.parse(apkPath);
-        }
-
-        return new HashSet<>();
+        return manifest;
     }
 
     public String getApkPath() {
@@ -226,5 +240,9 @@ public class Project {
 
     public BackgroundWorker getExecutor() {
         return executor;
+    }
+
+    public SmaliKeeper getSmaliKeeper() {
+        return smaliKeeper;
     }
 }

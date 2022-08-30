@@ -5,6 +5,7 @@ import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassHeader implements ClassPart {
     private String text;
+    private final String superclass;
     private int end;
     private boolean deleted;
 
@@ -13,26 +14,26 @@ public class ClassHeader implements ClassPart {
             deleted = true;
         }
         end = string.indexOf("\n\n", pos) + 2;
-        if (string.charAt(end) != '\n')     //there are 1 or 2 line breaks after header
-        {
-            end--;
+        if (end == 1) {
+            throw new IllegalStateException("Bug detected - class body contains \"\\r\" symbols.");
+        }
+        if (string.charAt(end) != '\n') {
+            end--;     //there are 1 or 2 line breaks after header
         }
         text = string.substring(pos, end);
+        int start = text.indexOf(".super") + 7;
+        superclass = text.substring(start, text.indexOf(';', start) + 1);
     }
 
     @Override
     public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
         if (!deleted && !target.isMethod()) {
             int start = text.indexOf(".super") + 7;
-            int targetPos = text.indexOf(target.getRef(), start);
-            if (targetPos == -1 || targetPos > end) {
-                return null;        //ignore .source line
-            }
+            if (!text.startsWith(target.getRef(), start))
+                return null;
 
-            end = text.indexOf(';', start);
-            String superclass = text.substring(start, end + 1);
-            text = text.substring(0, start) + "Ljava/lang/Object" + text.substring(end);
-            if (!smaliClass.deleteSuperclass(superclass)) {
+            text = text.replace(getSuperclass(), "Ljava/lang/Object;");
+            if (!smaliClass.changeSuperclass(superclass)) {
                 SmaliTarget dep = new SmaliTarget();
                 dep.setRef(smaliClass.getRef());
                 return dep;
@@ -43,6 +44,10 @@ public class ClassHeader implements ClassPart {
     }
 
     @Override
+    public void makeStub(SmaliClass smaliClass) {
+    }
+
+    @Override
     public int getEndPos() {
         return end;
     }
@@ -50,5 +55,9 @@ public class ClassHeader implements ClassPart {
     @Override
     public String getText() {
         return text;
+    }
+
+    public String getSuperclass() {
+        return superclass;
     }
 }

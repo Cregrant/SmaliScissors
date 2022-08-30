@@ -21,6 +21,10 @@ public class ClassMetadata implements ClassPart {
     }
 
     @Override
+    public void makeStub(SmaliClass smaliClass) {
+    }
+
+    @Override
     public int getEndPos() {
         return end;
     }

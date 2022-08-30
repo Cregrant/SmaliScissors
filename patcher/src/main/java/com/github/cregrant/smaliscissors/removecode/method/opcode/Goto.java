@@ -12,9 +12,4 @@ public class Goto extends Opcode {
     public Tag getTag() {
         return tag;
     }
-
-    @Override
-    public boolean inputRegisterUsed(String register) {
-        return false;
-    }
 }

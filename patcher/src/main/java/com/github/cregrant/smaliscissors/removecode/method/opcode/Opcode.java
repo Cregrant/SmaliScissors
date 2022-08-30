@@ -50,6 +50,8 @@ public class Opcode {
             result = new ArrayGet(lineString);
         } else if (lineString.startsWith(".catch", offset)) {
             result = new Catch(lineString);
+        } else if (lineString.startsWith("neg-", offset) || lineString.contains("-to-")) {
+            result = new Move(lineString);
         } else {
             result = new Unknown(lineString);
         }
@@ -74,7 +76,6 @@ public class Opcode {
             } else if (started && ch >= 48 && ch <= 57) {
                 sb.append(ch);
             } else if (started && ch == ',' || ch == '}') {
-                assert sb.length() <= 3;
                 inputRegisters.add(sb.toString());
                 sb = new StringBuilder(3);
             } else if (ch == 'L') {

@@ -1,18 +1,18 @@
-package com.github.cregrant.smaliscissors.removecode;
+package com.github.cregrant.smaliscissors.removecode.xml;
 
 import java.util.HashSet;
 
-public class XmlParser {
+public class ManifestScanner {
     private final String body;
     private int pos;
 
-    public XmlParser(String body) {
+    public ManifestScanner(String body) {
         this.body = body;
     }
 
     public HashSet<String> parse() {
         HashSet<String> classes = new HashSet<>();
-        String[] targets = new String[] {"<activity ", "<provider ", "<receiver ", "<service "};
+        String[] targets = new String[] {"<activity ", "<provider ", "<receiver ", "<service ", "<meta-data "};
         for (String target : targets) {
             while (hasNext(target)) {
                 classes.add(getNext());

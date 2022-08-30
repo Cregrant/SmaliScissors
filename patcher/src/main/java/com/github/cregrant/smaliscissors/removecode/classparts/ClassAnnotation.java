@@ -26,6 +26,11 @@ public class ClassAnnotation implements ClassPart {
     }
 
     @Override
+    public void makeStub(SmaliClass smaliClass) {
+        //text = '#' + text;
+    }
+
+    @Override
     public int getEndPos() {
         return end;
     }

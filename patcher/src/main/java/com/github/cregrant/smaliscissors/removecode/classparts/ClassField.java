@@ -31,24 +31,37 @@ public class ClassField implements ClassPart {
     }
 
     @Override
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {        //fixme return dependency
+    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
         if (!deleted && !target.isMethod() && text.contains(target.getRef())) {
-            deleted = true;
-            if (singleLine) {
-                text = '#' + text;
-            } else {
-                StringBuilder sb = new StringBuilder(text);
-                int i = -1;
-                do {
-                    if (sb.charAt(i + 1) != '\n') {
-                        sb.insert(i + 1, '#');
-                    }
-                    i = sb.indexOf("\n", i + 1);
-                } while (i != -1 && i + 1 < sb.length());
-                text = sb.toString();
-            }
+            return delete(smaliClass);
         }
         return null;
+    }
+
+    @Override
+    public void makeStub(SmaliClass smaliClass) {
+        delete(smaliClass);
+    }
+
+    private SmaliTarget delete(SmaliClass smaliClass) {
+        deleted = true;
+        int end = text.indexOf(";") + 1;
+        SmaliTarget target = new SmaliTarget();
+        target.setRef(smaliClass.getRef() + "->" + text.substring(text.lastIndexOf(" ", end - 1) + 1, end));
+        if (singleLine) {
+            text = '#' + text;
+        } else {
+            StringBuilder sb = new StringBuilder(text);
+            int i = -1;
+            do {
+                if (sb.charAt(i + 1) != '\n') {
+                    sb.insert(i + 1, '#');
+                }
+                i = sb.indexOf("\n", i + 1);
+            } while (i != -1 && i + 1 < sb.length());
+            text = sb.toString();
+        }
+        return target;
     }
 
     @Override

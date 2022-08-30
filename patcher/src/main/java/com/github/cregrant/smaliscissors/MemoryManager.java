@@ -10,8 +10,8 @@ public class MemoryManager {
     }
 
     void tryEnableCache() {
-        long max = Runtime.getRuntime().maxMemory() - 40000000;     //max heap size - 40MB
-        if (project.isSmaliScanned()) {
+        long max = (long) (0.4f * Runtime.getRuntime().maxMemory() - 40000000);     //0.4 of max heap size - 40MB
+        if (project.isSmaliScanned() && max > 0) {
             long smaliSize = 0;
             for (DecompiledFile df : project.getSmaliList()) {
                 smaliSize += df.getSize();
@@ -21,7 +21,7 @@ public class MemoryManager {
                 max -= smaliSize;
             }
         }
-        if (project.isXmlScanned()) {
+        if (project.isXmlScanned() && max > 0) {
             long xmlSize = 0;
             for (DecompiledFile df : project.getXmlList()) {
                 xmlSize += df.getSize();

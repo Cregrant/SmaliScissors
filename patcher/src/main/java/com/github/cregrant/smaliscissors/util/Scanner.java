@@ -11,7 +11,10 @@ import com.github.cregrant.smaliscissors.removecode.SmaliClass;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Stack;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -199,9 +202,9 @@ public class Scanner {
                     File someFile = files[0];
                     if (someFile.isFile()) {
                         SmaliFile smaliFile = (SmaliFile) scanFile(someFile);
-                        try {
-                            new SmaliClass(project, smaliFile, smaliFile.getBody().replace("\r", ""));
-                        } catch (IllegalArgumentException e) {
+                        String body = smaliFile.getBody().replace("\r", "");
+                        SmaliClass smaliClass = new SmaliClass(project, smaliFile, body);
+                        if (!smaliClass.isPathValid()) {
                             deleted.add(subfolder);
                         }
                         break;

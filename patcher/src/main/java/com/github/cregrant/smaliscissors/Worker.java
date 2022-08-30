@@ -19,8 +19,14 @@ public class Worker {
 
     void setProjects(List<String> projectsList) {
         projects = new ArrayList<>(projectsList.size());
-        for (String project : projectsList) {
-            projects.add(new Project(project, executor));
+        for (String path : projectsList) {
+            try {
+                Project project = new Project(path, executor);
+                projects.add(project);
+            } catch (Exception e) {
+                Main.out.println("Error: skipping project \"" + path + "\"! (" + e.getMessage() + ")");
+            }
+
         }
     }
 

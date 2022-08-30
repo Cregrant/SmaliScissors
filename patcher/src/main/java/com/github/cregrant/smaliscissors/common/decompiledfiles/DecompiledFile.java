@@ -22,7 +22,7 @@ public abstract class DecompiledFile implements Comparable<DecompiledFile> {
         if (isCacheEnabled()) {
             return getRamBody();
         } else {
-            return IO.read(project.getPath() + File.separator + path);
+            return IO.read(getFilesystemPath());
         }
     }
 
@@ -31,13 +31,13 @@ public abstract class DecompiledFile implements Comparable<DecompiledFile> {
             modified = true;
             body = newBody;
         } else {
-            IO.write(project.getPath() + File.separator + path, newBody);
+            IO.write(getFilesystemPath(), newBody);
         }
     }
 
     private String getRamBody() {
         if (body == null) {
-            body = IO.read(project.getPath() + File.separator + path);
+            body = IO.read(getFilesystemPath());
         }
         return body;
     }
@@ -48,8 +48,12 @@ public abstract class DecompiledFile implements Comparable<DecompiledFile> {
         }
         modified = false;
         if (isCacheEnabled() && body != null) {
-            IO.write(project.getPath() + File.separator + path, body);
+            IO.write(getFilesystemPath(), body);
         }
+    }
+
+    private String getFilesystemPath() {
+        return project.getPath() + File.separator + path;
     }
 
     public String getPath() {

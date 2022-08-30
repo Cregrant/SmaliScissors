@@ -32,14 +32,11 @@ public class SmaliWorker {
             int errorsNum = 0;
             int patchedNum = 0;
             int crashReportersNum = 0;
+            project.getSmaliKeeper().changeTargets(patch, rule);
 
             for (String path : rule.getTargets()) {
                 SmaliTarget target = new SmaliTarget();
-                if (path.startsWith("L")) {
-                    target.setRef(path);
-                } else {
-                    target.setSkipPath(path);
-                }
+                target.setSkipPath(path);
 
                 State newState;
                 try {
@@ -60,11 +57,12 @@ public class SmaliWorker {
                         Main.out.println("Removed " + target);
                         patchedNum++;
                     } else {
-                        Main.out.println("Not found " + target);
+                        //Main.out.println("Not found " + target);
                     }
                 }
                 currentState = newState;
             }
+            project.getSmaliKeeper().keepClasses(currentState);
 
             if (DEBUG_BENCHMARK || DEBUG_NOT_WRITE) {
                 System.out.println("\rLoop takes " + (System.currentTimeMillis() - l) + " ms\n");
@@ -79,8 +77,8 @@ public class SmaliWorker {
             } else if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
                 Main.out.println(patchedNum + " targets patched and " + errorsNum + " failed.");
             }
+
         } while (DEBUG_BENCHMARK);
-        new XmlWorker(project, rule);
     }
 
     private void writeChanges(State state) {
@@ -121,6 +119,9 @@ public class SmaliWorker {
                 final List<SmaliTarget> dependencies = Collections.synchronizedList(new ArrayList<SmaliTarget>());
                 List<Future<?>> futures = new ArrayList<>(classes.size());
                 for (final SmaliClass smaliClass : classes) {
+                    if (smaliClass.getRef().endsWith("Registrar;")) {
+                        throw new IllegalStateException("Skipped to prevent some firebase errors.");
+                    }
                     Runnable r = new Runnable() {
                         @Override
                         public void run() {
