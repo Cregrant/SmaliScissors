@@ -59,8 +59,7 @@ public class SmaliFilter {
                             return;
                         }
 
-                        if (body.charAt(body.indexOf('\n') - 1) == '\r')    //get rid of windows \r
-                        {
+                        if (body.charAt(body.indexOf('\n') - 1) == '\r') {    //get rid of windows \r
                             body = body.replace("\r", "");
                         }
 

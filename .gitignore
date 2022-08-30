@@ -21,14 +21,10 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-/patches/
-run.bat
-/out/
-/build/
-.idea/
+
+/*.*
+build/
+/.idea/
 /.gradle/
-/jmh/
-/patches/temp/
-/patcher/build/
-/windows_launcher/build/
+/patches/
 /Benchmark/

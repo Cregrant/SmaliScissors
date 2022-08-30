@@ -137,11 +137,12 @@ public class Regex {
 
     /**
      * Custom implementation of matcher.replaceAll()
-     * because android skip ${GROUP10} and nextPart.
+     * because android skip ${GROUP10} and next groups.
      */
     public static String replaceAll(String body, Pattern match, String replacement) {
         Matcher matcher = match.matcher(body);
         if (replacement.length() == 0) {
+            @SuppressWarnings("StringBufferMayBeStringBuilder")
             StringBuffer sb = new StringBuffer(body.length());
             while (matcher.find()) {
                 matcher.appendReplacement(sb, replacement);

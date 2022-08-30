@@ -24,14 +24,14 @@ public class Main {
                 break;
             }
 
-            String msg = "\nPicker project. Enter = all. X - cancel. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
+            String msg = "\nSelect a project. Enter = all. x - exit. Example: 0 or 0 1 2 (means 0 and 1 and 2).";
             Picker projectsPicker = new Picker(scanner.getScannedProjects(), msg);
             ArrayList<String> selectedProjects = projectsPicker.getChoice();
             if (selectedProjects.isEmpty()) {
                 break;
             }
 
-            String msg2 = "\nNow select patch:";
+            String msg2 = "\nNow select a patch:";
             Picker patchesPicker = new Picker(scanner.getScannedPatches(), msg2);
             ArrayList<String> selectedPatches = patchesPicker.getChoice();
             if (selectedPatches.isEmpty()) {
