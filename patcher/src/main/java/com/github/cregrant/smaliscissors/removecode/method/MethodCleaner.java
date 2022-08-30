@@ -1,10 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Blank;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Catch;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Opcode;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Tag;
+import com.github.cregrant.smaliscissors.removecode.method.opcode.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -26,7 +23,6 @@ public class MethodCleaner {
         if (method.isAbstract()) {
             return;
         }
-
         opcodes = new MethodParser(method, removeString).parse();
         scanMethodBody(stack);
         MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, stack);
@@ -63,6 +59,7 @@ public class MethodCleaner {
                 }
                 Tag endTag = current.getEndTag();
                 int j = i - 1;
+                int lastPos = j;
                 for (; j >= 0; j--) {
                     if (endTag.equals(opcodes.get(j))) {
                         endTag = ((Tag) opcodes.get(j));
@@ -83,7 +80,8 @@ public class MethodCleaner {
                             opcodes.get(i).deleteLine();    //delete .catch statements
                             i++;
                         } while (opcodes.get(i) instanceof Catch);
-                        return;
+                        i = lastPos;
+                        continue loop;
                     } else if (!otherOp.isDeleted()) {
                         i = j;    //don't touch if something left inside
                         continue loop;

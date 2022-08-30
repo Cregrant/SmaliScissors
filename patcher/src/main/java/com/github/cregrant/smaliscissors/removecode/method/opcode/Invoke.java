@@ -22,8 +22,9 @@ public class Invoke extends Opcode {
     private void scanTargetSignatures(String target) {
         int start = line.indexOf("(", 26) + 1;
         int end = line.lastIndexOf(")");
-        int match = line.lastIndexOf(target);
-        if (start != end && match >= start && match <= end) {      //only arguments should contain target string
+        int leftMatch = line.indexOf(target);
+        int rightMatch = line.lastIndexOf(target);
+        if (start != end && leftMatch >= start && rightMatch <= end) {    //only arguments should contain target string
             prepareSoftRemove(target);
         }
     }

@@ -34,7 +34,7 @@ public class SmaliTarget {
         if (smaliRef.contains(";->")) {     //no file
             isMethod = true;
         } else {
-            skipPath = smaliRef.substring(1, smaliRef.length() - 1) + ".smali";
+            skipPath = smaliRef.substring(1);
         }
     }
 
@@ -45,6 +45,8 @@ public class SmaliTarget {
     public void setSkipPath(String shortPath) {
         skipPath = shortPath;
         smaliRef = "L" + shortPath.replace(".smali", ";");
+        if (!smaliRef.endsWith(";") && !smaliRef.endsWith("/"))
+            smaliRef = smaliRef + ";";
     }
 
     public boolean isMethod() {

@@ -52,7 +52,7 @@ public class RuleParser {
         for (Rule rule : rules) {              //also delete crash reporters if [REMOVE_CODE] applied
             if (rule instanceof RemoveCode) {
                 RemoveCode removeCode = new RemoveCode();
-                removeCode.setTargets(Arrays.asList(CRASH_REPORTERS.split("\n")));
+                removeCode.setTargets(new ArrayList<>(Arrays.asList(CRASH_REPORTERS.split("\n"))));  //keep new ArrayList<>
                 removeCode.setInternal();
                 rules.add(removeCode);
                 break;

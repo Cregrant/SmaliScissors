@@ -80,9 +80,7 @@ public class MethodOpcodeCleaner {
                             Invoke invoke = ((Invoke) op);
                             if (invoke.isConstructor() && !invoke.isSoftRemove()) {
                                 String target = invoke.getInputRegisters().get(0);
-                                if (deleteInvokeInstance(target, i)) {
-                                    stack.add(new MethodCleaner.Line(target, i));
-                                } else {
+                                if (!deleteInvokeInstance(target, i)) {
                                     broken = true;    //instance too far away? Let's just delete this method
                                     return;
                                 }
@@ -164,6 +162,7 @@ public class MethodOpcodeCleaner {
             Opcode op = opcodes.get(j);
             if (op instanceof Const && op.getOutputRegister().equals(register)) {
                 op.deleteLine();
+                stack.add(new MethodCleaner.Line(register, j));
                 return true;
             } else if (op instanceof Move) {
                 Move move = ((Move) op);
