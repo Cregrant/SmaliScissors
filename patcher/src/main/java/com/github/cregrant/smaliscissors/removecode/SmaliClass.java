@@ -7,9 +7,9 @@ import com.github.cregrant.smaliscissors.removecode.classparts.ClassHeader;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
 import com.github.cregrant.smaliscissors.removecode.method.MethodParser;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Blank;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Invoke;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Opcode;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.Blank;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.Invoke;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.Opcode;
 
 import java.util.ArrayList;
 import java.util.List;

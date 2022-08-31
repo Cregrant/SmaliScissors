@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.removecode.method.opcode;
+package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
 public class Catch extends Opcode {
     private final Tag startTag;

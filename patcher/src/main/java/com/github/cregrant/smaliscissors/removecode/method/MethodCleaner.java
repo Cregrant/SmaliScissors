@@ -1,7 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.*;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

@@ -1,9 +1,9 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Invoke;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.InvokeResult;
-import com.github.cregrant.smaliscissors.removecode.method.opcode.Opcode;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.Invoke;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.InvokeResult;
+import com.github.cregrant.smaliscissors.removecode.method.opcodes.Opcode;
 
 import java.util.ArrayList;
 
