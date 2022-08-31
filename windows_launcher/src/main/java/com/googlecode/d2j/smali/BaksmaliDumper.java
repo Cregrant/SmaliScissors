@@ -244,17 +244,17 @@ public class BaksmaliDumper implements DexConstants {
             if (v == Long.MIN_VALUE) {
                 return "0x" + Long.toHexString(v) + "L";
             } else {
-                return ((Long) obj).toString() + "L";
+                return obj + "L";
             }
         }
         if (obj instanceof Float) {
-            return obj.toString() + "F";
+            return obj + "F";
         }
         if (obj instanceof Double) {
-            return obj.toString() + "D";
+            return obj + "D";
         }
         if (obj instanceof Short) {
-            return ((Short) obj).toString() + "S";
+            return obj + "S";
         }
         if (obj instanceof Byte) {
             return ((Byte) obj).toString() + 't';

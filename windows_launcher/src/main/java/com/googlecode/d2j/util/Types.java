@@ -25,7 +25,7 @@ public class Types {
     }
 
     /**
-     * 
+     *
      * @param desc
      *            a asm method desc, ex: (II)V
      * @return the desc of return type, ex: V
@@ -100,7 +100,7 @@ public class Types {
             char c = signature.charAt(at);
             int endAt = at + 1;
             if (c == 'L') {
-                // Scan to ';' or '<'. Consume ';' but not '<'.
+                // Scanner to ';' or '<'. Consume ';' but not '<'.
                 while (endAt < rawLength) {
                     c = signature.charAt(endAt);
                     if (c == ';') {
@@ -112,7 +112,7 @@ public class Types {
                     endAt++;
                 }
             } else {
-                // Scan to 'L' without consuming it.
+                // Scanner to 'L' without consuming it.
                 while (endAt < rawLength) {
                     c = signature.charAt(endAt);
                     if (c == 'L') {

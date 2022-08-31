@@ -200,7 +200,7 @@ public class Dex2IRConverter {
         for (TryCatchNode tcb : dexCodeNode.tryStmts) {
             for (DexLabel h : tcb.handler) {
                 int index = indexOf(h);
-                q.add(index + 1); // add the next insn after label
+                q.add(index + 1); // add the nextPart insn after label
                 handlers.add(index);
             }
         }

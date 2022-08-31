@@ -1,52 +1,85 @@
 package com.github.cregrant.smaliscissors;
 
+import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.common.outer.SimpleOutStream;
+
+import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Main {
-    static final double version = 0.01;
-    public static OutStream out;
-    static DexExecutor dex;
+    public static SimpleOutStream out;
+    public static DexExecutor dex;
 
-    public static void main(String[] args, OutStream logger, DexExecutor dexExecutor) {
-        if (args.length<2) {
-            Main.out.println("Usage as module: add String(s) with full path to project and String(s) with full path to zip patches\n" +
-                    "Append keepSmaliFilesInRAM or keepXmlFilesInRAM if you want to keep these files in RAM.\n" +
-                    "Example ...Main.main(sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip, keepSmaliFilesInRAM");
+
+    public static void mainAsModule(String[] args, SimpleOutStream logger, DexExecutor dexExecutor) {
+        if (args == null || args.length < 2) {
+            Main.out.println("Usage as module: args - String(s) with full path to projects and String(s) with full path to zip patches\n" +
+                    "Example: Main.main(sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip");
+            return;
+        }
+        out = logger == null ? getDefaultOutStream() : logger;
+        dex = dexExecutor;
+        ArrayList<String> zipList = new ArrayList<>(5);
+        ArrayList<String> projectList = new ArrayList<>(5);
+        String targets = "";
+
+        for (String str : args) {
+            if (str.endsWith(".zip")) {
+                zipList.add(str);
+            } else if (new File(str).exists()) {
+                projectList.add(str);
+            } else {
+                targets = str;
+/*                try {
+                    Prefs.logLevel = Prefs.Log.valueOf(str);
+                } catch (IllegalArgumentException e) {
+                    out.println("Invalid log level. Using INFO.");
+                }*/
+            }
+        }
+
+        if (zipList.isEmpty() || projectList.isEmpty()) {
+            out.println("Invalid input");
             return;
         }
 
-        out = logger;
-        dex = dexExecutor;
-        long startTimeTotal = System.currentTimeMillis();
-        ArrayList<String> zipArr = new ArrayList<>(2);
-        ArrayList<String> projectsList = new ArrayList<>(1);
-
-        for (String str : args) {
-            if (str.endsWith(".zip"))
-                zipArr.add(str);
-            else if (str.equalsIgnoreCase("keepSmaliFilesInRAM"))
-                Prefs.keepSmaliFilesInRAM = true;
-            else if (str.equalsIgnoreCase("keepXmlFilesInRAM"))
-                Prefs.keepXmlFilesInRAM = true;
-            else projectsList.add(str);
+        Worker worker = new Worker(projectList);
+        if (targets.isEmpty()) {
+            worker.setPatches(zipList);
+        } else {
+            worker.addRemoveCodeRule(zipList, targets);
         }
-        patchProjects(projectsList, zipArr);
-        Scan.smaliList = new ArrayList<>(1);
-        Scan.xmlList = new ArrayList<>(1);
-        Main.out.println("All done in " + (System.currentTimeMillis() - startTimeTotal) + " ms");
-        Main.out.println("Good bye Sir.");
+        worker.run();
+        System.gc();
     }
 
-    private static void patchProjects(List<String> projectsList, ArrayList<String> zipArr) {
-        if (projectsList.isEmpty() || zipArr.isEmpty()) {
-            Main.out.println("Empty project or patch list");
-            throw new IndexOutOfBoundsException();
-        }
+//    public static void mainTest(String[] args) {
+//        mainAsDex("",
+//                "C:\\JAVA_projects\\SmaliScissors\\patches\\remove_code_all_discord.zip",
+//                "C:\\BAT\\_INPUT_APK\\Discord_121.9_",
+//                "com/android/installreferrer\n" +
+//                        "com/google/android/gms/tagmanager\n" +
+//                        "com/google/android/gms/ads\n" +
+//                        "com/google/android/gms/analytics\n" +
+//                        "com/google/android/gms/measurement\n" +
+//                        "com/google/firebase/crash\n" +
+//                        "com/google/firebase/analytics\n" +
+//                        "com/google/firebase/firebase_analytics\n" +
+//                        "com/adjust");
+//    }
 
-        for (String currentProjectPath : projectsList) {
-            Prefs.projectPath = currentProjectPath;
-            Executor.executePatches(zipArr);
-        }
+    //Run RemoveCode rule by executing this project as dex file (like in the ExecuteDex rule)
+//    public static void mainAsDex(String apkPath, String zipPath, String projectPath, String param) {
+//        String[] args = new String[]{projectPath, zipPath, param};
+//        mainAsModule(args, null, null);
+//    }
+
+    private static SimpleOutStream getDefaultOutStream() {
+        return new SimpleOutStream() {
+            @Override
+            public void println(Object x) {
+                System.out.println(x);
+            }
+        };
     }
 }

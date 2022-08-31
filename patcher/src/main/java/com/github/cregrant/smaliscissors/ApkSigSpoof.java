@@ -1,9 +1,10 @@
 package com.github.cregrant.smaliscissors;
 
+import com.github.cregrant.smaliscissors.util.IO;
+
 import java.io.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
-import java.util.Base64;
 import java.util.Enumeration;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -15,16 +16,18 @@ public class ApkSigSpoof {
         //todo add PmsHookApplication.smali before call spoof()
         try {
             String smali = IO.read(projectPath + File.separator + "/smali/cc/binmt/signature/PmsHookApplication.smali");
-            String[] ss = new String[1]; ss[0] = apkPath;
+            String[] ss = new String[1];
+            ss[0] = apkPath;
             byte[] cert = ApkSigSpoof.getEncodedSig(ss);
-            if (cert==null)
+            if (cert == null) {
                 throw new Exception();
+            }
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
             dataOutputStream.write(1);
             dataOutputStream.writeInt(cert.length);
             dataOutputStream.write(cert);
-            String replace = smali.replace("### Signatures Data ###", Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray()));
+            String replace = smali;//.replace("### Signatures Data ###", Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray()));
             FileOutputStream fileOutputStream = new FileOutputStream(projectPath + File.separator + "/smali/cc/binmt/signature/PmsHookApplication.smali");
             fileOutputStream.write(replace.getBytes());
             fileOutputStream.flush();
@@ -63,7 +66,7 @@ public class ApkSigSpoof {
                 } while (je.getName().startsWith("META-INF/"));
 
                 InputStream is = jarFile.getInputStream(je);
-                is.readAllBytes();
+                //is.readAllBytes();
                 is.close();
                 Certificate[] localCerts = je.getCertificates();
                 if (localCerts == null) {

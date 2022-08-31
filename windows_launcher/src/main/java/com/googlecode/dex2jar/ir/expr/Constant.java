@@ -57,10 +57,10 @@ public class Constant extends E0Expr {
             return "NULL";
         } else if (value instanceof Number) {
             if (value instanceof Float) {
-                return value.toString() + "F";
+                return value + "F";
             }
             if (value instanceof Long) {
-                return value.toString() + "L";
+                return value + "L";
             }
             return value.toString();
         } else if (value instanceof String) {

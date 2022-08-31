@@ -1,2 +1,2 @@
-java -jar test.jar
+java -jar windows_launcher.jar
 pause

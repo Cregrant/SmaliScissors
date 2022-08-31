@@ -388,7 +388,7 @@ public abstract class BaseCmd {
                 sb.append(option.getOptAndLongOpt());
             }
             sb.append(" is required");
-            System.err.println(sb.toString());
+            System.err.println(sb);
             throw new HelpException();
         }
 
