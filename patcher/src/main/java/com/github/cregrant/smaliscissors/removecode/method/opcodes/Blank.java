@@ -3,12 +3,7 @@ package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 public class Blank extends Opcode {
 
     public Blank() {
-        super(null);
+        super("\n");
         deleted = true;
-    }
-
-    @Override
-    public String toString() {
-        return "\n";
     }
 }

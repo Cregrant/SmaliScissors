@@ -24,10 +24,11 @@ public class MethodCleaner {
             return;
         }
         opcodes = new MethodParser(method, removeString).parse();
-        scanMethodBody(stack);
         MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, stack);
+        scanMethodBody(cleaner);
         cleaner.processBody(new MethodArrayCleaner(cleaner));
         returnBroken = cleaner.isBroken();
+        checkInfinityLoops();
         fixEmptyCatchBlocks();
     }
 
@@ -92,19 +93,48 @@ public class MethodCleaner {
         }
     }
 
-    private void scanMethodBody(ArrayDeque<Line> stack) {
+    private void scanMethodBody(MethodOpcodeCleaner cleaner) {
         for (int i = 0; i < opcodes.size(); i++) {
             Opcode op = opcodes.get(i);
             if (!op.isDeleted() && op.toString().contains(removeString)) {
                 String register = op.getOutputRegister();
                 op.deleteLine();
+                cleaner.removeObjectIfIncomplete(op);
                 if (!register.isEmpty()) {
-                    stack.add(new Line(register, i + 1));
+                    cleaner.getStack().add(new Line(register, i + 1));
                 }
             }
         }
         //stack.sort(Collections.reverseOrder());
     }
+
+    private void checkInfinityLoops() {        //deleting conditions can create an infinity loop
+        for (int i = 0; i < opcodes.size(); i++) {
+            Opcode op = opcodes.get(i);
+            if (op.isDeleted() || !(op instanceof Tag) || !op.toString().startsWith(":goto", 4)) {
+                continue;
+            }
+            boolean broken = false;
+            for (int j = i; j < opcodes.size(); j++) {
+                Opcode innerOp = opcodes.get(j);
+                boolean deleted = innerOp.isDeleted();
+                if (!deleted && (innerOp instanceof Return || innerOp instanceof If)) {
+                    break;
+                }
+                if (deleted || !(innerOp instanceof Goto)) {
+                    continue;
+                }
+                if (((Goto) innerOp).getTag().equals(op)) {
+                    broken = true;
+                    break;
+                }
+            }
+            if (broken) {
+                returnBroken = true;
+            }
+        }
+    }
+
 
     private String opcodesToString() {
         StringBuilder sb = new StringBuilder();

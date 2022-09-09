@@ -6,7 +6,6 @@ import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
-import com.github.cregrant.smaliscissors.removecode.xml.Mainfest;
 import com.github.cregrant.smaliscissors.removecode.xml.ManifestScanner;
 import com.github.cregrant.smaliscissors.removecode.xml.ManifestScannerRaw;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
@@ -29,7 +28,7 @@ public class Project {
     private final String apkPath;
     private final String path;
     private final String name;
-    private Mainfest manifest;
+    private XmlFile manifest;
     private ArrayList<SmaliFile> smaliList = new ArrayList<>();
     private ArrayList<XmlFile> xmlList = new ArrayList<>();
     private HashSet<String> protectedClasses;
@@ -166,7 +165,7 @@ public class Project {
 
     private HashSet<String> parseProtectedClasses() {
         if (getManifest() != null) {
-            return new ManifestScanner(manifest.getFile().getBody()).parse();
+            return new ManifestScanner(manifest.getBody()).parse();
         }
         if (apkPath != null) {
             return ManifestScannerRaw.parse(apkPath);
@@ -174,17 +173,17 @@ public class Project {
         return new HashSet<>();
     }
 
-    public Mainfest getManifest() {
+    public XmlFile getManifest() {
         if (manifest == null) {
             for (XmlFile file : xmlList) {
                 if (file.getPath().equals("AndroidManifest.xml")) {
-                    manifest = new Mainfest(file);
+                    manifest = file;
                     return manifest;
                 }
             }
             File manifestFile = new File(path + File.separator + "AndroidManifest.xml");
             if (manifestFile.exists()) {
-                manifest = new Mainfest(new XmlFile(this, "AndroidManifest.xml"));
+                manifest = new XmlFile(this, "AndroidManifest.xml");
             }
         }
         return manifest;

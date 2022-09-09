@@ -5,7 +5,6 @@ import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 
 public class MethodOpcodeCleaner {
@@ -38,61 +37,33 @@ public class MethodOpcodeCleaner {
 
                     String outputRegister = op.getOutputRegister();
                     if (op instanceof Goto) {
-                        Goto opcodeJump = (Goto) op;
-                        int lineNum = searchTag(opcodeJump.getTag());
-                        String hash = lineNum + register;
-                        if (!preventLoopsList.contains(hash)) {
-                            preventLoopsList.add(hash);
-                            if (opcodeJump instanceof If) {    //TODO add as experimental option
-//                            boolean nextBroken = checkBranchBroken(preventLoopsList, lines, new Line(register, i + 1));
-//                            boolean tagBroken = checkBranchBroken(preventLoopsList, lines, new Line(register, lineNum));
-//
-//                            if (nextBroken) {
-//                                if (tagBroken)
-//                                    return true;
-//                                else {
-//                                    ((If) op).transformToGoto();
-//                                    stack.add(new Line(register, lineNum));
-//                                    break;
-//                                }
-//                            }
-                                stack.add(new MethodCleaner.Line(register, lineNum));
-                            } else {
-                                i = lineNum;
-                                continue;
-                            }
+                        processCondition(register, ((Goto) op));
+                        if (!(op instanceof If)) {      //real Goto
+                            break;
                         }
                     }
                     methodArrayCleaner.track(op);
                     boolean isReturn = op instanceof Return;
                     boolean registerOverwrote = outputRegister.equals(register);
                     if (op.inputRegisterUsed(register)) {
+                        removeObjectIfIncomplete(op);
                         if (isReturn) {
                             broken = true;
-                            return;
                         }
                         String arrayRegister = methodArrayCleaner.delete(op);
                         if (arrayRegister != null) {
                             stack.add(new MethodCleaner.Line(arrayRegister, i));     //delete opcodes that use the array register
                         }
 
-                        if (op instanceof Invoke) {    //delete instance if constructor has deleted
-                            Invoke invoke = ((Invoke) op);
-                            if (invoke.isConstructor() && !invoke.isSoftRemove()) {
-                                String target = invoke.getInputRegisters().get(0);
-                                if (!deleteInvokeInstance(target, i)) {
-                                    broken = true;    //instance too far away? Let's just delete this method
-                                    return;
-                                }
-                            }
-                        }
-
                         op.deleteLine();
                         registerOverwrote = false;
                         if (op instanceof Invoke && ((Invoke) op).isSoftRemove()) {
-                            insertOpcodes(((Invoke) op).getInsertList());
+                            insertOpcodes(((Invoke) op).getAndClearInsertList());
                         } else if (!outputRegister.isEmpty() && !outputRegister.equals(register)) {
                             stack.add(new MethodCleaner.Line(outputRegister, i));
+                        }
+                        if (broken) {
+                            return;
                         }
                     }
                     if (isReturn || registerOverwrote) {
@@ -105,27 +76,48 @@ public class MethodOpcodeCleaner {
         }
     }
 
+    void removeObjectIfIncomplete(Opcode op) {    //delete new-instance if constructor has deleted
+        if (op instanceof Invoke) {
+            Invoke invoke = ((Invoke) op);
+            if (invoke.isConstructor() && !invoke.isSoftRemove()) {
+                String target = invoke.getInputRegisters().get(0);
+                if (!deleteInvokeInstance(target, i)) {
+                    broken = true;    //instance too far away? Let's just delete this method
+                }
+            }
+        }
+    }
+
     public boolean isBroken() {
         return broken;
+    }
+
+    private void processCondition(String register, Goto op) {
+        if (op.inputRegisterUsed(register)) {
+            op.deleteLine();
+        }
+        if (op instanceof Switch) {
+            Switch switchOp = ((Switch) op);
+            for (TableTag tableTag : switchOp.getTableTags()) {
+                addToStack(register, tableTag.getTag());
+            }
+        } else {
+            addToStack(register, op.getTag());
+        }
+    }
+
+    private void addToStack(String register, Tag tag) {
+        int lineNum = searchTag(tag);
+        String hash = lineNum + register;
+        if (!preventLoopsList.contains(hash)) {
+            preventLoopsList.add(hash);
+            stack.add(new MethodCleaner.Line(register, lineNum));
+        }
     }
 
     void insertOpcodes(ArrayList<Opcode> ops) {     //the opcodes will be inserted before the current
         opcodes.addAll(i, ops);
         i += ops.size();
-    }
-
-    private boolean checkBranchBroken(ArrayList<String> loopsList, String[] lines, MethodCleaner.Line checkLine) {
-        String[] linesLocal = Arrays.copyOf(lines, lines.length);   //FIXME broken
-        ArrayList<String> preventLoopsList = new ArrayList<>(loopsList);
-        ArrayList<MethodCleaner.Line> registersList = new ArrayList<>();
-        registersList.add(checkLine);
-        boolean returnBrokenLocal = false;
-        int k = 0;
-
-        while (k < registersList.size() && !returnBrokenLocal) {
-            //FIXME HEAVY WORK HERE
-        }
-        return returnBrokenLocal;
     }
 
     public NewArray searchNewArray(String register) {
@@ -160,7 +152,7 @@ public class MethodOpcodeCleaner {
     private boolean deleteInvokeInstance(String register, int pos) {
         for (int j = pos - 1; j > 0; j--) {
             Opcode op = opcodes.get(j);
-            if (op instanceof Const && op.getOutputRegister().equals(register)) {
+            if (op instanceof NewInstance && op.getOutputRegister().equals(register)) {
                 op.deleteLine();
                 stack.add(new MethodCleaner.Line(register, j));
                 return true;
@@ -174,5 +166,9 @@ public class MethodOpcodeCleaner {
             }
         }
         return false;
+    }
+
+    public ArrayDeque<MethodCleaner.Line> getStack() {
+        return stack;
     }
 }

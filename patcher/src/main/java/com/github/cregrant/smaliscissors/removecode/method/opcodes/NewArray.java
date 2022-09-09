@@ -4,12 +4,13 @@ public class NewArray extends Array {
 
     public NewArray(String line) {
         super(line);
-        arrayRegister = line.substring(line.indexOf(' ', 13) + 1, line.indexOf(','));
+        scanRegisters();
+        arrayRegister = inputRegisters.removeFirst();
         outputRegister = arrayRegister;
     }
 
-    @Override
-    public boolean inputRegisterUsed(String register) {
-        return false;
+    protected NewArray(String line, boolean b) {
+        super(line);
+        scanRegisters();
     }
 }

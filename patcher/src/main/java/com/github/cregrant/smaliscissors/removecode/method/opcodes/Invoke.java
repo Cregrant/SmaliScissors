@@ -9,14 +9,14 @@ public class Invoke extends Opcode {
     private ArrayList<String> replacedRegisters;
     private ArrayList<String> argumentsList;
     private ArrayList<Opcode> insertList = new ArrayList<>(5);
-    private Opcode invokeResultLink;
+    private Opcode moveResultLink;
     private boolean softRemove;
 
     public Invoke(String line, String target) {
         super(line);
-        scanInputRegisters();
+        scanRegisters();
         scanTargetSignatures(target);
-        constructor = this.line.contains(";-><init>");
+        constructor = line.contains("invoke-direct");
     }
 
     private void scanTargetSignatures(String target) {
@@ -31,7 +31,7 @@ public class Invoke extends Opcode {
 
     private void prepareSoftRemove(String target) {
         argumentsList = new ArgumentParser().parse(line);
-        boolean isStatic = line.charAt(12) == 't';
+        boolean isStatic = line.charAt(line.charAt(0) == '#' ? 13 : 12) == 't';
         int offset = isStatic ? 0 : 1;
         replacedRegisters = new ArrayList<>(3);
         for (int i = 0; i < argumentsList.size(); i++) {
@@ -45,53 +45,13 @@ public class Invoke extends Opcode {
     }
 
     @Override
-    public void scanInputRegisters() {
-        int beginPosition = line.indexOf("{", 17) + 1;
-        if (beginPosition == 0) {
-            throw new IllegalArgumentException("scanInputRegisters failed!");
-        }
-
-        if (line.charAt(beginPosition + 4) == '.') {     //range call like {v1 .. v5}
-            int dotsPosition = line.indexOf("..", beginPosition);
-            int endPosition = line.indexOf('}', dotsPosition);
-
-            String r = line.substring((beginPosition) + 1, dotsPosition - 1);
-            int from = Integer.parseInt(r);
-            int to = Integer.parseInt(line.substring(dotsPosition + 4, endPosition));
-            String type = line.substring(beginPosition, beginPosition + 1);
-            for (int i = from; i <= to; i++) {
-                getInputRegisters().add(type + i);
-            }
-        } else {
-            int end = line.indexOf("}", beginPosition) + 1;
-
-            char[] chars = line.substring(beginPosition, end).toCharArray();
-            StringBuilder sb = new StringBuilder(3);
-            boolean started = false;
-            for (char ch : chars) {
-                if (ch == 'v' || ch == 'p') {
-                    sb.append(ch);
-                    started = true;
-                } else if (started && ch >= 48 && ch <= 57)     //some digit
-                {
-                    sb.append(ch);
-                } else if (started && ch == ',' || ch == '}') {
-                    assert sb.length() <= 3;
-                    getInputRegisters().add(sb.toString());
-                    sb = new StringBuilder(3);
-                }
-            }
-        }
-    }
-
-    @Override
     public void deleteLine() {
         if (softRemove) {
             fixCall();
         } else if (!deleted) {
             line = "#" + line;
-            if (invokeResultLink != null) {
-                invokeResultLink.deleteLine();
+            if (moveResultLink != null) {
+                moveResultLink.deleteLine();
             }
             deleted = true;
         }
@@ -102,7 +62,7 @@ public class Invoke extends Opcode {
             return;
         }
         for (String reg : replacedRegisters) {
-            insertList.add(new Const("    const/16 " + reg + ", 0x0   #stub"));
+            insertList.add(new Create("    const/16 " + reg + ", 0x0   #stub"));
             insertList.add(new Blank());
         }
         replacedRegisters.clear();
@@ -120,7 +80,7 @@ public class Invoke extends Opcode {
         line = sb.toString();
     }
 
-    public ArrayList<Opcode> getInsertList() {
+    public ArrayList<Opcode> getAndClearInsertList() {
         ArrayList<Opcode> list = insertList;
         insertList = new ArrayList<>(5);
         return list;
@@ -134,8 +94,8 @@ public class Invoke extends Opcode {
         return softRemove;
     }
 
-    public void setInvokeResultLink(Opcode invokeResultLink) {
-        this.invokeResultLink = invokeResultLink;
-        outputRegister = invokeResultLink.getOutputRegister();
+    public void setMoveResultLink(Opcode moveResultLink) {
+        this.moveResultLink = moveResultLink;
+        outputRegister = moveResultLink.getOutputRegister();
     }
 }

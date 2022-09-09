@@ -1,11 +1,10 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
-public class ArrayGet extends Array {
+public class TripleMath extends Opcode {
 
-    public ArrayGet(String line) {
+    public TripleMath(String line) {
         super(line);
         scanRegisters();
-        arrayRegister = inputRegisters.get(1);
         outputRegister = inputRegisters.removeFirst();
     }
 }

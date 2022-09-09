@@ -4,7 +4,7 @@ public class If extends Goto {
 
     public If(String line) {
         super(line);
-        scanInputRegisters();
+        scanRegisters();
     }
 
 //    public void transformToGoto() {
