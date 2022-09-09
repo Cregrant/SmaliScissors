@@ -1,12 +1,12 @@
-package com.github.cregrant.smaliscissors.removecode.xml;
+package com.github.cregrant.smaliscissors.removecode.manifestparsers;
 
 import java.util.HashSet;
 
-public class ManifestScanner {
+public class DecompiledParser {
     private final String body;
     private int pos;
 
-    public ManifestScanner(String body) {
+    public DecompiledParser(String body) {
         this.body = body;
     }
 

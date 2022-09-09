@@ -6,8 +6,8 @@ import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
-import com.github.cregrant.smaliscissors.removecode.xml.ManifestScanner;
-import com.github.cregrant.smaliscissors.removecode.xml.ManifestScannerRaw;
+import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledParser;
+import com.github.cregrant.smaliscissors.removecode.manifestparsers.BinaryParser;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Scanner;
@@ -165,10 +165,11 @@ public class Project {
 
     private HashSet<String> parseProtectedClasses() {
         if (getManifest() != null) {
-            return new ManifestScanner(manifest.getBody()).parse();
+            return new DecompiledParser(manifest.getBody()).parse();
         }
         if (apkPath != null) {
-            return ManifestScannerRaw.parse(apkPath);
+            BinaryParser parser = new BinaryParser(apkPath);
+            return parser.getStrings();
         }
         return new HashSet<>();
     }
