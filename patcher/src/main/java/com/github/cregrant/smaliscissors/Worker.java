@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.BackgroundWorker;
+import com.github.cregrant.smaliscissors.util.Misc;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -65,14 +66,7 @@ public class Worker {
             Main.out.println(e.getMessage());
             Main.out.println("Note: probably patch require some files that haven't been decompiled yet.");
         } catch (Exception e) {
-            StackTraceElement[] stack = e.getStackTrace();
-            StringBuilder sb = new StringBuilder();
-            sb.append("\nUnexpected error occured:\n\n");
-            int limit = Math.min(stack.length, 6);
-            for (int i = 0; i < limit; i++) {
-                sb.append(stack[i].toString()).append('\n');
-            }
-            Main.out.println(sb.toString());
+            Main.out.println(Misc.stacktraceToString(e));
         } finally {
             executor.stop();
         }

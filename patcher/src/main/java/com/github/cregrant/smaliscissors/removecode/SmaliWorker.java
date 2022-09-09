@@ -7,10 +7,12 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.RemoveFiles;
+import com.github.cregrant.smaliscissors.util.Misc;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliWorker {
     private static final boolean DEBUG_BENCHMARK = false;
@@ -103,7 +105,7 @@ public class SmaliWorker {
         }
     }
 
-    private State remove(SmaliTarget initialTarget, State currentState) {
+    private State remove(SmaliTarget initialTarget, State currentState) throws Exception {
         State newState = new State(currentState);
         List<SmaliTarget> currentTargets = new ArrayList<>();
         currentTargets.add(initialTarget);
@@ -118,6 +120,7 @@ public class SmaliWorker {
 
                 final List<SmaliTarget> dependencies = Collections.synchronizedList(new ArrayList<SmaliTarget>());
                 List<Future<?>> futures = new ArrayList<>(classes.size());
+                AtomicReference<Exception> exception = new AtomicReference<>();
                 for (final SmaliClass smaliClass : classes) {
                     if (smaliClass.getRef().endsWith("Registrar;")) {
                         throw new IllegalStateException("Skipped to prevent some firebase errors.");
@@ -125,12 +128,26 @@ public class SmaliWorker {
                     Runnable r = new Runnable() {
                         @Override
                         public void run() {
-                            dependencies.addAll(smaliClass.clean(target));
+                            try {
+                                if (exception.get() == null) {
+                                    dependencies.addAll(smaliClass.clean(target));
+                                }
+                            } catch (Exception e) {
+                                exception.set(e);
+                            }
+
                         }
                     };
                     futures.add(project.getExecutor().submit(r));
                 }
                 project.getExecutor().compute(futures);
+
+                if (exception.get() != null) {
+                    if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel())
+                        Main.out.println(Misc.stacktraceToString(exception.get()));
+                    throw exception.get();
+                }
+
                 for (SmaliTarget dependency : dependencies) {
                     if (newState.removedTargets.contains(dependency)) {
                         continue;
