@@ -32,7 +32,7 @@ public class ClassField implements ClassPart {
 
     @Override
     public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
-        if (!deleted && !target.isMethod() && text.contains(target.getRef())) {
+        if (!deleted && target.isClass() && text.contains(target.getRef())) {
             return delete(smaliClass);
         }
         return null;
@@ -46,8 +46,8 @@ public class ClassField implements ClassPart {
     private SmaliTarget delete(SmaliClass smaliClass) {
         deleted = true;
         int end = text.indexOf(";") + 1;
-        SmaliTarget target = new SmaliTarget();
-        target.setRef(smaliClass.getRef() + "->" + text.substring(text.lastIndexOf(" ", end - 1) + 1, end));
+        String fieldRef = smaliClass.getRef() + "->" + text.substring(text.lastIndexOf(" ", end - 1) + 1, end);
+        SmaliTarget target = new SmaliTarget().setRef(fieldRef);
         if (singleLine) {
             text = '#' + text;
         } else {

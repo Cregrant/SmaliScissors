@@ -90,8 +90,9 @@ public class ClassMethod implements ClassPart {
 
         MethodCleaner cleaner = new MethodCleaner(this, target.getRef());
         cleaner.clean();
-        if (target.getRef().contains("Lcom/appsflyer/") && cleaner.getNewBody().equals(oldBody))
+        if (target.getRef().contains("Lcom/applovin/") && cleaner.getNewBody().equals(oldBody)) {
             oldBody = oldBody;
+        }
         if (cleaner.isSuccessful()) {
             if (!isAbstract) {
                 setBody(cleaner.getNewBody());
@@ -113,13 +114,13 @@ public class ClassMethod implements ClassPart {
     }
 
     private SmaliTarget getDeleteTarget() {
-        SmaliTarget target = new SmaliTarget();
+        String reference;
         if (canBeDeleted()) {
-            target.setRef(ref);                                     //method reference
+            reference = ref;                                     //method reference
         } else {
-            target.setRef(ref.substring(0, ref.indexOf("->")));     //class reference
+            reference = ref.substring(0, ref.indexOf("->"));     //class reference
         }
-        return target;
+        return new SmaliTarget().setRef(reference);
     }
 
     private boolean canBeDeleted() {     //it is better to delete the class with the bridge method. Idk why too.

@@ -24,7 +24,7 @@ public class ClassInterface implements ClassPart {
     }
 
     public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
-        if (!deleted && !target.isMethod() && text.contains(target.getRef())) {
+        if (!deleted && target.isClass() && text.contains(target.getRef())) {
             delete();
         }
         return null;

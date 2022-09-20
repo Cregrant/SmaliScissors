@@ -37,8 +37,7 @@ public class SmaliWorker {
             project.getSmaliKeeper().changeTargets(patch, rule);
 
             for (String path : rule.getTargets()) {
-                SmaliTarget target = new SmaliTarget();
-                target.setSkipPath(path);
+                SmaliTarget target = new SmaliTarget().setSkipPath(path);
 
                 State newState;
                 try {
@@ -112,7 +111,7 @@ public class SmaliWorker {
         do {
             List<SmaliTarget> newTargets = new ArrayList<>();
             for (final SmaliTarget target : currentTargets) {
-                Set<SmaliClass> classes = new SmaliFilter().separate(project, target, newState);
+                Set<SmaliClass> classes = new SmaliFilter(project, newState).separate(target);
                 if (classes.isEmpty()) {
                     continue;
                 }
@@ -120,7 +119,7 @@ public class SmaliWorker {
 
                 final List<SmaliTarget> dependencies = Collections.synchronizedList(new ArrayList<SmaliTarget>());
                 List<Future<?>> futures = new ArrayList<>(classes.size());
-                AtomicReference<Exception> exception = new AtomicReference<>();
+                final AtomicReference<Exception> exception = new AtomicReference<>();
                 for (final SmaliClass smaliClass : classes) {
                     if (smaliClass.getRef().endsWith("Registrar;")) {
                         throw new IllegalStateException("Skipped to prevent some firebase errors.");
@@ -143,15 +142,22 @@ public class SmaliWorker {
                 project.getExecutor().compute(futures);
 
                 if (exception.get() != null) {
-                    if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel())
+                    if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
                         Main.out.println(Misc.stacktraceToString(exception.get()));
+                    }
                     throw exception.get();
                 }
 
                 for (SmaliTarget dependency : dependencies) {
-                    if (newState.removedTargets.contains(dependency)) {
+                    if (!dependency.isClass()) {
+                        String parentClassRef = dependency.getRef().substring(0, dependency.getRef().indexOf(';'));
+                        if (newState.removedTargets.contains(new SmaliTarget().setRef(parentClassRef))) {
+                            continue;
+                        }
+                    } else if (newState.removedTargets.contains(dependency)) {
                         continue;
                     }
+
                     newTargets.add(dependency);
                     if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
                         Main.out.println("Also deleting " + dependency);

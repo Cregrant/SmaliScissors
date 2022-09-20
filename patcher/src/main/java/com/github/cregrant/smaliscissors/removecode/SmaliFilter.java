@@ -8,48 +8,31 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliFilter {
+    private final Project project;
+    private final SmaliWorker.State currentState;
+    private final List<Future<?>> futures;
+    private final Set<SmaliFile> deletedFiles;
+    private final Set<SmaliClass> result;
 
-    Set<SmaliClass> separate(final Project project, final SmaliTarget target, SmaliWorker.State currentState) {
-        final Set<SmaliClass> result = Collections.synchronizedSet(new HashSet<SmaliClass>(100));    //from files and classes
-        List<Future<?>> futures = new ArrayList<>(currentState.files.size());
+    public SmaliFilter(Project project, SmaliWorker.State currentState) {
+        this.project = project;
+        this.currentState = currentState;
+        futures = new ArrayList<>(currentState.files.size());
+        deletedFiles = new HashSet<>(100);
+        result = Collections.synchronizedSet(new HashSet<SmaliClass>(100));
+    }
 
-        Set<SmaliFile> deletedFiles = new HashSet<>(100);
-        Set<SmaliClass> removedClasses = Collections.synchronizedSet(new HashSet<SmaliClass>(100));
+    Set<SmaliClass> separate(final SmaliTarget target) {
+        processPatchedClasses(target);
+        removeTargetFiles(target);
+        scanAllFiles(target);
+        return result;
+    }
+
+    private void scanAllFiles(final SmaliTarget target) {
         final Set<SmaliFile> acceptedFiles = Collections.synchronizedSet(new HashSet<SmaliFile>(100));
-
-        for (final SmaliClass smaliClass : currentState.patchedClasses) {
-            if (!target.isMethod() && target.isDeletionAllowed()) {
-                if (!acceptPath(smaliClass.getFile().getPath(), target.getSkipPath())) {
-                    removedClasses.add(smaliClass);
-                    deletedFiles.add(smaliClass.getFile());
-                    continue;
-                }
-            }
-
-            Runnable r = new Runnable() {
-                @Override
-                public void run() {
-                    if (SmaliFilter.this.acceptBody(smaliClass.getNewBody(), target)) {
-                        result.add(smaliClass);
-                    }
-                }
-            };
-            futures.add(project.getExecutor().submit(r));
-        }
-        currentState.patchedClasses.removeAll(removedClasses);
-
         final AtomicReference<Exception> error = new AtomicReference<>();
-        if (!target.isMethod() && target.isDeletionAllowed()) {
-            for (SmaliFile df : currentState.files) {
-                if (!acceptPath(df.getPath(), target.getSkipPath())) {
-                    deletedFiles.add(df);
-                }
-            }
-        }
-        currentState.files.removeAll(deletedFiles);
-        currentState.deletedFiles.addAll(deletedFiles);
-
-        if (target.isMethod() || !deletedFiles.isEmpty()) {
+        if (!target.isClass() || !target.isDeletionAllowed() || !deletedFiles.isEmpty()) {
             for (final SmaliFile df : currentState.files) {
                 Runnable r = new Runnable() {
                     @Override
@@ -63,7 +46,7 @@ public class SmaliFilter {
                             body = body.replace("\r", "");
                         }
 
-                        if (SmaliFilter.this.acceptBody(body, target)) {
+                        if (acceptBody(body, target)) {
                             acceptedFiles.add(df);
                             try {
                                 result.add(new SmaliClass(project, df, body));
@@ -77,11 +60,45 @@ public class SmaliFilter {
             }
         }
         project.getExecutor().compute(futures);
+        currentState.files.removeAll(acceptedFiles);
         if (error.get() != null) {
             throw new RuntimeException(error.get());
         }
-        currentState.files.removeAll(acceptedFiles);
-        return result;
+    }
+
+    private void removeTargetFiles(SmaliTarget target) {
+        if (target.isClass() && target.isDeletionAllowed()) {
+            for (SmaliFile df : currentState.files) {
+                if (!acceptPath(df.getPath(), target.getSkipPath())) {
+                    deletedFiles.add(df);
+                }
+            }
+            currentState.files.removeAll(deletedFiles);
+            currentState.deletedFiles.addAll(deletedFiles);
+        }
+    }
+
+    private void processPatchedClasses(final SmaliTarget target) {
+        for (Iterator<SmaliClass> iterator = currentState.patchedClasses.iterator(); iterator.hasNext(); ) {
+            final SmaliClass smaliClass = iterator.next();
+            if (target.isClass() && target.isDeletionAllowed()) {
+                if (!acceptPath(smaliClass.getFile().getPath(), target.getSkipPath())) {
+                    iterator.remove();
+                    deletedFiles.add(smaliClass.getFile());
+                    continue;
+                }
+            }
+
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    if (acceptBody(smaliClass.getNewBody(), target)) {
+                        result.add(smaliClass);
+                    }
+                }
+            };
+            futures.add(project.getExecutor().submit(r));
+        }
     }
 
     private boolean acceptBody(String body, SmaliTarget target) {

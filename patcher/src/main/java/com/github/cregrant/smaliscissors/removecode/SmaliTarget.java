@@ -3,7 +3,7 @@ package com.github.cregrant.smaliscissors.removecode;
 public class SmaliTarget {
     private String smaliRef;
     private String skipPath;    //filepath starts with skipPath will be skipped
-    private boolean isMethod;
+    private boolean isClass = true;
     private boolean allowDeleteFiles = true;
 
     public boolean containsInside(String string) {
@@ -29,28 +29,31 @@ public class SmaliTarget {
         return smaliRef;
     }
 
-    public void setRef(String smaliRef) {
+    public SmaliTarget setRef(String smaliRef) {
         this.smaliRef = smaliRef;
-        if (smaliRef.contains(";->")) {     //no file
-            isMethod = true;
+        if (!smaliRef.contains(";->")) {     //no file
+            isClass = false;
         } else {
             skipPath = smaliRef.substring(1);
         }
+        return this;
     }
 
     public String getSkipPath() {
         return skipPath;
     }
 
-    public void setSkipPath(String shortPath) {
+    public SmaliTarget setSkipPath(String shortPath) {
         skipPath = shortPath;
         smaliRef = "L" + shortPath.replace(".smali", ";");
-        if (!smaliRef.endsWith(";") && !smaliRef.endsWith("/"))
+        if (!smaliRef.endsWith(";") && !smaliRef.endsWith("/")) {
             smaliRef = smaliRef + ";";
+        }
+        return this;
     }
 
-    public boolean isMethod() {
-        return isMethod;
+    public boolean isClass() {
+        return isClass;
     }
 
     public boolean isDeletionAllowed() {
