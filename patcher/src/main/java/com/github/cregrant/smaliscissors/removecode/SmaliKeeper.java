@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.removecode;
 import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Replace;
@@ -14,10 +15,7 @@ import java.util.List;
 public class SmaliKeeper {
     private final Project project;
     private boolean firebaseCrashlyticsFound = false;
-    private boolean firebaseCrashlyticsPatched = false;
-
     private boolean firebaseAnalyticsFound = false;
-    private boolean firebaseAnalyticsPatched = false;
 
     public SmaliKeeper(Project project) {
         this.project = project;
@@ -33,7 +31,6 @@ public class SmaliKeeper {
 
     void changeTargets(Patch patch, RemoveCode rule) {
         changeFirebaseCrashlytics(patch, rule);    //delete network calls because the code uses reflection
-        //changeFirebaseAnalytics(patch, rule);
     }
 
     void keepClasses(SmaliWorker.State state) {
@@ -56,10 +53,10 @@ public class SmaliKeeper {
     private void keepClass(SmaliWorker.State state, HashSet<SmaliClass> set, SmaliClass smaliClass) {
         smaliClass.makeStub();
         set.add(smaliClass);
-        String shortPath = smaliClass.getSuperclass().substring(1, smaliClass.getSuperclass().length() - 1);
-        if (!shortPath.startsWith("android") && project.getProtectedClasses().contains(shortPath)) {
+        String superclassPath = smaliClass.getSuperclass().substring(1, smaliClass.getSuperclass().length() - 1);
+        if (!superclassPath.startsWith("android") && project.getProtectedClasses().contains(superclassPath)) {
             for (SmaliFile file : state.deletedFiles) {
-                if (file.getPath().endsWith(shortPath)) {
+                if (file.getPath().endsWith(superclassPath)) {
                     SmaliClass superclass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
                     keepClass(state, set, superclass);
                     break;
@@ -70,30 +67,33 @@ public class SmaliKeeper {
 
     private void changeFirebaseCrashlytics(Patch patch, RemoveCode rule) {
         if (firebaseCrashlyticsFound) {      //keep the code but delete network calls
-            List<String> crashlyticsList = Arrays.asList("com/crashlytics/", "com/google/firebase/crashlytics/", "com/google/firebase/crash/", "io/fabric/", "io/invertase/firebase/crashlytics/");
+            List<String> crashlyticsList = Arrays.asList("com/crashlytics/", "com/google/firebase/crashlytics/",
+                    "com/google/firebase/crash/", "io/fabric/", "io/invertase/firebase/crashlytics/");
             if (rule.getTargets().removeAll(crashlyticsList)) {
-                if (firebaseCrashlyticsPatched) {
+                if (project.getProperties().getProperty(ProjectProperties.Property.firebase_crashlytics_patched.name()) != null) {
                     return;
                 }
+
                 Main.out.println("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                firebaseCrashlyticsPatched = true;
+                project.getProperties().setProperty(ProjectProperties.Property.firebase_crashlytics_patched.name(), "true");
             }
         }
     }
 
-    private void changeFirebaseAnalytics(Patch patch, RemoveCode rule) {
+    void changeFirebaseAnalytics(Patch patch, RemoveCode rule) {
         if (firebaseAnalyticsFound) {      //keep the code but delete network calls
-            List<String> analyticsList = Arrays.asList("com/google/firebase/analytics/", "com/google/firebase/firebase_analytics/");
-            if (rule.getTargets().removeAll(analyticsList)) {
-                if (firebaseAnalyticsPatched) {
+            if (rule.getTargets().contains("com/google/firebase/analytics/")
+                    || rule.getTargets().contains("com/google/firebase/firebase_analytics/")) {
+                if (project.getProperties().getProperty(ProjectProperties.Property.firebase_analytics_patched.name()) != null) {
                     return;
                 }
+
                 Main.out.println("It is not possible to remove firebase analytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                firebaseAnalyticsPatched = true;
+                project.getProperties().setProperty(ProjectProperties.Property.firebase_analytics_patched.name(), "true");
             }
         }
     }

@@ -2,12 +2,13 @@ package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.ApkLocator;
 import com.github.cregrant.smaliscissors.common.BackgroundWorker;
+import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
-import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledParser;
 import com.github.cregrant.smaliscissors.removecode.manifestparsers.BinaryParser;
+import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledParser;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Scanner;
@@ -25,6 +26,7 @@ public class Project {
     private final MemoryManager memoryManager;
     private final BackgroundWorker executor;
     private final SmaliKeeper smaliKeeper;
+    private final ProjectProperties properties;
     private final String apkPath;
     private final String path;
     private final String name;
@@ -44,6 +46,7 @@ public class Project {
         memoryManager = new MemoryManager(this);
         apkPath = new ApkLocator().getApkPath(this);
         smaliKeeper = new SmaliKeeper(this);
+        properties = new ProjectProperties(this);
     }
 
     void scan(boolean scanSmali, boolean scanXml) throws FileNotFoundException {
@@ -96,6 +99,7 @@ public class Project {
         if (Prefs.logLevel == Prefs.Log.DEBUG) {
             Main.out.println("Writing changes...");
         }
+        properties.save();
         if (manifest != null) {
             manifest.save();
         }
@@ -244,5 +248,9 @@ public class Project {
 
     public SmaliKeeper getSmaliKeeper() {
         return smaliKeeper;
+    }
+
+    public ProjectProperties getProperties() {
+        return properties;
     }
 }

@@ -122,6 +122,7 @@ public class SmaliWorker {
                 final AtomicReference<Exception> exception = new AtomicReference<>();
                 for (final SmaliClass smaliClass : classes) {
                     if (smaliClass.getRef().endsWith("Registrar;")) {
+                        project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
                         throw new IllegalStateException("Skipped to prevent some firebase errors.");
                     }
                     Runnable r = new Runnable() {
@@ -174,20 +175,20 @@ public class SmaliWorker {
 
     static class State {
         HashSet<SmaliFile> files;
-        ArrayList<SmaliFile> deletedFiles;
+        HashSet<SmaliFile> deletedFiles;
         HashSet<SmaliClass> patchedClasses;
         HashSet<SmaliTarget> removedTargets;
 
         State(List<SmaliFile> files) {
             this.files = new HashSet<>(files);
-            this.deletedFiles = new ArrayList<>();
+            this.deletedFiles = new HashSet<>();
             this.patchedClasses = new HashSet<>();
             this.removedTargets = new HashSet<>();
         }
 
         State(State state) {
             this.files = new HashSet<>(state.files);
-            this.deletedFiles = new ArrayList<>(state.deletedFiles);
+            this.deletedFiles = new HashSet<>(state.deletedFiles);
             this.patchedClasses = new HashSet<>(state.patchedClasses);
             this.removedTargets = new HashSet<>(state.removedTargets);
         }
