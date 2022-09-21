@@ -44,6 +44,9 @@ public class ClassField implements ClassPart {
     }
 
     private SmaliTarget delete(SmaliClass smaliClass) {
+        if (deleted) {
+            return null;
+        }
         deleted = true;
         int end = text.indexOf(";") + 1;
         String fieldRef = smaliClass.getRef() + "->" + text.substring(text.lastIndexOf(" ", end - 1) + 1, end);

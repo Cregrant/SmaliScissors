@@ -36,6 +36,9 @@ public class ClassInterface implements ClassPart {
     }
 
     private void delete() {
+        if (deleted) {
+            return;
+        }
         text = '#' + text;
         deleted = true;
     }

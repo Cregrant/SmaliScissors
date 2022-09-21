@@ -18,6 +18,7 @@ public class ClassMethod implements ClassPart {
     private final boolean isStatic;
     private final boolean isAbstract;
     private final boolean isConstructor;
+    private boolean deleted = false;
     private String modifiers;
     private Object body;
     private ArrayList<String> inputObjects = new ArrayList<>(2);
@@ -27,8 +28,9 @@ public class ClassMethod implements ClassPart {
         int signatureEnd = text.indexOf('\n', pos);
         String line = text.substring(pos, signatureEnd);
         end = text.indexOf(".end method", pos) + 13;
-        if (text.startsWith("#Deleted body", end)) {     //there is deleted method body next to the "end"
+        if (text.startsWith("#Deleted body", end)) {     //there is a deleted method body next to the "end"
             end = text.indexOf(".end method", end + 10) + 13;
+            deleted = true;
         }
         if (end == 12) {
             throw new IllegalArgumentException();
@@ -128,6 +130,10 @@ public class ClassMethod implements ClassPart {
     }
 
     private void replaceBodyWithStub(String stub) {        //there is a stub that'll help not to broke everything
+        if (deleted) {
+            return;
+        }
+        deleted = true;
         changeBody(stub + "#Deleted body:\n");
     }
 

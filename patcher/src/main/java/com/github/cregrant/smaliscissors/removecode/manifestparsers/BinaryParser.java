@@ -30,7 +30,7 @@ public class BinaryParser {
         int off = xmlTagOff;
         HashSet<String> classes = new HashSet<>();
         try {
-            while (off < xml.length) {
+            while (off < xml.length - 3) {
                 int tag0 = LEW(xml, off);
 
                 if (tag0 == START_TAG) { // XML START TAG

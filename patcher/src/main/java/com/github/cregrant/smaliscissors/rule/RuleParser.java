@@ -244,6 +244,13 @@ public class RuleParser {
     }
 
     private String fixRegexMatchXml(String match) {   //add compatibility with non-ApkEditor xml style
-        return match == null ? null : match.replace("><", ">\\s*?<").replaceAll(" +", "\\s+?");
+        if (match == null) {
+            return null;
+        }
+        return match
+                .replace("><", ">\\s*?<")
+                .replace("\" />", "\"/>")
+                .replaceAll(" +", "\\\\s+?");
+
     }
 }

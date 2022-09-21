@@ -79,9 +79,6 @@ public class Assign implements Rule {
             }
 
             int min = Math.min(keyList.size(), valueList.size());
-            if (min == 0) {
-                return;
-            }
             for (int i = 0; i < min; ++i) {
                 String key = keyList.get(i);
                 String value = valueList.get(i);

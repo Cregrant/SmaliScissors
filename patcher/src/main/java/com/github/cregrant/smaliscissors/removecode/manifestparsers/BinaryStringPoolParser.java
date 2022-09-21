@@ -101,6 +101,10 @@ public class BinaryStringPoolParser {
             byte[] str_buf = new byte[actual_str_len];
             byte[] buf = new byte[string_len - 2]; // Skip 2 Length bytes, already read.
             in.read(buf);
+            if (actual_str_len == 0) {
+                continue;
+            }
+
             int j = 0;
             for (byte b : buf) {
                 if (b != 0x00) {     // Skip 0x00

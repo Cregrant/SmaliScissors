@@ -10,9 +10,6 @@ public class ClassHeader implements ClassPart {
     private boolean deleted;
 
     public ClassHeader(String string, int pos) {
-        if (string.charAt(pos) == '#') {
-            deleted = true;
-        }
         end = string.indexOf("\n\n", pos) + 2;
         if (end == 1) {
             throw new IllegalStateException("Bug detected - class body contains \"\\r\" symbols.");

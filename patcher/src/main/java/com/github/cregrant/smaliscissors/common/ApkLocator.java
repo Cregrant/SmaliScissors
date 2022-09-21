@@ -12,11 +12,13 @@ import java.util.regex.Pattern;
 public class ApkLocator {
 
     public String getApkPath(Project project) {
-        String apkPathSupplied = Main.dex.getApkPath();
-        if (apkPathSupplied != null) {
-            File file = new File(apkPathSupplied);
-            if (file.exists()) {
-                return apkPathSupplied;
+        if (Main.dex != null) {
+            String apkPathSupplied = Main.dex.getApkPath();
+            if (apkPathSupplied != null) {
+                File file = new File(apkPathSupplied);
+                if (file.exists()) {
+                    return apkPathSupplied;
+                }
             }
         }
 

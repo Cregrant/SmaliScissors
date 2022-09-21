@@ -26,7 +26,7 @@ public class Switch extends If implements AdditionalTable {
 
     @Override
     public Tag getTag() {
-        throw new IllegalCallerException("Invalid switch tag access!");
+        throw new IllegalStateException("Invalid switch tag access!");
     }
 
     @Override

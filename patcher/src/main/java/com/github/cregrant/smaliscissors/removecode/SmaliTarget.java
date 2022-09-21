@@ -31,7 +31,7 @@ public class SmaliTarget {
 
     public SmaliTarget setRef(String smaliRef) {
         this.smaliRef = smaliRef;
-        if (!smaliRef.contains(";->")) {     //no file
+        if (smaliRef.contains(";->")) {     //no file
             isClass = false;
         } else {
             skipPath = smaliRef.substring(1);
