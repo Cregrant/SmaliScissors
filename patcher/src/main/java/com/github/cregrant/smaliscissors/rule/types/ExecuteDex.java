@@ -113,7 +113,7 @@ public class ExecuteDex implements Rule {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:  EXECUTE_DEX.\n");
         if (name != null) {
-            sb.append("Name:  ").append(getName());
+            sb.append("Name:  ").append(name);
         }
         return sb.toString();
     }

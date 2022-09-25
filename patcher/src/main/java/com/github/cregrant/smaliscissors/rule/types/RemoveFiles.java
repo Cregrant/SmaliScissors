@@ -8,13 +8,12 @@ import com.github.cregrant.smaliscissors.util.IO;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
 public class RemoveFiles implements Rule {
     private String name;
-    private Collection<String> targets;
+    private List<String> targets;
 
     @Override
     public String getName() {
@@ -76,11 +75,11 @@ public class RemoveFiles implements Rule {
         }
     }
 
-    public Collection<String> getTargets() {
+    public List<String> getTargets() {
         return targets;
     }
 
-    public void setTargets(Collection<String> targets) {
+    public void setTargets(List<String> targets) {
         this.targets = targets;
     }
 
@@ -92,8 +91,13 @@ public class RemoveFiles implements Rule {
             sb.append("Name: ").append(name).append('\n');
         }
         sb.append("Targets:\n");
-        for (String target : targets) {
+        for (int i = 0; i < targets.size(); i++) {
+            String target = targets.get(i);
             sb.append("    ").append(target).append("\n");
+            if (Prefs.logLevel.getLevel() >= Prefs.Log.INFO.getLevel() && i >= 30) {
+                sb.append("    ... + ").append(targets.size() - i - 1).append(" more lines\n");
+                break;
+            }
         }
         return sb.toString();
     }

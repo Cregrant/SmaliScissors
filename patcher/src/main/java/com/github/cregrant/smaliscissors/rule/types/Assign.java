@@ -148,10 +148,10 @@ public class Assign implements Rule {
         if (name != null) {
             sb.append("Name:  ").append(name).append('\n');
         }
-        sb.append("Target: ").append(target).append("\n");
+        sb.append("Target: ").append(target).append('\n');
         sb.append("Assignments:\n");
         for (String assign : assignments) {
-            sb.append("    ").append(assign).append("\n");
+            sb.append("    ").append(assign).append('\n');
         }
         sb.append("Match: ").append(match).append('\n');
         sb.append("Regex: ").append(isRegex);

@@ -123,7 +123,7 @@ public class Add implements Rule {
         }
         sb.append("Target:  ").append(target).append("\n");
         sb.append("Source:  ").append(source).append('\n');
-        sb.append("Extract: ").append(isExtract());
+        sb.append("Extract: ").append(extract);
         return sb.toString();
     }
 }

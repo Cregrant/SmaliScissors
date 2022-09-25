@@ -184,12 +184,12 @@ public class Replace implements Rule {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:    MATCH_REPLACE.\n");
         if (getName() != null) {
-            sb.append("Name:  ").append(getName()).append('\n');
+            sb.append("Name:  ").append(name).append('\n');
         }
-        sb.append("Target:  ").append(getTarget()).append("\n");
-        sb.append("Match:   ").append(getMatch()).append('\n');
-        sb.append("Regex:   ").append(isRegex()).append('\n');
-        sb.append("Replace: ").append(getReplacement());
+        sb.append("Target:  ").append(target).append("\n");
+        sb.append("Match:   ").append(match).append('\n');
+        sb.append("Regex:   ").append(isRegex).append('\n');
+        sb.append("Replace: ").append(replacement);
         return sb.toString();
     }
 }

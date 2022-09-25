@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
 import com.github.cregrant.smaliscissors.Patch;
+import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
 
@@ -74,8 +75,13 @@ public class RemoveCode implements Rule {
             sb.append("Name: ").append(name).append('\n');
         }
         sb.append("Targets:\n");
-        for (String target : getTargets()) {
+        for (int i = 0; i < targets.size(); i++) {
+            String target = targets.get(i);
             sb.append("    ").append(target).append("\n");
+            if (Prefs.logLevel.getLevel() >= Prefs.Log.INFO.getLevel() && i >= 30) {
+                sb.append("    ... + ").append(targets.size() - i - 1).append(" more lines\n");
+                break;
+            }
         }
         return sb.toString();
     }
