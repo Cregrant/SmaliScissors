@@ -64,6 +64,8 @@ public class Opcode {
             result = new Catch(str);
         } else if (str.startsWith("fill-array-data", offset)) {
             result = new FillArrayData(str);
+        } else if (str.startsWith("filled-new-array", offset)) {
+            result = new FilledNewArray(str);
         } else if (str.startsWith("monitor", offset)) {
             result = new Monitor(str);
         } else if (str.startsWith("switch", offset + 7)) {
