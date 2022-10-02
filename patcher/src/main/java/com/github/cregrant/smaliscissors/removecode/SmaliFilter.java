@@ -69,7 +69,7 @@ public class SmaliFilter {
     private void removeTargetFiles(SmaliTarget target) {
         if (target.isClass() && target.isDeletionAllowed()) {
             for (SmaliFile df : currentState.files) {
-                if (!acceptPath(df.getPath(), target.getSkipPath())) {
+                if (acceptPath(df.getPath(), target.getSkipPath())) {
                     deletedFiles.add(df);
                 }
             }
@@ -82,7 +82,7 @@ public class SmaliFilter {
         for (Iterator<SmaliClass> iterator = currentState.patchedClasses.iterator(); iterator.hasNext(); ) {
             final SmaliClass smaliClass = iterator.next();
             if (target.isClass() && target.isDeletionAllowed()) {
-                if (!acceptPath(smaliClass.getFile().getPath(), target.getSkipPath())) {
+                if (acceptPath(smaliClass.getFile().getPath(), target.getSkipPath())) {
                     iterator.remove();
                     deletedFiles.add(smaliClass.getFile());
                     continue;
@@ -107,6 +107,6 @@ public class SmaliFilter {
 
     private boolean acceptPath(String path, String target) {
         int pos = path.indexOf('/') + 1;
-        return !path.startsWith(target, pos);
+        return path.startsWith(target, pos);
     }
 }
