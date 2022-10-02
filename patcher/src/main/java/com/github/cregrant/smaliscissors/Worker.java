@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.BackgroundWorker;
+import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.util.Misc;
 
 import java.io.FileNotFoundException;
@@ -11,15 +12,14 @@ import static java.lang.System.currentTimeMillis;
 
 public class Worker {
     private final BackgroundWorker executor = new BackgroundWorker();
-    private ArrayList<Project> projects;
-    private ArrayList<Patch> patches;
+    private final ArrayList<Project> projects = new ArrayList<>(5);
+    private final ArrayList<Patch> patches = new ArrayList<>(5);
 
     public Worker(List<String> projectsList) {
         setProjects(projectsList);
     }
 
     void setProjects(List<String> projectsList) {
-        projects = new ArrayList<>(projectsList.size());
         for (String path : projectsList) {
             try {
                 Project project = new Project(path, executor);
@@ -27,21 +27,27 @@ public class Worker {
             } catch (Exception e) {
                 Main.out.println("Error: skipping project \"" + path + "\"! (" + e.getMessage() + ")");
             }
-
         }
     }
 
     void setPatches(List<String> patchesList) {
-        patches = new ArrayList<>(patchesList.size());
-        for (String patch : patchesList) {
-            patches.add(new Patch(patch));
+        for (String patchString : patchesList) {
+            patches.add(new Patch(patchString));
         }
     }
 
-    void addRemoveCodeRule(List<String> patchesList, String targets) {
-        String[] splitTargets = targets.split("\\R");
-        patches = new ArrayList<>(1);
-        patches.add(new RemoveCodePatch(patchesList.get(0), splitTargets));
+    void setSingleRemoveCodeRule(String targets) {
+        String[] splitTargets = targets.split(" ");
+        RemoveCode rule = new RemoveCode();
+        ArrayList<String> targetsList = new ArrayList<>(splitTargets.length);
+        for (String s : splitTargets) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) {
+                targetsList.add(trimmed);
+            }
+        }
+        rule.setTargets(targetsList);
+        patches.add(new Patch(rule));
     }
 
     void run() {

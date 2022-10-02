@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.rule.RuleParser;
+import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.IO;
 
@@ -17,8 +18,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Patch {
-    private final File file;
-    private final File tempDir;
+    private File file;
+    private File tempDir;
     private final String name;
     protected ArrayList<Rule> rules;
     protected boolean smaliNeeded;
@@ -31,6 +32,13 @@ public class Patch {
         name = file.getName();
         tempDir = new File(file.getParentFile() + File.separator + "temp");
         parseRules();
+    }
+
+    public Patch(RemoveCode rule) {
+        rules = new ArrayList<>(1);
+        rules.add(rule);
+        smaliNeeded = true;
+        name = "Single REMOVE_CODE rule";
     }
 
     public void jumpToRuleName(String someName) {

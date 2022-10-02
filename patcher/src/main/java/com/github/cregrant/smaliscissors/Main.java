@@ -12,67 +12,53 @@ public class Main {
 
 
     public static void mainAsModule(String[] args, SimpleOutStream logger, DexExecutor dexExecutor) {
-        if (args == null || args.length < 2) {
-            Main.out.println("Usage as module: args - String(s) with full path to projects and String(s) with full path to zip patches\n" +
-                    "Example: Main.main(sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip");
-            return;
-        }
         out = logger == null ? getDefaultOutStream() : logger;
         dex = dexExecutor;
+        if (args == null || args.length < 2) {
+            Main.out.println("Usage as module: args - String(s) with full path to projects and String(s) with full path to zip patches\n" +
+                    "Example args: sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip\n" +
+                    "Or use as single REMOVE_CODE rule executor (project path(s) and targets separated by space inside quotes:\n" +
+                    "sdcard/ApkEditor/decoded, \"com/folder1/\"\n" +
+                    "sdcard/ApkEditor/decoded, \"com/folder1/ com/folder2/abc.smali\"");
+
+            return;
+        }
         ArrayList<String> zipList = new ArrayList<>(5);
         ArrayList<String> projectList = new ArrayList<>(5);
-        String targets = "";
+        String removeCodeTargets = "";
 
         for (String str : args) {
-            if (str.endsWith(".zip")) {
+            boolean exists = new File(str).exists();
+            if (str.endsWith(".zip") && exists) {
                 zipList.add(str);
-            } else if (new File(str).exists()) {
+            } else if (exists) {
                 projectList.add(str);
+            } else if (str.endsWith("/") || str.endsWith(".smali")) {
+                removeCodeTargets = str;
             } else {
-                targets = str;
-/*                try {
-                    Prefs.logLevel = Prefs.Log.valueOf(str);
-                } catch (IllegalArgumentException e) {
-                    out.println("Invalid log level. Using INFO.");
-                }*/
+                out.println("Unknown argument error: " + str);
+                return;
             }
+
         }
 
-        if (zipList.isEmpty() || projectList.isEmpty()) {
+        if ((removeCodeTargets.isEmpty() && zipList.isEmpty()) || projectList.isEmpty()) {
             out.println("Invalid input");
             return;
         }
 
         Worker worker = new Worker(projectList);
-        if (targets.isEmpty()) {
+        if (removeCodeTargets.isEmpty()) {
             worker.setPatches(zipList);
         } else {
-            worker.addRemoveCodeRule(zipList, targets);
+            worker.setSingleRemoveCodeRule(removeCodeTargets);
         }
         worker.run();
-        System.gc();
     }
 
-//    public static void mainTest(String[] args) {
-//        mainAsDex("",
-//                "C:\\JAVA_projects\\SmaliScissors\\patches\\remove_code_all_discord.zip",
-//                "C:\\BAT\\_INPUT_APK\\Discord_121.9_",
-//                "com/android/installreferrer\n" +
-//                        "com/google/android/gms/tagmanager\n" +
-//                        "com/google/android/gms/ads\n" +
-//                        "com/google/android/gms/analytics\n" +
-//                        "com/google/android/gms/measurement\n" +
-//                        "com/google/firebase/crash\n" +
-//                        "com/google/firebase/analytics\n" +
-//                        "com/google/firebase/firebase_analytics\n" +
-//                        "com/adjust");
-//    }
-
-    //Run RemoveCode rule by executing this project as dex file (like in the ExecuteDex rule)
-//    public static void mainAsDex(String apkPath, String zipPath, String projectPath, String param) {
-//        String[] args = new String[]{projectPath, zipPath, param};
-//        mainAsModule(args, null, null);
-//    }
+    public static void main(String[] args) {
+        mainAsModule(args, null, null);
+    }
 
     private static SimpleOutStream getDefaultOutStream() {
         return new SimpleOutStream() {
