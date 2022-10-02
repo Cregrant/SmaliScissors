@@ -9,6 +9,8 @@ import java.util.HashMap;
 public class MethodParser {
     private final ClassMethod method;
     private final String target;
+    private ArrayList<Opcode> opcodes;
+    private int pos;
 
     public MethodParser(ClassMethod method, String target) {
         this.method = method;
@@ -21,38 +23,24 @@ public class MethodParser {
         if (methodBody.endsWith("\n\n")) {
             lines[lines.length - 1] = lines[lines.length - 1] + "\n";
         }
-        ArrayList<Opcode> opcodes = new ArrayList<>(lines.length);
+        opcodes = new ArrayList<>(lines.length);
         HashMap<Tag, Table> tables = new HashMap<>();
-        boolean tableStarted = false;
-        Table table = null;
 
-        for (String line : lines) {
-            Opcode op;
-            if (tableStarted) {
-                op = Opcode.parseTableOpcode(line);
-                tableStarted = table.addOpcode(op);     //false if reach end
-            } else {
-                op = Opcode.parseOpcode(line, target);
-            }
+        for (; pos < lines.length; pos++) {
+            String line = lines[pos];
+            Opcode op = Opcode.parseOpcode(line, target);
             opcodes.add(op);
 
-            if (op instanceof MoveResult) {   //append MoveResult to a prev opcode
-                Opcode prevOpcode = opcodes.get(opcodes.size() - 3);
-                if (prevOpcode instanceof Invoke) {
-                    ((Invoke) prevOpcode).setMoveResultLink(op);
-                } else if (prevOpcode instanceof FilledNewArray) {
-                    ((FilledNewArray) prevOpcode).setMoveResultLink(op);
-                }
+            if (op instanceof MoveResult) {
+                appendMoveResult(op);
             } else if (op instanceof Table) {
-                Table newTable = (Table) op;
-                newTable.setTag((Tag) opcodes.get(opcodes.size() - 2));
-                table = newTable;
+                Table table = (Table) op;
+                fillTable(lines, table);
                 tables.put(table.getTag(), table);
-                tableStarted = true;
             }
         }
 
-        for (Opcode op : opcodes) {
+        for (Opcode op : opcodes) {         //map tables to opcodes
             if (op instanceof AdditionalTable) {
                 AdditionalTable aTable = ((AdditionalTable) op);
                 Table mappedTable = tables.get(aTable.getTableTag());
@@ -62,8 +50,26 @@ public class MethodParser {
                 aTable.setTable(mappedTable);
             }
         }
-
         return opcodes;
+    }
+
+    private void appendMoveResult(Opcode op) {     //append MoveResult to a prev opcode
+        Opcode prevOpcode = opcodes.get(opcodes.size() - 3);
+        if (prevOpcode instanceof Invoke) {
+            ((Invoke) prevOpcode).setMoveResultLink(op);
+        } else if (prevOpcode instanceof FilledNewArray) {
+            ((FilledNewArray) prevOpcode).setMoveResultLink(op);
+        }
+    }
+
+    private void fillTable(String[] lines, Table table) {
+        table.setTag((Tag) opcodes.get(opcodes.size() - 2));
+        boolean nextExists;
+        do {
+            Opcode op = Opcode.parseTableOpcode(lines[pos]);
+            nextExists = table.addOpcode(op);
+            pos++;
+        } while (nextExists && pos < lines.length);
     }
 }
 
