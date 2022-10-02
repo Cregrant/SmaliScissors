@@ -34,7 +34,7 @@ public class SmaliTarget {
         if (smaliRef.contains(";->")) {     //no file
             isClass = false;
         } else {
-            skipPath = smaliRef.substring(1);
+            skipPath = smaliRef.substring(1, smaliRef.length() - 1) + ".smali";
         }
         return this;
     }
@@ -84,5 +84,4 @@ public class SmaliTarget {
     public String toString() {
         return smaliRef;
     }
-
 }
