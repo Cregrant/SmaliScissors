@@ -7,12 +7,9 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.RemoveFiles;
-import com.github.cregrant.smaliscissors.util.Misc;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.ArrayList;
 
 public class SmaliWorker {
     private static final boolean DEBUG_BENCHMARK = false;
@@ -20,6 +17,7 @@ public class SmaliWorker {
     private final Project project;
     private final Patch patch;
     private final RemoveCode rule;
+    private int bestLoopTime = Integer.MAX_VALUE;
 
     public SmaliWorker(Project project, Patch patch, RemoveCode rule) {
         this.project = project;
@@ -35,13 +33,14 @@ public class SmaliWorker {
             int patchedNum = 0;
             int crashReportersNum = 0;
             project.getSmaliKeeper().changeTargets(patch, rule);
+            State newState = new State(currentState);
 
             for (String path : rule.getTargets()) {
                 SmaliTarget target = new SmaliTarget().setSkipPath(path);
 
-                State newState;
+                SmaliRemoveJob job = new SmaliRemoveJob(project, patch, rule);
                 try {
-                    newState = remove(target, currentState);
+                    job.remove(target, newState);
                 } catch (Exception e) {
                     errorsNum++;
                     Main.out.println("Failed to remove " + target + " (" + e.getMessage() + ")");
@@ -50,23 +49,28 @@ public class SmaliWorker {
 
                 //print only user defined rules
                 if (rule.isInternal()) {
-                    if (newState.removedTargets.size() > currentState.removedTargets.size()) {
+                    if (job.isStateModified()) {
                         crashReportersNum++;
                     }
                 } else if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-                    if (newState.removedTargets.size() > currentState.removedTargets.size()) {
+                    if (job.isStateModified()) {
                         Main.out.println("Removed " + target);
                         patchedNum++;
                     } else {
                         //Main.out.println("Not found " + target);
                     }
                 }
-                currentState = newState;
+                if (job.isStateModified()) {
+                    currentState = newState;
+                    newState = new State(currentState);
+                }
             }
             project.getSmaliKeeper().keepClasses(currentState);
 
             if (DEBUG_BENCHMARK || DEBUG_NOT_WRITE) {
-                System.out.println("\rLoop takes " + (System.currentTimeMillis() - l) + " ms\n");
+                int loopTime = (int) (System.currentTimeMillis() - l);
+                bestLoopTime = Math.min(loopTime, bestLoopTime);
+                System.out.println("\rLoop takes " + loopTime + " ms (" + bestLoopTime + " ms best)\n");
             } else {
                 writeChanges(currentState);
             }
@@ -104,93 +108,4 @@ public class SmaliWorker {
         }
     }
 
-    private State remove(SmaliTarget initialTarget, State currentState) throws Exception {
-        State newState = new State(currentState);
-        List<SmaliTarget> currentTargets = new ArrayList<>();
-        currentTargets.add(initialTarget);
-        do {
-            List<SmaliTarget> newTargets = new ArrayList<>();
-            for (final SmaliTarget target : currentTargets) {
-                Set<SmaliClass> classes = new SmaliFilter(project, newState).separate(target);
-                if (classes.isEmpty()) {
-                    continue;
-                }
-                newState.removedTargets.add(target);
-
-                final List<SmaliTarget> dependencies = Collections.synchronizedList(new ArrayList<SmaliTarget>());
-                List<Future<?>> futures = new ArrayList<>(classes.size());
-                final AtomicReference<Exception> exception = new AtomicReference<>();
-                for (final SmaliClass smaliClass : classes) {
-                    if (smaliClass.getRef().endsWith("Registrar;")) {
-                        project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
-                        throw new IllegalStateException("Skipped to prevent some firebase errors.");
-                    }
-                    Runnable r = new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                if (exception.get() == null) {
-                                    dependencies.addAll(smaliClass.clean(target));
-                                }
-                            } catch (Exception e) {
-                                exception.set(e);
-                            }
-
-                        }
-                    };
-                    futures.add(project.getExecutor().submit(r));
-                }
-                project.getExecutor().compute(futures);
-
-                if (exception.get() != null) {
-                    if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                        Main.out.println(Misc.stacktraceToString(exception.get()));
-                    }
-                    throw exception.get();
-                }
-
-                for (SmaliTarget dependency : dependencies) {
-                    if (!dependency.isClass()) {
-                        String parentClassRef = dependency.getRef().substring(0, dependency.getRef().indexOf(';'));
-                        if (newState.removedTargets.contains(new SmaliTarget().setRef(parentClassRef))) {
-                            continue;
-                        }
-                    } else if (newState.removedTargets.contains(dependency)) {
-                        continue;
-                    }
-
-                    newTargets.add(dependency);
-                    if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                        Main.out.println("Also deleting " + dependency);
-                    }
-                }
-                newState.patchedClasses.removeAll(classes);
-                newState.patchedClasses.addAll(classes);
-            }
-            currentTargets = newTargets;
-        } while (!currentTargets.isEmpty());
-
-        return newState;
-    }
-
-    static class State {
-        HashSet<SmaliFile> files;
-        HashSet<SmaliFile> deletedFiles;
-        HashSet<SmaliClass> patchedClasses;
-        HashSet<SmaliTarget> removedTargets;
-
-        State(List<SmaliFile> files) {
-            this.files = new HashSet<>(files);
-            this.deletedFiles = new HashSet<>();
-            this.patchedClasses = new HashSet<>();
-            this.removedTargets = new HashSet<>();
-        }
-
-        State(State state) {
-            this.files = new HashSet<>(state.files);
-            this.deletedFiles = new HashSet<>(state.deletedFiles);
-            this.patchedClasses = new HashSet<>(state.patchedClasses);
-            this.removedTargets = new HashSet<>(state.removedTargets);
-        }
-    }
 }

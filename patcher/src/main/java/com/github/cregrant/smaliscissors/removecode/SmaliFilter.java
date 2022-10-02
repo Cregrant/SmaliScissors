@@ -9,12 +9,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliFilter {
     private final Project project;
-    private final SmaliWorker.State currentState;
+    private final State currentState;
     private final List<Future<?>> futures;
     private final Set<SmaliFile> deletedFiles;
     private final Set<SmaliClass> result;
 
-    public SmaliFilter(Project project, SmaliWorker.State currentState) {
+    public SmaliFilter(Project project, State currentState) {
         this.project = project;
         this.currentState = currentState;
         futures = new ArrayList<>(currentState.files.size());

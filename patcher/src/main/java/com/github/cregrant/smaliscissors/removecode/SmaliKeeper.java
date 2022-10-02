@@ -33,7 +33,7 @@ public class SmaliKeeper {
         changeFirebaseCrashlytics(patch, rule);    //delete network calls because the code uses reflection
     }
 
-    void keepClasses(SmaliWorker.State state) {
+    void keepClasses(State state) {
         HashSet<SmaliClass> returned = new HashSet<>();
         for (SmaliFile file : state.deletedFiles) {      //keep activities, services anf other AndroidManifest.xml things
             String path = file.getPath();
@@ -50,7 +50,7 @@ public class SmaliKeeper {
         }
     }
 
-    private void keepClass(SmaliWorker.State state, HashSet<SmaliClass> set, SmaliClass smaliClass) {
+    private void keepClass(State state, HashSet<SmaliClass> set, SmaliClass smaliClass) {
         smaliClass.makeStub();
         set.add(smaliClass);
         String superclassPath = smaliClass.getSuperclass().substring(1, smaliClass.getSuperclass().length() - 1);
