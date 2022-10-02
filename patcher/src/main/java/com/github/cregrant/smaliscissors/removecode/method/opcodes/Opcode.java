@@ -112,7 +112,7 @@ public class Opcode {
             } else if (startPos != 0 && (ch == ',' || ch == ' ')) {
                 inputRegisters.add(line.substring(startPos, i));
                 startPos = 0;
-            } else if (ch == 'L' || ch == ':' || ch == '}') {
+            } else if (ch == 'L' || ch == ':' || ch == '}' || ch == '"') {
                 break;
             }
         }
@@ -120,8 +120,8 @@ public class Opcode {
             inputRegisters.add(line.substring(startPos, i));
         }
 
-        int dotPos = start + 4;
-        if (line.length() > dotPos && line.charAt(dotPos) == '.') {
+        int dotPos = start + 5;
+        if (inputRegisters.size() == 2 && line.length() > dotPos && line.charAt(dotPos) == '.') {
             fillRegistersRanged();     //range call like {v1 .. v5} for filled-new-array or invoke opcode
         }
     }
