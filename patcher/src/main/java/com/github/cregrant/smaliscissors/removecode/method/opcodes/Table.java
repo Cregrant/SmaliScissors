@@ -35,11 +35,12 @@ public class Table extends Opcode {
     List<TableTag> getTableTags() {
         if (content.isEmpty() || content.get(0) instanceof Unknown) {
             return Collections.emptyList();
-        }
-        else {
+        } else {
             List<TableTag> list = new ArrayList<>(content.size());
             for (Opcode opcode : content) {
-                list.add(((TableTag) opcode));
+                if (opcode instanceof TableTag) {
+                    list.add(((TableTag) opcode));
+                }
             }
             return list;
         }
