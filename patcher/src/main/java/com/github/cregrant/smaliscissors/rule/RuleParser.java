@@ -1,12 +1,12 @@
 package com.github.cregrant.smaliscissors.rule;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.rule.types.*;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Regex.ResultFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.InputMismatchException;
 import java.util.regex.Pattern;
 
 import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
@@ -72,15 +72,14 @@ public class RuleParser {
         return isXmlNeeded;
     }
 
-    Rule parseRule(String patchStr, int num) {   //todo refactor
+    Rule parseRule(String patchStr, int num) {
         Rule rule;
         String typeString = patchStr.substring(patchStr.indexOf('[') + 1, patchStr.indexOf(']'));
         Rule.Type type;
         try {
             type = Rule.Type.valueOf(typeString);
         } catch (EnumConstantNotPresentException e) {
-            Main.out.println("Unknown rule №" + num + ": " + typeString);
-            return null;
+            throw new InputMismatchException("Unknown rule №" + num + ": " + typeString);
         }
 
         switch (type) {
@@ -112,14 +111,12 @@ public class RuleParser {
                 rule = removeCodeRule(patchStr);
                 break;
             default:
-                Main.out.println("Parse error. Contact devs");
-                return null;
+                rule = new Dummy();     //will trigger parse error
         }
         if (rule.isValid()) {
             return rule;
         } else {
-            Main.out.println("Error parsing rule №" + num);
-            return null;
+            throw new InputMismatchException("Error parsing rule №" + num + ":\n------------\n" + patchStr + "\n--------------");
         }
     }
 
