@@ -64,8 +64,4 @@ public class ClassParser {
     public boolean hasNextPart() {
         return pos < body.length();
     }
-
-    public int getPos() {
-        return pos;
-    }
 }

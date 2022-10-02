@@ -2,7 +2,10 @@ package com.github.cregrant.smaliscissors.util;
 
 import com.github.cregrant.smaliscissors.Main;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -138,39 +141,5 @@ public class IO {
             prevStr = str;
         }
         return new File(sb.toString());
-    }
-
-    private void extractFull(File zipFile, String dstPath) {
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
-            ZipEntry zipEntry;
-            while ((zipEntry = zis.getNextEntry()) != null) {
-                if (zipEntry.getName().endsWith("patch.txt")) {
-                    continue;
-                }
-
-                File filePath = mergePath(dstPath, zipEntry.getName());
-                if (zipEntry.isDirectory()) {
-                    filePath.mkdirs();
-                } else {
-                    filePath.getParentFile().mkdirs();
-                    try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(filePath))) {
-                        byte[] buffer = new byte[16384];
-                        int len;
-                        while ((len = zis.read(buffer)) != -1) {
-                            bos.write(buffer, 0, len);
-                        }
-                        bos.flush();
-                    }
-                }
-
-                zis.closeEntry();
-            }
-        } catch (FileNotFoundException e) {
-            Main.out.println("Temp zip file not found!");
-            e.printStackTrace();
-        } catch (IOException e) {
-            Main.out.println("Error during extracting zip file.");
-            e.printStackTrace();
-        }
     }
 }

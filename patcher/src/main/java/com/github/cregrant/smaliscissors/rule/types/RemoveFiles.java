@@ -75,10 +75,6 @@ public class RemoveFiles implements Rule {
         }
     }
 
-    public List<String> getTargets() {
-        return targets;
-    }
-
     public void setTargets(List<String> targets) {
         this.targets = targets;
     }

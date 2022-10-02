@@ -52,13 +52,9 @@ public class SmaliWorker {
                     if (job.isStateModified()) {
                         crashReportersNum++;
                     }
-                } else if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-                    if (job.isStateModified()) {
-                        Main.out.println("Removed " + target);
-                        patchedNum++;
-                    } else {
-                        //Main.out.println("Not found " + target);
-                    }
+                } else if (job.isStateModified() && Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
+                    Main.out.println("Removed " + target);
+                    patchedNum++;
                 }
                 if (job.isStateModified()) {
                     currentState = newState;
@@ -67,11 +63,11 @@ public class SmaliWorker {
             }
             project.getSmaliKeeper().keepClasses(currentState);
 
-            if (DEBUG_BENCHMARK || DEBUG_NOT_WRITE) {
+            if (DEBUG_BENCHMARK) {
                 int loopTime = (int) (System.currentTimeMillis() - l);
                 bestLoopTime = Math.min(loopTime, bestLoopTime);
                 System.out.println("\rLoop takes " + loopTime + " ms (" + bestLoopTime + " ms best)\n");
-            } else {
+            } else if (!DEBUG_NOT_WRITE) {
                 writeChanges(currentState);
             }
 

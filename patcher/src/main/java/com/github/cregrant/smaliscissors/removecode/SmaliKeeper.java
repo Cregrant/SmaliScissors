@@ -39,7 +39,7 @@ public class SmaliKeeper {
             String path = file.getPath();
             String shortPath = path.substring(path.indexOf("/") + 1, path.length() - 6);
             if (project.getProtectedClasses().contains(shortPath)) {
-                SmaliClass smaliClass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
+                SmaliClass smaliClass = new SmaliClass(file, file.getBody().replace("\r", ""));
                 keepClass(state, returned, smaliClass);
                 returned.add(smaliClass);
             }
@@ -57,7 +57,7 @@ public class SmaliKeeper {
         if (!superclassPath.startsWith("android") && project.getProtectedClasses().contains(superclassPath)) {
             for (SmaliFile file : state.deletedFiles) {
                 if (file.getPath().endsWith(superclassPath)) {
-                    SmaliClass superclass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
+                    SmaliClass superclass = new SmaliClass(file, file.getBody().replace("\r", ""));
                     keepClass(state, set, superclass);
                     break;
                 }

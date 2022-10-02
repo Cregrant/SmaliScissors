@@ -157,11 +157,6 @@ public class Opcode {
     }
 
     @Override
-    protected Object clone() throws CloneNotSupportedException {
-        return super.clone();
-    }
-
-    @Override
     public String toString() {
         return line;
     }

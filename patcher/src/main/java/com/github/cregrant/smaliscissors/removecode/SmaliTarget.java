@@ -4,7 +4,6 @@ public class SmaliTarget {
     private String smaliRef;
     private String skipPath;    //filepath starts with skipPath will be skipped
     private boolean isClass = true;
-    private boolean allowDeleteFiles = true;
 
     public boolean containsInside(String string) {
         int pos = string.indexOf(smaliRef);
@@ -54,14 +53,6 @@ public class SmaliTarget {
 
     public boolean isClass() {
         return isClass;
-    }
-
-    public boolean isDeletionAllowed() {
-        return allowDeleteFiles;
-    }
-
-    public void denyDeletion() {
-        this.allowDeleteFiles = false;
     }
 
     @Override

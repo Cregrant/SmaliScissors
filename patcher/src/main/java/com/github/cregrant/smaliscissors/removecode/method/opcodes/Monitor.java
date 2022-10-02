@@ -4,18 +4,9 @@ import java.util.Objects;
 
 public class Monitor extends Opcode {
 
-    private boolean isStart;
-
     protected Monitor(String line) {
         super(line);
         scanRegisters();
-        if (line.contains("enter")) {
-            isStart = true;
-        }
-    }
-
-    public boolean isStart() {
-        return isStart;
     }
 
     @Override

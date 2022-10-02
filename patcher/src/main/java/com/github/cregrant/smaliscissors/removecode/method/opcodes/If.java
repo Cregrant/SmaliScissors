@@ -6,9 +6,4 @@ public class If extends Goto {
         super(line);
         scanRegisters();
     }
-
-//    public void transformToGoto() {
-//        lines[num] = "    goto " + tag;
-//        absoluteJump = true;
-//    }
 }
