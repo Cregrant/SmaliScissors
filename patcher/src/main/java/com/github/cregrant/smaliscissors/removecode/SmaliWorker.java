@@ -44,6 +44,7 @@ public class SmaliWorker {
                 } catch (Exception e) {
                     errorsNum++;
                     Main.out.println("Failed to remove " + target + " (" + e.getMessage() + ")");
+                    newState = new State(currentState);
                     continue;
                 }
 

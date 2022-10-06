@@ -66,9 +66,9 @@ public class MethodParser {
         table.setTag((Tag) opcodes.get(opcodes.size() - 2));
         boolean nextExists;
         do {
+            pos++;
             Opcode op = Opcode.parseTableOpcode(lines[pos]);
             nextExists = table.addOpcode(op);
-            pos++;
         } while (nextExists && pos < lines.length);
     }
 }

@@ -19,7 +19,7 @@ public class Table extends Opcode {
             content.add(opcode);    //Unknown for .array-data and Tag for others
             return true;
         } else {
-            endOpcode = opcode;
+            endOpcode = new Opcode(opcode.line);    //can't delete end if it is Unknown opcode
             return false;
         }
     }
@@ -57,5 +57,16 @@ public class Table extends Opcode {
             }
         }
         deleted = true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(line).append('\n');
+        for (Opcode op : content) {
+            sb.append(op).append('\n');
+        }
+        sb.append(endOpcode);
+        return sb.toString();
     }
 }

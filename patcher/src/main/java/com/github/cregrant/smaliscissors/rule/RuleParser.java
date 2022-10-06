@@ -246,7 +246,7 @@ public class RuleParser {
         }
         return match
                 .replace("><", ">\\s*?<")
-                .replace("\" />", "\"/>")
+                .replace("\" />", "\" ?/>")
                 .replaceAll(" +", "\\\\s+?");
 
     }
