@@ -1,11 +1,17 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
-public class Catch extends Opcode {
+import java.util.List;
+
+public class Catch extends Opcode implements Jump {
+
     private final Tag startTag;
+    private final Tag jumpTag;
     private final Tag endTag;
 
     public Catch(String line) {
         super(line);
+        jumpTag = new Tag(line.substring(line.lastIndexOf(':')));
+
         int end = line.lastIndexOf("}");
         int pos = line.lastIndexOf(":", end);
         endTag = new Tag(line.substring(pos, end));
@@ -29,6 +35,16 @@ public class Catch extends Opcode {
             return startTag.equals(otherCatch.getStartTag()) && endTag.equals(otherCatch.getEndTag());
         }
         return false;
+    }
+
+    @Override
+    public Tag getTag() {
+        return jumpTag;
+    }
+
+    @Override
+    public List<TableTag> getTableTags() {
+        return null;
     }
 
     @Override

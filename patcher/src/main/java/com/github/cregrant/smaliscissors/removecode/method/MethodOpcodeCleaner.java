@@ -36,9 +36,9 @@ public class MethodOpcodeCleaner {
                     }
 
                     String outputRegister = op.getOutputRegister();
-                    if (op instanceof Goto) {
-                        processCondition(register, ((Goto) op));
-                        if (!(op instanceof If)) {      //real Goto
+                    if (op instanceof Jump) {
+                        processCondition(register, op);
+                        if (op.getClass() == Goto.class) {      //real Goto
                             break;
                         }
                     }
@@ -92,17 +92,18 @@ public class MethodOpcodeCleaner {
         return broken;
     }
 
-    private void processCondition(String register, Goto op) {
+    private void processCondition(String register, Opcode op) {
         if (op.inputRegisterUsed(register)) {
             op.deleteLine();
         }
-        if (op instanceof Switch) {
-            Switch switchOp = ((Switch) op);
-            for (TableTag tableTag : switchOp.getTableTags()) {
+
+        Jump jump = ((Jump) op);
+        if (jump.getTag() != null) {
+            addToStack(register, jump.getTag());
+        } else {
+            for (TableTag tableTag : jump.getTableTags()) {
                 addToStack(register, tableTag.getTag());
             }
-        } else {
-            addToStack(register, op.getTag());
         }
     }
 

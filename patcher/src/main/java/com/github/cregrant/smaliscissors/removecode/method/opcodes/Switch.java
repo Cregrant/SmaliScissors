@@ -2,7 +2,7 @@ package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
 import java.util.List;
 
-public class Switch extends If implements AdditionalTable {
+public class Switch extends Opcode implements AdditionalTable, Jump {
 
     private final Tag tag;
     private Table table;
@@ -26,7 +26,7 @@ public class Switch extends If implements AdditionalTable {
 
     @Override
     public Tag getTag() {
-        throw new IllegalStateException("Invalid switch tag access!");
+        return null;
     }
 
     @Override
