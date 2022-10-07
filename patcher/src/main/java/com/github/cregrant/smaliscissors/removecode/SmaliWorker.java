@@ -101,6 +101,9 @@ public class SmaliWorker {
         }
 
         for (SmaliClass smaliClass : state.patchedClasses) {     //write changes
+            if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
+                Main.out.println("Writing " + smaliClass);
+            }
             smaliClass.getFile().setBody(smaliClass.getNewBody());
         }
     }

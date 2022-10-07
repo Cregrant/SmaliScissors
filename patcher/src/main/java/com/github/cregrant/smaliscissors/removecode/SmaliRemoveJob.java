@@ -47,6 +47,9 @@ public class SmaliRemoveJob {
                         project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
                         throw new IllegalStateException("Skipped to prevent some firebase errors.");
                     }
+                    if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
+                        Main.out.println("Cleaning " + smaliClass);
+                    }
                     Runnable r = new Runnable() {
                         @Override
                         public void run() {
