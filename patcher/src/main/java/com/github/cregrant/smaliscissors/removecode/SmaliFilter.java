@@ -92,17 +92,28 @@ public class SmaliFilter {
             Runnable r = new Runnable() {
                 @Override
                 public void run() {
-                    if (acceptBody(smaliClass.getNewBody(), target)) {
+                    if (acceptClassBody(smaliClass, target)) {
                         result.add(smaliClass);
                     }
                 }
             };
             futures.add(project.getExecutor().submit(r));
         }
+        project.getExecutor().compute(futures);
+        futures.clear();
     }
 
-    private boolean acceptBody(String body, SmaliTarget target) {
+    private boolean acceptStringBody(String body, SmaliTarget target) {
         return target.containsInside(body);
+    }
+
+    private boolean acceptClassBody(SmaliClass smaliClass, SmaliTarget target) {
+        for (ClassPart part : smaliClass.getBodyParts()) {
+            if (target.containsInside(part.getText())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean acceptPath(String path, String target) {

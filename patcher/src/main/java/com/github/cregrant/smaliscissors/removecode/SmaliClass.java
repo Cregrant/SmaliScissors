@@ -20,7 +20,6 @@ public class SmaliClass {
     private final SmaliFile file;
     private final String ref;
     private final ArrayList<ClassPart> parts;
-    private String newBody;
 
     public SmaliClass(Project project, SmaliFile df, String body) {
         this.project = project;
@@ -29,34 +28,35 @@ public class SmaliClass {
         String shortPath = temp.substring(temp.indexOf('/') + 1, temp.lastIndexOf(".smali"));
         ref = 'L' + shortPath + ';';
         parts = new ClassParser(this, body).parseParts();
-        newBody = body;
     }
 
     public List<SmaliTarget> clean(SmaliTarget target) {
         ArrayList<SmaliTarget> dependencies = new ArrayList<>(3);
-        StringBuilder builder = new StringBuilder();
         for (ClassPart part : parts) {
             SmaliTarget dependency = part.clean(target, this);
-            builder.append(part.getText());
             if (dependency != null) {
                 dependencies.add(dependency);
             }
         }
-        newBody = builder.toString();
         return dependencies;
     }
 
     public void makeStub() {
-        StringBuilder builder = new StringBuilder();
         for (ClassPart part : parts) {
             part.makeStub(this);
-            builder.append(part.getText());
         }
-        newBody = builder.toString();
     }
 
     public String getNewBody() {
-        return newBody;
+        StringBuilder builder = new StringBuilder();
+        for (ClassPart part : parts) {
+            builder.append(part.getText());
+        }
+        return builder.toString();
+    }
+
+    public ArrayList<ClassPart> getBodyParts() {
+        return parts;
     }
 
     public boolean changeSuperclass(String classRef) {
