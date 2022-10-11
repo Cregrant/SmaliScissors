@@ -34,11 +34,12 @@ public class SmaliWorker {
             int crashReportersNum = 0;
             project.getSmaliKeeper().changeTargets(patch, rule);
             State newState = new State(currentState);
+            ClassesPool pool = new ClassesPool(project);
 
             for (String path : rule.getTargets()) {
                 SmaliTarget target = new SmaliTarget().setSkipPath(path);
 
-                SmaliRemoveJob job = new SmaliRemoveJob(project, patch, rule);
+                SmaliRemoveJob job = new SmaliRemoveJob(project, pool, patch, rule);
                 try {
                     job.remove(target, newState);
                 } catch (Exception e) {

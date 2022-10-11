@@ -16,12 +16,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliRemoveJob {
     private final Project project;
+    private final ClassesPool pool;
     private final Patch patch;
     private final RemoveCode rule;
     private boolean stateModified;
 
-    public SmaliRemoveJob(Project project, Patch patch, RemoveCode rule) {
+    public SmaliRemoveJob(Project project, ClassesPool pool, Patch patch, RemoveCode rule) {
         this.project = project;
+        this.pool = pool;
         this.patch = patch;
         this.rule = rule;
     }
@@ -32,7 +34,7 @@ public class SmaliRemoveJob {
         do {
             List<SmaliTarget> newTargets = new ArrayList<>();
             for (final SmaliTarget target : currentTargets) {
-                Set<SmaliClass> classes = new SmaliFilter(project, state).separate(target);
+                Set<SmaliClass> classes = new SmaliFilter(project, pool, state).separate(target);
                 if (classes.isEmpty()) {
                     continue;
                 }
