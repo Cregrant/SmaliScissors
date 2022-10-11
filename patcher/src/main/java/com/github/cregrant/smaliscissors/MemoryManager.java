@@ -4,13 +4,20 @@ import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 
 public class MemoryManager {
     private final Project project;
+    private boolean extremeLowMemory;
 
     public MemoryManager(Project project) {
         this.project = project;
     }
 
     void tryEnableCache() {
-        long max = (long) (0.4f * Runtime.getRuntime().maxMemory() - 40000000);     //0.4 of max heap size - 40MB
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        if (maxMemory < 40000000) {
+            extremeLowMemory = true;
+            return;
+        }
+
+        long max = (long) (0.4f * maxMemory - 40000000);     //0.4 of max heap size - 40MB
         if (project.isSmaliScanned() && max > 0) {
             long smaliSize = 0;
             for (DecompiledFile df : project.getSmaliList()) {
@@ -38,5 +45,9 @@ public class MemoryManager {
 
     public boolean isXmlCacheEnabled() {
         return project.isXmlCacheEnabled();
+    }
+
+    public boolean isExtremeLowMemory() {
+        return extremeLowMemory;
     }
 }

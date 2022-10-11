@@ -6,7 +6,6 @@ import java.util.List;
 public class Prefs {
 
     public static Log logLevel = Log.INFO;
-    public static boolean allowCompression = true;
     public static boolean skipSmaliRootFolders = true;
     public static List<String> smaliFoldersToSkip = Arrays.asList("android", "kotlin", "kotlinx");
     public enum Log {

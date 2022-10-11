@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.Main;
+import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassHeader;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
@@ -15,12 +16,14 @@ import java.util.List;
 import java.util.Objects;
 
 public class SmaliClass {
+    private final Project project;
     private final SmaliFile file;
     private final String ref;
     private final ArrayList<ClassPart> parts;
     private String newBody;
 
-    public SmaliClass(SmaliFile df, String body) {
+    public SmaliClass(Project project, SmaliFile df, String body) {
+        this.project = project;
         file = df;
         String temp = df.getPath();
         String shortPath = temp.substring(temp.indexOf('/') + 1, temp.lastIndexOf(".smali"));
@@ -141,6 +144,10 @@ public class SmaliClass {
 
     public SmaliFile getFile() {
         return file;
+    }
+
+    public Project getProject() {
+        return project;
     }
 
     @Override

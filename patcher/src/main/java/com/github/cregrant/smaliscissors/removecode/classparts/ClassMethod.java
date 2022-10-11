@@ -1,6 +1,5 @@
 package com.github.cregrant.smaliscissors.removecode.classparts;
 
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.removecode.Gzip;
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
@@ -25,6 +24,7 @@ public class ClassMethod implements ClassPart {
     private int end;
 
     public ClassMethod(SmaliClass smaliClass, String text, int pos) {
+        this.smaliClass = smaliClass;
         int signatureEnd = text.indexOf('\n', pos);
         String line = text.substring(pos, signatureEnd);
         end = text.indexOf(".end method", pos) + 13;
@@ -48,7 +48,6 @@ public class ClassMethod implements ClassPart {
         isConstructor = name.equals("<init>");
         ref = smaliClass.getRef().replace(".smali", "") + "->" + getSignature();
         returnObject = line.substring(inputEnd + 1);
-        this.smaliClass = smaliClass;
 
         if (inputEnd - inputStart > 1) {
             inputObjects = new ArgumentParser().parse(line);
@@ -64,7 +63,7 @@ public class ClassMethod implements ClassPart {
     }
 
     public String getBody() {
-        if (Prefs.allowCompression) {
+        if (body instanceof Gzip) {
             return ((Gzip) body).decompress();
         } else {
             return (String) body;
@@ -72,7 +71,7 @@ public class ClassMethod implements ClassPart {
     }
 
     public void setBody(String newBody) {
-        if (Prefs.allowCompression) {
+        if (smaliClass.getProject().getMemoryManager().isExtremeLowMemory()) {
             body = new Gzip(newBody);
         } else {
             body = newBody;
@@ -81,8 +80,7 @@ public class ClassMethod implements ClassPart {
 
     @Override
     public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
-        String oldBody = getBody();
-        if (!getSignature().contains(target.getRef()) && !target.containsInside(oldBody)) {
+        if ((!getSignature().contains(target.getRef()) && deleted) || !target.containsInside(getBody())) {
             return null;
         }
         if (returnObject.contains(target.getRef())) {
@@ -92,9 +90,6 @@ public class ClassMethod implements ClassPart {
 
         MethodCleaner cleaner = new MethodCleaner(this, target.getRef());
         cleaner.clean();
-        if (target.getRef().contains("Lcom/applovin/") && cleaner.getNewBody().equals(oldBody)) {
-            oldBody = oldBody;
-        }
         if (cleaner.isSuccessful()) {
             if (!isAbstract) {
                 setBody(cleaner.getNewBody());
@@ -138,6 +133,10 @@ public class ClassMethod implements ClassPart {
     }
 
     private void deleteBody() {
+        if (deleted) {
+            return;
+        }
+        deleted = true;
         deleteMethodDeclaration();
         changeBody(null);
     }

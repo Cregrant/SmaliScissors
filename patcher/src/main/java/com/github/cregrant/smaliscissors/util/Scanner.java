@@ -203,7 +203,7 @@ public class Scanner {
                     if (someFile.isFile()) {
                         SmaliFile smaliFile = (SmaliFile) scanFile(someFile);
                         String body = smaliFile.getBody().replace("\r", "");
-                        SmaliClass smaliClass = new SmaliClass(smaliFile, body);
+                        SmaliClass smaliClass = new SmaliClass(project, smaliFile, body);
                         if (!smaliClass.isPathValid()) {
                             deleted.add(subfolder);
                         }
