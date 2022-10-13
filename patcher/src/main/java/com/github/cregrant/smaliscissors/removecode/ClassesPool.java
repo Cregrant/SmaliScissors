@@ -30,7 +30,7 @@ class ClassesPool {
         List<SmaliFile> smaliFiles = project.getSmaliList();
         final Map<String, Set<SmaliFile>> cMap = new ConcurrentHashMap<>(smaliFiles.size());
         for (SmaliFile file : smaliFiles) {
-            String path = file.getPath();
+            String path = removePathObfuscation(file.getPath());
             int start = path.indexOf('/') + 1;
             String ref = "L" + path.substring(start, path.length() - 6) + ";";
             cMap.put(ref, Collections.synchronizedSet(new HashSet<SmaliFile>()));
@@ -86,6 +86,14 @@ class ClassesPool {
         } while (true);
 
         return strings;
+    }
+
+    private String removePathObfuscation(String path) {     //abc.1.smali -> abc.smali
+        int dotPos = path.indexOf('.');
+        if (dotPos == path.length() - 6) {
+            return path;
+        }
+        return path.substring(0, dotPos + 1) + "smali";
     }
 
     HashMap<String, ArrayList<SmaliFile>> getMap() {
