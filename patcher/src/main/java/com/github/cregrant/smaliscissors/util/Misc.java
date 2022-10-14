@@ -5,7 +5,8 @@ public class Misc {
     public static String stacktraceToString(Exception e) {
         StackTraceElement[] stack = e.getStackTrace();
         StringBuilder sb = new StringBuilder();
-        sb.append("\nUnexpected error occured:\n\n");
+        sb.append("\nUnexpected error occured:\n");
+        sb.append(e.getMessage()).append("\n\n");
         int limit = Math.min(stack.length, 6);
         for (int i = 0; i < limit; i++) {
             sb.append(stack[i].toString()).append('\n');
