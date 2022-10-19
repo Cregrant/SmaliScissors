@@ -6,11 +6,24 @@ repositories {
     mavenCentral()
 }
 
-dependencies {
-    //compile group: 'com.google.re2j', name: 're2j', version: '1.6'
+compileJava {
+    sourceCompatibility = 1.7
 }
 
-sourceSets {
+compileTestJava {
+    sourceCompatibility = 1.8
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.9.0'
+    testCompileOnly 'junit:junit:4.13.2'
+}
+
+test {
+    useJUnitPlatform()
+}
 
 tasks.jar {
     manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.Main"
