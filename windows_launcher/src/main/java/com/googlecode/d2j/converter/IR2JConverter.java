@@ -619,24 +619,27 @@ public class IR2JConverter implements Opcodes {
         }
 
         switch (value.vt) {
-        case NEW_MUTI_ARRAY:
-            for (Value vb : value.ops) {
-                accept(vb, asm);
-            }
-            NewMutiArrayExpr nmae = (NewMutiArrayExpr) value;
-            String sb = "[".repeat(Math.max(0, nmae.dimension)) +
-                    nmae.baseType;
-            asm.visitMultiANewArrayInsn(sb, value.ops.length);
-            break;
-        case INVOKE_NEW:
-            asm.visitTypeInsn(NEW, toInternal(((InvokeExpr) value).getOwner()));
-            asm.visitInsn(DUP);
-            // pass through
-        case INVOKE_INTERFACE:
-        case INVOKE_SPECIAL:
-        case INVOKE_STATIC:
-        case INVOKE_VIRTUAL: {
-            InvokeExpr ie = (InvokeExpr) value;
+            case NEW_MUTI_ARRAY:
+                for (Value vb : value.ops) {
+                    accept(vb, asm);
+                }
+                NewMutiArrayExpr nmae = (NewMutiArrayExpr) value;
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < Math.max(0, nmae.dimension); i++) {
+                    sb.append("[");
+                }
+                sb.append(nmae.baseType);
+                asm.visitMultiANewArrayInsn(sb.toString(), value.ops.length);
+                break;
+            case INVOKE_NEW:
+                asm.visitTypeInsn(NEW, toInternal(((InvokeExpr) value).getOwner()));
+                asm.visitInsn(DUP);
+                // pass through
+            case INVOKE_INTERFACE:
+            case INVOKE_SPECIAL:
+            case INVOKE_STATIC:
+            case INVOKE_VIRTUAL: {
+                InvokeExpr ie = (InvokeExpr) value;
             int i = 0;
             if (value.vt != VT.INVOKE_STATIC && value.vt != VT.INVOKE_NEW) {
                 i = 1;

@@ -144,7 +144,7 @@ public final class ZipEntry implements ZipConstants, Cloneable {
     }
 
     ZipEntry(ByteBuffer it0, boolean skipCommentsAndExtra) throws IOException {
-        ByteBuffer it = it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
+        ByteBuffer it = (ByteBuffer) it0.slice().order(ByteOrder.LITTLE_ENDIAN).limit(CENHDR);
         ZipFile.skip(it0, CENHDR);
         int sig = it.getInt();
         if (sig != CENSIG) {

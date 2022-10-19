@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * similar with org.objectweb.asm.util.ASMifierClassVisitor
@@ -67,7 +66,9 @@ public class ASMifierFileV extends DexFileVisitor {
 
     public ASMifierFileV(Path dir, String pkgName) {
         super();
-        this.dir = Objects.requireNonNullElseGet(dir, () -> new File(".").toPath());
+        if (this.dir == null) {
+            this.dir = new File(".").toPath();
+        }
         if (pkgName != null) {
             this.pkgName = pkgName;
         }
@@ -87,7 +88,9 @@ public class ASMifierFileV extends DexFileVisitor {
         for (int i = 0; i < out.array.size(); i++) {
             sb.setLength(0);
             int p = out.is.get(i);
-            sb.append("    ".repeat(Math.max(0, p)));
+            for (int j = 0; j < Math.max(0, p); j++) {
+                sb.append("    ");
+            }
             sb.append(out.array.get(i));
             list.add(sb.toString());
         }

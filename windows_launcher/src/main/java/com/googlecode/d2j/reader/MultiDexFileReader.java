@@ -54,7 +54,7 @@ public class MultiDexFileReader implements BaseDexFileReader {
 
     @Override
     public List<String> getClassNames() {
-        return new AbstractList<>() {
+        return new AbstractList<String>() {
             @Override
             public String get(int index) {
                 return items.get(index).className;

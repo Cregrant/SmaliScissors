@@ -652,7 +652,12 @@ public class TypeTransformer implements Transformer {
             if (dim == 0) {
                 return s;
             }
-            return "[".repeat(Math.max(0, dim)) + s;
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < Math.max(0, dim); i++) {
+                sb.append('[');
+            }
+            sb.append(s);
+            return sb.toString();
         }
 
         private static int countArrayDim(String a) {
@@ -947,8 +952,7 @@ public class TypeTransformer implements Transformer {
                     for (Value vb : vbs) {
                         useAs(vb, "I");
                     }
-                    String sb = "[".repeat(Math.max(0, nmae.dimension)) + nmae.baseType;
-                    provideAs(nmae, sb);
+                    provideAs(nmae, String.join("", Collections.nCopies(2, "[")) + nmae.baseType);
                     break;
                 case PHI:
                     for (Value vb : vbs) {

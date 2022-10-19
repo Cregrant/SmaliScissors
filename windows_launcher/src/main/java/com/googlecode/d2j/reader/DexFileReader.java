@@ -315,7 +315,9 @@ public class DexFileReader implements BaseDexFileReader {
 
     public static void niceExceptionMessage(Throwable t, int deep) {
         StringBuilder sb = new StringBuilder();
-        sb.append(".".repeat(Math.max(0, deep + 1)));
+        for (int i = 0; i < Math.max(0, deep + 1); i++) {
+            sb.append(".");
+        }
         sb.append(' ');
         if (t instanceof DexException) {
             sb.append(t.getMessage());

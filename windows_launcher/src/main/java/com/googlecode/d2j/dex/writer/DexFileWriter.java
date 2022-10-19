@@ -53,7 +53,9 @@ public class DexFileWriter extends DexFileVisitor {
                         && method.getParameterTypes()[0]
                         .equals(String.class)) {
                     StringBuilder sb = new StringBuilder();
-                    sb.append("  ".repeat(Math.max(0, indent)));
+                    for (int i = 0; i < Math.max(0, indent); i++) {
+                        sb.append("  ");
+                    }
                     sb.append(String.format("%05d ", out0.offset()));
                     sb.append(method.getName()).append(" [");
                     for (Object arg : args) {

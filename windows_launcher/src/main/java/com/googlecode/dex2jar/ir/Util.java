@@ -135,16 +135,18 @@ public class Util {
             int i = desc.lastIndexOf('/');
             return desc.substring(i < 0 ? 1 : i + 1, desc.length() - 1);
         }
-        case '[':
-            int d = 1;
-            for (; d < desc.length(); d++) {
-                if (desc.charAt(d) != '[') {
-                    break;
+            case '[':
+                int d = 1;
+                for (; d < desc.length(); d++) {
+                    if (desc.charAt(d) != '[') {
+                        break;
+                    }
                 }
-            }
-            StringBuilder sb = new StringBuilder().append(toShortClassName(desc.substring(d)));
-            sb.append("[]".repeat(d));
-            return sb.toString();
+                StringBuilder sb = new StringBuilder().append(toShortClassName(desc.substring(d)));
+                for (int i = 0; i < d; i++) {
+                    sb.append("[]");
+                }
+                return sb.toString();
         }
         throw new UnsupportedOperationException();
     }
