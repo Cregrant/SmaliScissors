@@ -6,7 +6,6 @@ import java.util.Properties;
 
 public class Config {
     static String verboseLevel = "INFO";
-    static boolean allowCompression;
 
     public static void loadConf() {
         Properties props = new Properties();
@@ -25,7 +24,6 @@ public class Config {
                 com.github.cregrant.smaliscissors.Main.out.println("Config file broken or unreachable. Using default one.");
             }
             verboseLevel = props.getProperty("Verbose level");
-            allowCompression = Boolean.parseBoolean(props.getProperty("Allow compression"));
         }
         catch (Exception e) {
             com.github.cregrant.smaliscissors.Main.out.println("Error reading conf!");
@@ -39,7 +37,6 @@ public class Config {
             FileOutputStream output = new FileOutputStream(System.getProperty("user.dir") + "/config/conf.txt");
             Properties props = new Properties();
             props.put("Verbose level", String.valueOf(verboseLevel));
-            props.put("Allow compression", Boolean.valueOf(allowCompression).toString());
             props.store(output, "");
             output.close();
         }

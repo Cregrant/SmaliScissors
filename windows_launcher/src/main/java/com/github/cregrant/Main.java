@@ -38,7 +38,6 @@ public class Main {
                 break;
             }
 
-            //new Frame().MainFrame();
             ArrayList<String> strings = new ArrayList<>(selectedProjects);
             strings.addAll(selectedPatches);
             com.github.cregrant.smaliscissors.Main.mainAsModule(strings.toArray(new String[0]), out, new DexExecutorWindows());
