@@ -21,7 +21,19 @@ generateGrammarSource {
     arguments += ['-no-listener', '-visitor','-package','com.googlecode.d2j.smali.antlr4']
 }
 
-sourceSets {
-    test.output.resourcesDir = "build/classes/test"
-    main.antlr.srcDirs = ['src/main/antlr4']
+task fatJar(type: Jar) {
+    manifest.attributes["Main-Class"] = "com.github.cregrant.Main"
+    archiveBaseName.set("windows_launcher")
+    destinationDirectory.set(rootDir)
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    delete(archiveFile.get())
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/**"
+        exclude "assets/**"
+        exclude "res/**"
+    }
+    with jar
 }

@@ -12,4 +12,9 @@ dependencies {
 
 sourceSets {
 
+tasks.jar {
+    manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.Main"
+    archiveBaseName.set("patcher")
+    destinationDirectory.set(rootDir)
+    delete(archiveFile.get())
 }
