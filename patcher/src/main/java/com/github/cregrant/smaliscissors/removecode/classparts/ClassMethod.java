@@ -13,14 +13,14 @@ public class ClassMethod implements ClassPart {
     private final String ref;
     private final String name;
     private final String returnObject;
-    private final String signature;
     private final boolean isStatic;
     private final boolean isAbstract;
     private final boolean isConstructor;
     private boolean deleted = false;
+    private String signature;
     private String modifiers;
     private Object body;
-    private ArrayList<String> inputObjects = new ArrayList<>(2);
+    private ArrayList<String> inputObjects = new ArrayList<>(0);
     private int end;
 
     public ClassMethod(SmaliClass smaliClass, String text, int pos) {
@@ -52,14 +52,6 @@ public class ClassMethod implements ClassPart {
         if (inputEnd - inputStart > 1) {
             inputObjects = new ArgumentParser().parse(line);
         }
-    }
-
-    private String buildSignature(ArrayList<String> input) {
-        StringBuilder sb = new StringBuilder();
-        for (String obj : input) {
-            sb.append(obj);
-        }
-        return modifiers + name + '(' + sb + ')' + returnObject;
     }
 
     public String getBody() {
@@ -223,6 +215,15 @@ public class ClassMethod implements ClassPart {
         }
     }
 
+    public void setInputObjects(ArrayList<String> inputObjects) {
+        this.inputObjects = inputObjects;
+        StringBuilder sb = new StringBuilder();
+        for (String obj : inputObjects) {
+            sb.append(obj);
+        }
+        signature = modifiers + name + '(' + sb + ')' + returnObject;
+    }
+
     @Override
     public int getEndPos() {
         return end;
@@ -230,7 +231,7 @@ public class ClassMethod implements ClassPart {
 
     @Override
     public String getText() {
-        return buildSignature(inputObjects) + getBody();
+        return signature + getBody();
     }
 
     public String getRef() {
@@ -247,10 +248,6 @@ public class ClassMethod implements ClassPart {
 
     public ArrayList<String> getInputObjects() {
         return inputObjects;
-    }
-
-    public void setInputObjects(ArrayList<String> inputObjects) {
-        this.inputObjects = inputObjects;
     }
 
     public boolean isStatic() {
