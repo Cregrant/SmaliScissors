@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.removecode;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
+import com.github.cregrant.smaliscissors.util.ArraySplitter;
 
 import java.util.*;
 import java.util.concurrent.Future;
@@ -113,21 +114,17 @@ public class SmaliFilter {
             }
 
             final Set<SmaliFile> synchronizedDeletedFiles = Collections.synchronizedSet(new HashSet<SmaliFile>());
-            int chunkCount = Runtime.getRuntime().availableProcessors();
-            final int chunkSize = smaliFilesArray.length / chunkCount + chunkCount * 2;
-
-            for (int i = 0; i < chunkCount; i++) {
-                final int finalI = i;
+            final ArraySplitter splitter = new ArraySplitter(smaliFilesArray);
+            while (splitter.hasNext()) {
                 Runnable r = new Runnable() {
                     @Override
                     public void run() {
-                        int start = finalI * chunkSize;
-                        int end = (finalI + 1) * chunkSize;
-                        acceptFilesPathRanged(synchronizedDeletedFiles, smaliFilesArray, target.getSkipPath(), start, end);
+                        acceptFilesPathRanged(synchronizedDeletedFiles, smaliFilesArray, target.getSkipPath(), splitter.chunkStart(), splitter.chunkEnd());
                     }
                 };
                 futures.add(project.getExecutor().submit(r));
             }
+
             project.getExecutor().waitForFinish(futures);
             futures.clear();
 
