@@ -103,15 +103,41 @@ public class SmaliFilter {
         }
     }
 
-    private void removeTargetFiles(SmaliTarget target) {
+    private void removeTargetFiles(final SmaliTarget target) {
         if (target.isClass()) {
-            for (SmaliFile df : currentState.files) {
-                if (acceptPath(df.getPath(), target.getSkipPath())) {
-                    deletedFiles.add(df);
-                }
+            final SmaliFile[] smaliFilesArray;
+            if (currentState.filesArray == null) {
+                smaliFilesArray = currentState.files.toArray(new SmaliFile[0]);
+            } else {
+                smaliFilesArray = currentState.filesArray;
             }
-            currentState.files.removeAll(deletedFiles);
+
+            final Set<SmaliFile> synchronizedDeletedFiles = Collections.synchronizedSet(new HashSet<SmaliFile>());
+            int chunkCount = Runtime.getRuntime().availableProcessors();
+            final int chunkSize = smaliFilesArray.length / chunkCount + chunkCount * 2;
+
+            for (int i = 0; i < chunkCount; i++) {
+                final int finalI = i;
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        int start = finalI * chunkSize;
+                        int end = (finalI + 1) * chunkSize;
+                        acceptFilesPathRanged(synchronizedDeletedFiles, smaliFilesArray, target.getSkipPath(), start, end);
+                    }
+                };
+                futures.add(project.getExecutor().submit(r));
+            }
+            project.getExecutor().waitForFinish(futures);
+            futures.clear();
+
+            deletedFiles.addAll(synchronizedDeletedFiles);
+            boolean filesChanged = currentState.files.removeAll(deletedFiles);
             currentState.deletedFiles.addAll(deletedFiles);
+
+            if (currentState.filesArray != null && filesChanged) {
+                currentState.filesArray = currentState.files.toArray(new SmaliFile[0]);
+            }
         }
     }
 
@@ -151,6 +177,16 @@ public class SmaliFilter {
             }
         }
         return false;
+    }
+
+    private void acceptFilesPathRanged(Set<SmaliFile> set, SmaliFile[] smaliFilesArray, String target, int start, int end) {
+        end = Math.min(end, currentState.files.size());
+        for (int i = start; i < end; i++) {
+            SmaliFile file = smaliFilesArray[i];
+            if (acceptPath(file.getPath(), target)) {
+                set.add(file);
+            }
+        }
     }
 
     private boolean acceptPath(String path, String target) {

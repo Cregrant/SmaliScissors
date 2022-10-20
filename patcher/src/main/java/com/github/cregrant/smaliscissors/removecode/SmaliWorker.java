@@ -28,7 +28,7 @@ public class SmaliWorker {
     public void run() {
         do {
             long l = System.currentTimeMillis();
-            State currentState = new State(project.getSmaliList());
+            State currentState = new State(project, project.getSmaliList());
             int errorsNum = 0;
             int patchedNum = 0;
             int crashReportersNum = 0;
