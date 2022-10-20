@@ -48,16 +48,24 @@ public class SmaliFilter {
                 classRef = targetRef.substring(0, targetRef.indexOf(';') + 1);
             }
 
-            Set<SmaliFile> scheduledSet = new HashSet<SmaliFile>(100);
-            for (Map.Entry<String, ArrayList<SmaliFile>> entry : pool.getArray()) {
-                if (entry.getKey().startsWith(classRef)) {          //get all classes that call classRef
-                    for (SmaliFile file : entry.getValue()) {
-                        if (currentState.files.contains(file)) {    //accept if it hasn't been loaded yet
-                            scheduledSet.add(file);
-                        }
+            final Set<SmaliFile> scheduledSet = Collections.synchronizedSet(new HashSet<SmaliFile>(100));
+            final ArraySplitter splitter = new ArraySplitter(pool.getArray());
+            final String finalClassRef = classRef;
+            while (splitter.hasNext()) {
+                final int start = splitter.chunkStart();
+                final int end = splitter.chunkEnd();
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        acceptMapEntryRanged(scheduledSet, pool.getArray(), finalClassRef, start, end);
                     }
-                }
+                };
+                futures.add(project.getExecutor().submit(r));
             }
+
+            project.getExecutor().waitForFinish(futures);
+            futures.clear();
+
             for (final SmaliFile df : scheduledSet) {
                 scheduleFileScan(acceptedFiles, target, df, error);
             }
@@ -179,11 +187,25 @@ public class SmaliFilter {
     }
 
     private void acceptFilesPathRanged(List<SmaliFile> set, SmaliFile[] smaliFilesArray, String target, int start, int end) {
-        end = Math.min(end, currentState.files.size());
+        end = Math.min(end, smaliFilesArray.length);
         for (int i = start; i < end; i++) {
             SmaliFile file = smaliFilesArray[i];
             if (acceptPath(file.getPath(), target)) {
                 set.add(file);
+            }
+        }
+    }
+
+    private void acceptMapEntryRanged(Set<SmaliFile> set, Map.Entry<String, ArrayList<SmaliFile>>[] array, String classRef, int start, int end) {
+        end = Math.min(end, array.length);
+        for (int i = start; i < end; i++) {
+            Map.Entry<String, ArrayList<SmaliFile>> entry = array[i];
+            if (entry.getKey().startsWith(classRef)) {          //get all classes that call classRef
+                for (SmaliFile file : entry.getValue()) {
+                    if (currentState.files.contains(file)) {    //accept if it hasn't been loaded yet
+                        set.add(file);
+                    }
+                }
             }
         }
     }
