@@ -17,8 +17,7 @@ public class ClassMethod implements ClassPart {
     private final boolean isAbstract;
     private final boolean isConstructor;
     private boolean deleted = false;
-    private String signature;
-    private String modifiers;
+    private String line;
     private Object body;
     private ArrayList<String> inputObjects = new ArrayList<>(0);
     private int end;
@@ -26,7 +25,7 @@ public class ClassMethod implements ClassPart {
     public ClassMethod(SmaliClass smaliClass, String text, int pos) {
         this.smaliClass = smaliClass;
         int signatureEnd = text.indexOf('\n', pos);
-        String line = text.substring(pos, signatureEnd);
+        this.line = text.substring(pos, signatureEnd);
         end = text.indexOf(".end method", pos) + 13;
         if (text.startsWith("#Deleted body", end)) {     //there is a deleted method body next to the "end"
             end = text.indexOf(".end method", end + 10) + 13;
@@ -40,13 +39,11 @@ public class ClassMethod implements ClassPart {
         int inputStart = line.indexOf('(');
         int inputEnd = line.indexOf(')');
         int namePos = line.lastIndexOf(' ') + 1;
-        signature = line.substring(namePos);
-        modifiers = line.substring(0, namePos);
         name = line.substring(namePos, inputStart);
         isStatic = line.contains(" static ");
         isAbstract = line.contains(" abstract ");
         isConstructor = name.equals("<init>");
-        ref = smaliClass.getRef().replace(".smali", "") + "->" + getSignature();
+        ref = smaliClass.getRef().replace(".smali", "") + "->" + line.substring(namePos);
         returnObject = line.substring(inputEnd + 1);
 
         if (inputEnd - inputStart > 1) {
@@ -72,7 +69,7 @@ public class ClassMethod implements ClassPart {
 
     @Override
     public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
-        if ((!getSignature().contains(target.getRef()) && deleted) || !target.containsInside(getBody())) {
+        if ((!line.contains(target.getRef()) && deleted) || !target.containsInside(getBody())) {
             return null;
         }
         if (returnObject.contains(target.getRef())) {
@@ -113,7 +110,7 @@ public class ClassMethod implements ClassPart {
     }
 
     private boolean canBeDeleted() {     //it is better to delete the class with the bridge method. Idk why too.
-        return !getModifiers().contains(" bridge ");
+        return !line.contains(" bridge ");
     }
 
     private void replaceBodyWithStub(String stub) {        //there is a stub that'll help not to broke everything
@@ -129,7 +126,7 @@ public class ClassMethod implements ClassPart {
             return;
         }
         deleted = true;
-        deleteMethodDeclaration();
+        line = '#' + line;
         changeBody(null);
     }
 
@@ -145,10 +142,6 @@ public class ClassMethod implements ClassPart {
         }
         sb.insert(sb.lastIndexOf(".end method"), '#');
         setBody(sb.toString());
-    }
-
-    private void deleteMethodDeclaration() {
-        modifiers = '#' + getModifiers();
     }
 
     public String generateCommonStub() {
@@ -221,7 +214,9 @@ public class ClassMethod implements ClassPart {
         for (String obj : inputObjects) {
             sb.append(obj);
         }
-        signature = modifiers + name + '(' + sb + ')' + returnObject;
+        int inputStart = line.indexOf('(') + 1;
+        int inputEnd = line.indexOf(')');
+        line = line.substring(0, inputStart) + sb + line.substring(inputEnd);
     }
 
     @Override
@@ -231,7 +226,7 @@ public class ClassMethod implements ClassPart {
 
     @Override
     public String getText() {
-        return signature + getBody();
+        return line + getBody();
     }
 
     public String getRef() {
@@ -258,11 +253,7 @@ public class ClassMethod implements ClassPart {
         return isAbstract;
     }
 
-    public String getModifiers() {
-        return modifiers;
-    }
-
-    public String getSignature() {
-        return signature;
+    public String getLine() {
+        return line;
     }
 }

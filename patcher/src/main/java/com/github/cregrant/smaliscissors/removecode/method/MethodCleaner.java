@@ -39,14 +39,18 @@ public class MethodCleaner {
         }
 
         int offset = method.isStatic() ? 0 : 1;
+        boolean cleaned = false;
         for (int i = 0; i < inputObjects.size(); i++) {
             String obj = inputObjects.get(i);
             if (obj.contains(removeString)) {
+                cleaned = true;
                 stack.add(new Line("p" + (i + offset), 0));
                 inputObjects.set(i, "Z");
             }
         }
-        method.setInputObjects(inputObjects);
+        if (cleaned) {
+            method.setInputObjects(inputObjects);
+        }
     }
 
     private void fixEmptyCatchBlocks() {   //try-catch block won't compile if empty

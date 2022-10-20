@@ -64,7 +64,7 @@ public class SmaliClass {
             if (part instanceof ClassMethod) {
                 ClassMethod method = ((ClassMethod) part);
                 if (method.isConstructor()) {
-                    if (method.getModifiers().contains(" synthetic ")) {
+                    if (method.getLine().contains(" synthetic ")) {
                         return false;
                     }
                     fixConstructor(method, classRef);     //fix for a deleted superclass
