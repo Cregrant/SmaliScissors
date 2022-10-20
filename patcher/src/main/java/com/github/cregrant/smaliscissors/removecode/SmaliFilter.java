@@ -28,7 +28,7 @@ public class SmaliFilter {
     Set<SmaliClass> separate(final SmaliTarget target) {
         processPatchedClasses(target);
         removeTargetFiles(target);
-        if (!pool.getMap().isEmpty()) {
+        if (pool.getArray() != null && pool.getArray().length > 0) {
             scanAllFilesPooled(target);
         } else {
             scanAllFiles(target);
@@ -48,7 +48,7 @@ public class SmaliFilter {
             }
 
             Set<SmaliFile> scheduledSet = new HashSet<SmaliFile>(100);
-            for (Map.Entry<String, ArrayList<SmaliFile>> entry : pool.getMap().entrySet()) {
+            for (Map.Entry<String, ArrayList<SmaliFile>> entry : pool.getArray()) {
                 if (entry.getKey().startsWith(classRef)) {          //get all classes that call classRef
                     for (SmaliFile file : entry.getValue()) {
                         if (currentState.files.contains(file)) {    //accept if it hasn't been loaded yet

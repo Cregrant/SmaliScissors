@@ -10,20 +10,21 @@ import java.util.concurrent.Future;
 class ClassesPool {
 
     private final Project project;
-    private HashMap<String, ArrayList<SmaliFile>> map;
+    private Map.Entry<String, ArrayList<SmaliFile>>[] array;
 
     public ClassesPool(Project project) {
         this.project = project;
-        fillMap();
+        fillArray();
     }
 
-    private void fillMap() {
-        Map<String, Set<SmaliFile>> concurrentMap = scan();     //transform to save some memory
-        map = new HashMap<>(concurrentMap.size());
+    private void fillArray() {
+        Map<String, Set<SmaliFile>> concurrentMap = scan();
+        HashMap<String, ArrayList<SmaliFile>> map = new HashMap<>(concurrentMap.size());
         for (Map.Entry<String, Set<SmaliFile>> entry : concurrentMap.entrySet()) {
             ArrayList<SmaliFile> list = new ArrayList<>(entry.getValue());
             map.put(entry.getKey(), list);
         }
+        array = (Map.Entry<String, ArrayList<SmaliFile>>[]) map.entrySet().toArray(new Map.Entry[0]);
     }
 
     private Map<String, Set<SmaliFile>> scan() {
@@ -96,7 +97,7 @@ class ClassesPool {
         return path.substring(0, dotPos + 1) + "smali";
     }
 
-    HashMap<String, ArrayList<SmaliFile>> getMap() {
-        return map;
+    Map.Entry<String, ArrayList<SmaliFile>>[] getArray() {
+        return array;
     }
 }
