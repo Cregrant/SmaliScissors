@@ -117,7 +117,7 @@ public class Project {
                 }
             }));
         }
-        executor.compute(futures);
+        executor.waitForFinish(futures);
     }
 
 

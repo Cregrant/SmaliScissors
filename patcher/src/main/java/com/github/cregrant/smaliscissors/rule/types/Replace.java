@@ -89,7 +89,7 @@ public class Replace implements Rule {
             };
             futures.add(project.getExecutor().submit(r));
         }
-        project.getExecutor().compute(futures);
+        project.getExecutor().waitForFinish(futures);
 
         if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
             if (isSmali()) {

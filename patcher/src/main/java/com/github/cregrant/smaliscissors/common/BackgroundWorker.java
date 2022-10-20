@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 public class BackgroundWorker {
     private ExecutorService executor;
 
-    public void compute(List<Future<?>> futures) {
+    public void waitForFinish(List<Future<?>> futures) {
         for (Future<?> future : futures) {
             try {
                 future.get();

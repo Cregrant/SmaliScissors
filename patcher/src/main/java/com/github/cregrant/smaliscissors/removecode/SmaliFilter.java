@@ -61,7 +61,7 @@ public class SmaliFilter {
                 scheduleFileScan(acceptedFiles, target, df, error);
             }
         }
-        project.getExecutor().compute(futures);
+        project.getExecutor().waitForFinish(futures);
         futures.clear();
         currentState.files.removeAll(acceptedFiles);
         if (error.get() != null) {
@@ -95,7 +95,7 @@ public class SmaliFilter {
                 scheduleFileScan(acceptedFiles, target, df, error);
             }
         }
-        project.getExecutor().compute(futures);
+        project.getExecutor().waitForFinish(futures);
         futures.clear();
         currentState.files.removeAll(acceptedFiles);
         if (error.get() != null) {
@@ -136,7 +136,7 @@ public class SmaliFilter {
             };
             futures.add(project.getExecutor().submit(r));
         }
-        project.getExecutor().compute(futures);
+        project.getExecutor().waitForFinish(futures);
         futures.clear();
     }
 

@@ -88,7 +88,7 @@ public class MatchGoto implements Rule {
                 };
                 futures.add(project.getExecutor().submit(r));
             }
-            project.getExecutor().compute(futures);
+            project.getExecutor().waitForFinish(futures);
         } catch (Exception e) {
             Main.out.println(e.getMessage());
         }

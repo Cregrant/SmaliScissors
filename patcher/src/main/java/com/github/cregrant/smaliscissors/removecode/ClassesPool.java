@@ -52,7 +52,7 @@ class ClassesPool {
             };
             futures.add(project.getExecutor().submit(r));
         }
-        project.getExecutor().compute(futures);
+        project.getExecutor().waitForFinish(futures);
         return cMap;
     }
 

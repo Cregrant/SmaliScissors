@@ -67,7 +67,7 @@ public class SmaliRemoveJob {
                     };
                     futures.add(project.getExecutor().submit(r));
                 }
-                project.getExecutor().compute(futures);
+                project.getExecutor().waitForFinish(futures);
 
                 if (exception.get() != null) {
                     if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
