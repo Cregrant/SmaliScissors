@@ -113,13 +113,15 @@ public class SmaliFilter {
                 smaliFilesArray = currentState.filesArray;
             }
 
-            final Set<SmaliFile> synchronizedDeletedFiles = Collections.synchronizedSet(new HashSet<SmaliFile>());
+            final List<SmaliFile> synchronizedDeletedFiles = Collections.synchronizedList(new ArrayList<SmaliFile>());
             final ArraySplitter splitter = new ArraySplitter(smaliFilesArray);
             while (splitter.hasNext()) {
+                final int start = splitter.chunkStart();
+                final int end = splitter.chunkEnd();
                 Runnable r = new Runnable() {
                     @Override
                     public void run() {
-                        acceptFilesPathRanged(synchronizedDeletedFiles, smaliFilesArray, target.getSkipPath(), splitter.chunkStart(), splitter.chunkEnd());
+                        acceptFilesPathRanged(synchronizedDeletedFiles, smaliFilesArray, target.getSkipPath(), start, end);
                     }
                 };
                 futures.add(project.getExecutor().submit(r));
@@ -176,7 +178,7 @@ public class SmaliFilter {
         return false;
     }
 
-    private void acceptFilesPathRanged(Set<SmaliFile> set, SmaliFile[] smaliFilesArray, String target, int start, int end) {
+    private void acceptFilesPathRanged(List<SmaliFile> set, SmaliFile[] smaliFilesArray, String target, int start, int end) {
         end = Math.min(end, currentState.files.size());
         for (int i = start; i < end; i++) {
             SmaliFile file = smaliFilesArray[i];
