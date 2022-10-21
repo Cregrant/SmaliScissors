@@ -70,14 +70,14 @@ public class SmaliKeeper {
             List<String> crashlyticsList = Arrays.asList("com/crashlytics/", "com/google/firebase/crashlytics/",
                     "com/google/firebase/crash/", "io/fabric/", "io/invertase/firebase/crashlytics/");
             if (rule.getTargets().removeAll(crashlyticsList)) {
-                if (project.getProperties().getProperty(ProjectProperties.Property.firebase_crashlytics_patched.name()) != null) {
+                if (project.getProperties().get(ProjectProperties.Property.firebase_crashlytics_patched) != null) {
                     return;
                 }
 
                 Main.out.println("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                project.getProperties().setProperty(ProjectProperties.Property.firebase_crashlytics_patched.name(), "true");
+                project.getProperties().set(ProjectProperties.Property.firebase_crashlytics_patched, "true");
             }
         }
     }
@@ -86,14 +86,14 @@ public class SmaliKeeper {
         if (firebaseAnalyticsFound) {      //keep the code but delete network calls
             if (rule.getTargets().contains("com/google/firebase/analytics/")
                     || rule.getTargets().contains("com/google/firebase/firebase_analytics/")) {
-                if (project.getProperties().getProperty(ProjectProperties.Property.firebase_analytics_patched.name()) != null) {
+                if (project.getProperties().get(ProjectProperties.Property.firebase_analytics_patched) != null) {
                     return;
                 }
 
                 Main.out.println("It is not possible to remove firebase analytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                project.getProperties().setProperty(ProjectProperties.Property.firebase_analytics_patched.name(), "true");
+                project.getProperties().set(ProjectProperties.Property.firebase_analytics_patched, "true");
             }
         }
     }

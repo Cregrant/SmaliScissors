@@ -21,12 +21,12 @@ public class ProjectProperties {
         }
     }
 
-    public String getProperty(String key) {
-        return properties.getProperty(key);
+    public String get(Property key) {
+        return properties.getProperty(key.name());
     }
 
-    public void setProperty(String key, String value) {
-        properties.setProperty(key, value);
+    public void set(Property key, String value) {
+        properties.setProperty(key.name(), value);
     }
 
     public void save() {
@@ -42,7 +42,9 @@ public class ProjectProperties {
     public enum Property {
         firebase_crashlytics_patched,
         firebase_analytics_patched,
-        last_target,
+        removecode_action_type,
+        removecode_action_count,
+        last_removecode_target,
         targets_hash
     }
 }
