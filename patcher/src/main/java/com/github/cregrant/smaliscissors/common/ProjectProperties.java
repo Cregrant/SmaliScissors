@@ -11,7 +11,7 @@ public class ProjectProperties {
 
     public ProjectProperties(Project project) {
         propertiesFile = new File(project.getPath() + "/PatcherProperties.txt");
-        properties = new Properties();
+        properties = new Properties(getDefaults());
         if (propertiesFile.exists()) {
             try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(propertiesFile))) {
                 properties.load(bis);
@@ -27,6 +27,17 @@ public class ProjectProperties {
 
     public void set(Property key, String value) {
         properties.setProperty(key.name(), value);
+    }
+
+    private Properties getDefaults() {
+        Properties props = new Properties();
+        props.setProperty(Property.firebase_crashlytics_patched.name(), "false");
+        props.setProperty(Property.firebase_analytics_patched.name(), "false");
+        props.setProperty(Property.removecode_action_type.name(), "");
+        props.setProperty(Property.removecode_action_count.name(), "0");
+        props.setProperty(Property.last_removecode_target.name(), "");
+        props.setProperty(Property.targets_hash.name(), "0");
+        return props;
     }
 
     public void save() {

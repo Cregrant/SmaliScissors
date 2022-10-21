@@ -3,7 +3,6 @@ package com.github.cregrant.smaliscissors.removecode;
 import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
-import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Replace;
@@ -11,6 +10,9 @@ import com.github.cregrant.smaliscissors.rule.types.Replace;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.firebase_analytics_patched;
+import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.firebase_crashlytics_patched;
 
 public class SmaliKeeper {
     private final Project project;
@@ -70,14 +72,14 @@ public class SmaliKeeper {
             List<String> crashlyticsList = Arrays.asList("com/crashlytics/", "com/google/firebase/crashlytics/",
                     "com/google/firebase/crash/", "io/fabric/", "io/invertase/firebase/crashlytics/");
             if (rule.getTargets().removeAll(crashlyticsList)) {
-                if (project.getProperties().get(ProjectProperties.Property.firebase_crashlytics_patched) != null) {
+                if (Boolean.parseBoolean(project.getProperties().get(firebase_crashlytics_patched))) {
                     return;
                 }
 
                 Main.out.println("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                project.getProperties().set(ProjectProperties.Property.firebase_crashlytics_patched, "true");
+                project.getProperties().set(firebase_crashlytics_patched, "true");
             }
         }
     }
@@ -86,14 +88,14 @@ public class SmaliKeeper {
         if (firebaseAnalyticsFound) {      //keep the code but delete network calls
             if (rule.getTargets().contains("com/google/firebase/analytics/")
                     || rule.getTargets().contains("com/google/firebase/firebase_analytics/")) {
-                if (project.getProperties().get(ProjectProperties.Property.firebase_analytics_patched) != null) {
+                if (Boolean.parseBoolean(project.getProperties().get(firebase_analytics_patched))) {
                     return;
                 }
 
                 Main.out.println("It is not possible to remove firebase analytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
-                project.getProperties().set(ProjectProperties.Property.firebase_analytics_patched, "true");
+                project.getProperties().set(firebase_analytics_patched, "true");
             }
         }
     }
