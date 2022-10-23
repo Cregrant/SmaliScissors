@@ -98,6 +98,10 @@ public class SmaliRemoveJob {
         } while (!currentTargets.isEmpty());
     }
 
+    boolean containsTargetFiles(SmaliTarget target, State state) {
+        return !new SmaliFilter(project, pool, state).getTargetFiles(target).isEmpty();
+    }
+
     public boolean isStateModified() {
         return stateModified;
     }
