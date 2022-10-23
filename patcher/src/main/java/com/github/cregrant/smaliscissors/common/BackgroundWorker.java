@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 
 public class BackgroundWorker {
     private ExecutorService executor;
+    private final int threadsNum = Runtime.getRuntime().availableProcessors();
 
     public void waitForFinish(List<Future<?>> futures) {
         for (Future<?> future : futures) {
@@ -23,6 +24,10 @@ public class BackgroundWorker {
 
     public void stop() {
         executor.shutdownNow();
+    }
+
+    public int getThreadsNum() {
+        return threadsNum;
     }
 
     public Future<?> submit(Runnable task) {

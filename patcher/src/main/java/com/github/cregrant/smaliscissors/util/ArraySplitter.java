@@ -6,10 +6,9 @@ public class ArraySplitter {
     private final int chunkSize;
     private int currentPos;
 
-    public ArraySplitter(Object[] array) {
+    public ArraySplitter(Object[] array, int partsNum) {
         arrayLength = array.length;
-        int cores = Runtime.getRuntime().availableProcessors();
-        chunkSize = arrayLength / cores + cores;
+        chunkSize = arrayLength / partsNum + partsNum;
     }
 
     public boolean hasNext() {
