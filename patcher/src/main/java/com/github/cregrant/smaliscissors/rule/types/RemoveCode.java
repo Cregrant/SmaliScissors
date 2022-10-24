@@ -1,17 +1,63 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
+import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
 
 import java.io.IOException;
 import java.util.List;
 
+import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.*;
+
 public class RemoveCode implements Rule {
     private String name;
     private List<String> targets;
     private boolean internal;
+
+    public int getLastTargetIndex(Project project) {
+        ProjectProperties properties = project.getProperties();
+        String lastTarget = properties.get(last_removecode_target);
+
+        if (!lastTarget.isEmpty() && targets.hashCode() == Integer.parseInt(properties.get(targets_hash))) {
+            setLastTarget(project, "");
+            int pos = targets.indexOf(lastTarget);
+            if (pos == -1) {
+                Main.out.println("Hashcode collision happened? Patch won't be resumed from the last target");
+            }
+            return pos;
+        }
+
+        return -1;
+    }
+
+    public void setLastTarget(Project project, String target) {
+        ProjectProperties properties = project.getProperties();
+        properties.set(last_removecode_target, target);
+        properties.set(targets_hash, String.valueOf(targets.hashCode()));
+    }
+
+    public int getSkipCount(Project project) {
+        String storedAction = project.getProperties().get(removecode_action_type);
+        if (RemoveCodeAction.Action.SKIP.name().equals(storedAction)) {
+            return Integer.parseInt(project.getProperties().get(removecode_action_count));
+        }
+        return 0;
+    }
+
+    public int getApplyCount(Project project) {
+        String storedAction = project.getProperties().get(removecode_action_type);
+        if (RemoveCodeAction.Action.APPLY.name().equals(storedAction)) {
+            return Integer.parseInt(project.getProperties().get(removecode_action_count));
+        }
+        return 0;
+    }
+
+    public void removeActionCount(Project project) {
+        project.getProperties().set(removecode_action_count, "0");
+    }
 
     @Override
     public String getName() {

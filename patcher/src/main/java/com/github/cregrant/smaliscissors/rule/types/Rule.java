@@ -25,6 +25,7 @@ public interface Rule {
         ADD_FILES,
         REMOVE_FILES,
         REMOVE_CODE,
+        REMOVE_CODE_ACTION,
         DUMMY,
         GOTO,
         EXECUTE_DEX
