@@ -2,56 +2,34 @@ package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.common.outer.SimpleOutStream;
+import org.apache.commons.cli.*;
 
-import java.io.File;
-import java.util.ArrayList;
+
 
 public class Main {
     public static SimpleOutStream out;
     public static DexExecutor dex;
 
-
     public static void mainAsModule(String[] args, SimpleOutStream logger, DexExecutor dexExecutor) {
         out = logger == null ? getDefaultOutStream() : logger;
         dex = dexExecutor;
-        if (args == null || args.length < 2) {
-            Main.out.println("Usage as module: args - String(s) with full path to projects and String(s) with full path to zip patches\n" +
-                    "Example args: sdcard/ApkEditor/decoded, sdcard/ApkEditor/patches/patch.zip\n" +
-                    "Or use as single REMOVE_CODE rule executor (project path(s) and targets separated by space inside quotes:\n" +
-                    "sdcard/ApkEditor/decoded, \"com/folder1/\"\n" +
-                    "sdcard/ApkEditor/decoded, \"com/folder1/ com/folder2/abc.smali\"");
+        Args parsedArgs = new Args();
+        CommandLineParser parser = new DefaultParser();
+        CommandLine cmd;
 
-            return;
-        }
-        ArrayList<String> zipList = new ArrayList<>(5);
-        ArrayList<String> projectList = new ArrayList<>(5);
-        String removeCodeTargets = "";
-
-        for (String str : args) {
-            boolean exists = new File(str).exists();
-            if (str.endsWith(".zip") && exists) {
-                zipList.add(str);
-            } else if (exists) {
-                projectList.add(str);
-            } else if (str.endsWith("/") || str.endsWith(".smali")) {
-                removeCodeTargets = str;
-            } else {
-                out.println("Unknown argument error: " + str);
-                return;
-            }
-
+        try {
+            cmd = parser.parse(parsedArgs.getOptions(), args);
+            parsedArgs.validate(cmd);
+        } catch (ParseException e) {
+            System.out.println(e.getMessage());
+            new HelpFormatter().printHelp(" ", parsedArgs.getOptions());
+            System.exit(1);
         }
 
-        if ((removeCodeTargets.isEmpty() && zipList.isEmpty()) || projectList.isEmpty()) {
-            out.println("Invalid input");
-            return;
-        }
-
-        Worker worker = new Worker(projectList);
-        if (removeCodeTargets.isEmpty()) {
-            worker.setPatches(zipList);
-        } else {
-            worker.setSingleRemoveCodeRule(removeCodeTargets);
+        Worker worker = new Worker(parsedArgs.getProjectsList());
+        worker.addPatches(parsedArgs.getPatchesList());
+        if (!parsedArgs.getRemoveList().isEmpty()) {
+            worker.addSingleRemoveCodeRules(parsedArgs.getRemoveList());
         }
         worker.run();
     }

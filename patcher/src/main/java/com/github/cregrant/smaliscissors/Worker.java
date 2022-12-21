@@ -30,17 +30,16 @@ public class Worker {
         }
     }
 
-    void setPatches(List<String> patchesList) {
+    void addPatches(List<String> patchesList) {
         for (String patchString : patchesList) {
             patches.add(new Patch(patchString));
         }
     }
 
-    void setSingleRemoveCodeRule(String targets) {
-        String[] splitTargets = targets.split(" ");
+    void addSingleRemoveCodeRules(List<String> removeList) {
         RemoveCode rule = new RemoveCode();
-        ArrayList<String> targetsList = new ArrayList<>(splitTargets.length);
-        for (String s : splitTargets) {
+        ArrayList<String> targetsList = new ArrayList<>(removeList.size());
+        for (String s : removeList) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
                 targetsList.add(trimmed);
