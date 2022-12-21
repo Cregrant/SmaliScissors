@@ -15,6 +15,8 @@ compileTestJava {
 }
 
 dependencies {
+    //implementation 'org.tinylog:tinylog:1.3.6'
+    implementation 'commons-cli:commons-cli:1.5.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.9.0'
@@ -25,9 +27,17 @@ test {
     useJUnitPlatform()
 }
 
-tasks.jar {
+task fatJar(type: Jar) {
     manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.Main"
     archiveBaseName.set("patcher")
     destinationDirectory.set(rootDir)
     delete(archiveFile.get())
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    } with jar
 }
