@@ -3,11 +3,9 @@ package com.github.cregrant.smaliscissors.common;
 import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.util.IO;
-import com.github.cregrant.smaliscissors.util.Regex;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.regex.Pattern;
 
 public class ApkLocator {
 
@@ -34,23 +32,25 @@ public class ApkLocator {
     }
 
     private String parseApktoolConfig(Project project, File config) {
-        Pattern pattern = Pattern.compile(".{0,5}apkFile.+?(?:\": \"|: )(.+?\\.apk)(?:\",)?");
-        try {
-            String scannedPath = Regex.matchSingleLine(IO.read(config.getPath()), pattern);
-            if (scannedPath == null) {
-                return null;
-            }
+        String content = IO.read(config.getPath());
+        int end = content.indexOf(".apk");
+        if (end == -1) {
+            return null;
+        }
 
-            File parentFile = new File(project.getPath()).getParentFile();
-            File apkFile = new File(parentFile + File.separator + scannedPath);
-            if (apkFile.exists()) {
-                return apkFile.getPath();
-            }
-            apkFile = new File(scannedPath);
-            if (apkFile.exists()) {
-                return apkFile.getPath();
-            }
-        } catch (Exception ignored) {
+        int start = content.lastIndexOf(':', end);
+        if (start == -1) {
+            return null;
+        }
+        if (content.charAt(start + 2) == '"') {   //some apktool versions wraps the filename in quotes
+            start++;
+        }
+
+        String filename = content.substring(start + 2, end + 4);
+        File parentFile = new File(project.getPath()).getParentFile();
+        File apkFile = new File(parentFile, filename);
+        if (apkFile.exists()) {
+            return apkFile.getPath();
         }
         return null;
     }
@@ -64,8 +64,9 @@ public class ApkLocator {
                 return name.equals(projectName + ".apk");
             }
         });
-        if (apkFiles!= null && apkFiles.length == 1)
+        if (apkFiles != null && apkFiles.length == 1) {
             return apkFiles[0].getPath();
+        }
         return null;
     }
 }
