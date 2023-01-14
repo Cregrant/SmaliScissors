@@ -1,8 +1,12 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MemoryManager {
+
+    private static final Logger logger = LoggerFactory.getLogger(MemoryManager.class);
     private final Project project;
     private boolean extremeLowMemory;
 

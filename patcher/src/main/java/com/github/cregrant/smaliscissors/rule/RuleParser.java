@@ -1,10 +1,10 @@
 package com.github.cregrant.smaliscissors.rule;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.rule.types.*;
-import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Regex.ResultFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,6 +15,8 @@ import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
 import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
 
 public class RuleParser {
+
+    private static final Logger logger = LoggerFactory.getLogger(RuleParser.class);
     private static final String CRASH_REPORTERS = "com/rollbar/android/\ncom/userexperior/\ncom/instabug/\ncom/bugsnag/\ncom/bugfender/sdk/\ncom/microsoft/appcenter/crashes/\ncom/bugsee/library/Bugsee/\ncom/crashlytics/\ncom/google/firebase/crashlytics/\ncom/google/firebase/crash/\ncom/bugsense/trace/\ncom/applause/android/\ncom/mindscapehq/android/raygun4android/\nio/fabric/\nio/invertase/firebase/crashlytics/\nnet/hockeyapp/";
     private static final Pattern RULE = Pattern.compile("(\\[.+?]\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET|ACTION):[\\s\\S]*?\\[/.+?])");
     private static final Pattern SOURCE = Pattern.compile("SOURCE:\\s+(.+?)\\s*\\R");
@@ -121,14 +123,14 @@ public class RuleParser {
                     rule = new Dummy();     //will trigger parse error
             }
         } catch (Exception e) {
-            rule = new Dummy();
-            Main.out.println(Misc.stacktraceToString(e));
+            logger.error("Unable to parse rule №" + num + ":\n------------\n" + patchStr + "\n--------------", e);
+            throw e;
         }
 
         if (rule.isValid()) {
             return rule;
         } else {
-            throw new InputMismatchException("Error parsing rule №" + num + ":\n------------\n" + patchStr + "\n--------------");
+            throw new InputMismatchException("Unable to parse rule №" + num + ":\n------------\n" + patchStr + "\n--------------");
         }
     }
 

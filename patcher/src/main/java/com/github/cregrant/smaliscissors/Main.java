@@ -1,17 +1,16 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
-import com.github.cregrant.smaliscissors.common.outer.SimpleOutStream;
 import org.apache.commons.cli.*;
-
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Main {
-    public static SimpleOutStream out;
+
+    private static final Logger logger = LoggerFactory.getLogger(Main.class);
     public static DexExecutor dex;
 
-    public static void mainAsModule(String[] args, SimpleOutStream logger, DexExecutor dexExecutor) {
-        out = logger == null ? getDefaultOutStream() : logger;
+    public static void mainAsModule(String[] args, DexExecutor dexExecutor) {
         dex = dexExecutor;
         Args parsedArgs = new Args();
         CommandLineParser parser = new DefaultParser();
@@ -20,30 +19,25 @@ public class Main {
         try {
             cmd = parser.parse(parsedArgs.getOptions(), args);
             parsedArgs.validate(cmd);
+            start(parsedArgs);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             new HelpFormatter().printHelp(" ", parsedArgs.getOptions());
-            System.exit(1);
+        } catch (Exception e) {
+            logger.error("Execution interrupted:", e);
         }
+    }
 
+    public static void main(String[] args) {        //jar archive entry (broken?)
+        mainAsModule(args, null);
+    }
+
+    private static void start(Args parsedArgs) {
         Worker worker = new Worker(parsedArgs.getProjectsList());
         worker.addPatches(parsedArgs.getPatchesList());
         if (!parsedArgs.getRemoveList().isEmpty()) {
             worker.addSingleRemoveCodeRules(parsedArgs.getRemoveList());
         }
         worker.run();
-    }
-
-    public static void main(String[] args) {
-        mainAsModule(args, null, null);
-    }
-
-    private static SimpleOutStream getDefaultOutStream() {
-        return new SimpleOutStream() {
-            @Override
-            public void println(Object x) {
-                System.out.println(x);
-            }
-        };
     }
 }

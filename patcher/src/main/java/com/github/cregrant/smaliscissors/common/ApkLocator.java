@@ -3,11 +3,15 @@ package com.github.cregrant.smaliscissors.common;
 import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.util.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
 
 public class ApkLocator {
+
+    private static final Logger logger = LoggerFactory.getLogger(ApkLocator.class);
 
     public String getApkPath(Project project) {
         if (Main.dex != null) {
@@ -15,6 +19,7 @@ public class ApkLocator {
             if (apkPathSupplied != null) {
                 File file = new File(apkPathSupplied);
                 if (file.exists()) {
+                    logger.debug("Apk path supplied: {}", apkPathSupplied);
                     return apkPathSupplied;
                 }
             }
@@ -50,6 +55,7 @@ public class ApkLocator {
         File parentFile = new File(project.getPath()).getParentFile();
         File apkFile = new File(parentFile, filename);
         if (apkFile.exists()) {
+            logger.debug("Apk path found in an apktool config: {}", apkFile.getPath());
             return apkFile.getPath();
         }
         return null;
@@ -65,6 +71,7 @@ public class ApkLocator {
             }
         });
         if (apkFiles != null && apkFiles.length == 1) {
+            logger.debug("Apk path found in the same directory as a project: {}", apkFiles[0].getPath());
             return apkFiles[0].getPath();
         }
         return null;

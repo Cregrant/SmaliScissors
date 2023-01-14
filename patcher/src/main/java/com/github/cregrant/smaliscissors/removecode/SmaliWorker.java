@@ -1,20 +1,22 @@
 package com.github.cregrant.smaliscissors.removecode;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.RemoveFiles;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SmaliWorker {
-    private static final boolean DEBUG_BENCHMARK = false;
-    private static final boolean DEBUG_NOT_WRITE = false;
+
+    private static final Logger logger = LoggerFactory.getLogger(SmaliWorker.class);
+    public static boolean DEBUG_BENCHMARK = false;
+    public static boolean DEBUG_NOT_WRITE = true;
     private final Project project;
     private final Patch patch;
     private final RemoveCode rule;
@@ -82,7 +84,7 @@ public class SmaliWorker {
                 job.remove(target, newState);
             } catch (Exception e) {
                 errorsNum++;
-                Main.out.println("Failed to remove " + target + " (" + e.getMessage() + ")");
+                logger.error("Failed to remove " + target + " (" + e.getMessage() + ")");
                 newState = new State(currentState);
                 if (controller.canApply()) {
                     if (controller.applyAndCheckEnd(target)) {
@@ -97,9 +99,7 @@ public class SmaliWorker {
                 currentState = newState;
                 newState = new State(currentState);
 
-                if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-                    Main.out.println("Removed " + target);
-                }
+                logger.info("Removed " + target);
                 patchedNum++;
                 if (controller.canApply()) {
                     if (controller.applyAndCheckEnd(target)) {
@@ -117,11 +117,9 @@ public class SmaliWorker {
         project.getSmaliKeeper().keepClasses(currentState);
 
         if (rule.isInternal()) {
-            if (crashReportersNum > 0) {
-                Main.out.println(crashReportersNum + " crash reporters deleted silently.");
-            }
-        } else if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-            Main.out.println(patchedNum + " targets patched and " + errorsNum + " failed.");
+            logger.info(crashReportersNum + " crash reporters deleted silently.");
+        } else {
+            logger.info(patchedNum + " targets patched and " + errorsNum + " failed.");
         }
         return currentState;
     }
@@ -138,14 +136,13 @@ public class SmaliWorker {
             try {
                 removeFiles.apply(project, patch);
             } catch (IOException e) {
-                Main.out.println(e.getMessage());
-                Main.out.println("Congratulations! Is your project broken now? How did you do that?");
+                logger.error("Congratulations! Is your project broken now? How did you do that?", e);
             }
         }
 
         for (SmaliClass smaliClass : state.patchedClasses) {     //write changes
-            if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                Main.out.println("Writing " + smaliClass);
+            if (!rule.isInternal()) {
+                logger.debug("Writing {}", smaliClass);
             }
             smaliClass.getFile().setBody(smaliClass.getNewBody());
         }
@@ -174,9 +171,7 @@ public class SmaliWorker {
         boolean skipAndCheckEnd(SmaliTarget target) {
             skipCount--;
             if (skipCount == 0) {
-                if (Prefs.logLevel.getLevel() <= 1) {
-                    Main.out.println("Skipped " + target + " as set by REMOVE_CODE_ACTION");
-                }
+                logger.info("Skipped " + target + " as set by REMOVE_CODE_ACTION");
                 return true;
             } else {
                 return false;
@@ -190,9 +185,7 @@ public class SmaliWorker {
         boolean applyAndCheckEnd(SmaliTarget target) {
             applyCount--;
             if (applyCount == 0) {
-                if (Prefs.logLevel.getLevel() <= 1) {
-                    Main.out.println("Patch stopped after " + target + " as set by REMOVE_CODE_ACTION");
-                }
+                logger.info("Patch stopped after " + target + " as set by REMOVE_CODE_ACTION");
                 return true;
             } else {
                 return false;

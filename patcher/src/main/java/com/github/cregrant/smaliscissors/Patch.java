@@ -4,6 +4,8 @@ import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,6 +20,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class Patch {
+
+    private static final Logger logger = LoggerFactory.getLogger(Patch.class);
     private File file;
     private File tempDir;
     private final String name;
@@ -99,18 +103,14 @@ public class Patch {
         }
 
         Set<Map.Entry<String, String>> set = assignMap.entrySet();
-        if (Prefs.logLevel == Prefs.Log.DEBUG) {
-            Main.out.println("Replacing variables to text:\n" + set);
-        }
+        logger.debug("Replacing variables to text:\n{}", set);
 
         for (Map.Entry<String, String> entry : set) {
             String key = "${" + entry.getKey() + "}";
             if (string.contains(key)) {
                 String value = entry.getValue();
                 string = string.replace(key, value);
-                if (Prefs.logLevel == Prefs.Log.DEBUG) {
-                    Main.out.println(key + " -> " + value);
-                }
+                logger.debug("{} -> {}", key, value);
             }
         }
         return string;
@@ -119,7 +119,7 @@ public class Patch {
     private void parseRules() {
         String patchString = loadRules();
         if (patchString == null) {
-            Main.out.println("patch.txt not found inside " + file + "!");
+            logger.error("patch.txt not found inside {}!", file);
             rules = new ArrayList<>(0);
             return;
         }

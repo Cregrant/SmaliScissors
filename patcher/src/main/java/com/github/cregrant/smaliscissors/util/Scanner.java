@@ -1,12 +1,13 @@
 package com.github.cregrant.smaliscissors.util;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,6 +21,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class Scanner {
+
+    private static final Logger logger = LoggerFactory.getLogger(Scanner.class);
     private final Project project;
 
     public Scanner(Project project) {
@@ -32,7 +35,7 @@ public class Scanner {
         ArrayList<Future<ArrayList<DecompiledFile>>> tasks = new ArrayList<>();
         File[] list = new File(project.getPath()).listFiles();
         if (list == null) {
-            throw new FileNotFoundException("Error: incorrect path - " + project.getPath());
+            throw new FileNotFoundException("Incorrect path - " + project.getPath());
         }
 
         fixApktoolIssue(list);
@@ -58,7 +61,7 @@ public class Scanner {
             }
         }
         if (tasks.isEmpty()) {
-            throw new FileNotFoundException("Error: no smali folders found inside the project folder \"" + project.getName() + '\"');
+            throw new FileNotFoundException("No smali folders found inside the project folder \"" + project.getName() + '\"');
         }
 
         try {
@@ -70,12 +73,12 @@ public class Scanner {
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            logger.error("Project smali scanning failed", e);
             return new ArrayList<>(0);
         }
         Collections.sort(smaliList);
         Collections.reverse(smaliList);
-        Main.out.println(smaliList.size() + " smali files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
+        logger.info(smaliList.size() + " smali files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
         return smaliList;
     }
 
@@ -88,7 +91,7 @@ public class Scanner {
             XmlFile manifest = new XmlFile(project, "AndroidManifest.xml");
             xmlList.add(manifest);
         } else {
-            throw new FileNotFoundException("Error: AndroidManifest.xml not found");
+            throw new FileNotFoundException("AndroidManifest.xml not found");
         }
 
         final File resFolder = new File(project.getPath() + File.separator + "res");
@@ -101,7 +104,7 @@ public class Scanner {
             };
             tasks.add(project.getExecutor().submit(callable));
         } else {
-            throw new FileNotFoundException("Error: no files found inside the res folder.");
+            throw new FileNotFoundException("No files found inside the res folder.");
         }
 
         try {
@@ -113,12 +116,12 @@ public class Scanner {
                 }
             }
         } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+            logger.error("Project smali scanning failed", e);
             return new ArrayList<>(0);
         }
         Collections.sort(xmlList);
         Collections.reverse(xmlList);
-        Main.out.println(xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
+        logger.info(xmlList.size() + " xml files found in " + (System.currentTimeMillis() - startTime) + "ms.\n");
         return xmlList;
     }
 
@@ -218,7 +221,7 @@ public class Scanner {
             try {
                 IO.delete(file);
             } catch (IOException e) {
-                Main.out.println("ERROR: unable to delete " + file.getPath() + ". Build may fail.");
+                logger.error("Unable to delete " + file.getPath() + ". Build may fail.");
             }
         }
     }

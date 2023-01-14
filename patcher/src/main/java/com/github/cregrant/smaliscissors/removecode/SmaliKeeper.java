@@ -1,11 +1,12 @@
 package com.github.cregrant.smaliscissors.removecode;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Replace;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,6 +16,8 @@ import static com.github.cregrant.smaliscissors.common.ProjectProperties.Propert
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.firebase_crashlytics_patched;
 
 public class SmaliKeeper {
+
+    private static final Logger logger = LoggerFactory.getLogger(SmaliKeeper.class);
     private final Project project;
     private boolean firebaseCrashlyticsFound = false;
     private boolean firebaseAnalyticsFound = false;
@@ -76,7 +79,7 @@ public class SmaliKeeper {
                     return;
                 }
 
-                Main.out.println("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
+                logger.warn("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_crashlytics_patched, "true");
@@ -92,7 +95,7 @@ public class SmaliKeeper {
                     return;
                 }
 
-                Main.out.println("It is not possible to remove firebase analytics from code. Deleting network calls...");
+                logger.warn("It is not possible to remove firebase analytics from code. Deleting network calls...");
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_analytics_patched, "true");

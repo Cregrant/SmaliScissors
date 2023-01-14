@@ -1,5 +1,8 @@
 package com.github.cregrant.smaliscissors.removecode;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.zip.DataFormatException;
@@ -7,6 +10,8 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public class Gzip {
+
+    private static final Logger logger = LoggerFactory.getLogger(Gzip.class);
     private final int originalLength;
     private byte[] theCompressedArray;
 
@@ -38,7 +43,7 @@ public class Gzip {
         try {
             inflater.inflate(result);
         } catch (DataFormatException e) {
-            e.printStackTrace();
+            logger.error("Error decompressing gzip", e);
         }
         inflater.end();
         return new String(result, StandardCharsets.UTF_8);

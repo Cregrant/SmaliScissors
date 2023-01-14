@@ -1,9 +1,10 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.util.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -11,6 +12,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Add implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(Add.class);
     private String name;
     private String target;
     private String source;
@@ -53,7 +56,7 @@ public class Add implements Rule {
             patch.createTempDir();
             ArrayList<String> extractedList = IO.extract(patch.getFile(), patch.getTempDir().getPath(), getSource());
             if (extractedList.size() != 1) {
-                Main.out.println("What? Zip extract failed???");
+                logger.error("Extracted {} files, expected 1 file", extractedList.size());
                 return;
             }
             File extractedZipFile = new File(extractedList.get(0));

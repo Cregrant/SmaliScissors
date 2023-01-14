@@ -2,6 +2,8 @@ package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -9,8 +11,9 @@ import java.util.concurrent.Future;
 
 class ClassesPool {
 
-    private final Project project;
+    private static final Logger logger = LoggerFactory.getLogger(ClassesPool.class);
     private Map.Entry<String, ArrayList<SmaliFile>>[] array;
+    private final Project project;
 
     public ClassesPool(Project project) {
         this.project = project;

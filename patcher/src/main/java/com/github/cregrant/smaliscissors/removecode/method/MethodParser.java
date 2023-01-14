@@ -2,11 +2,15 @@ package com.github.cregrant.smaliscissors.removecode.method;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MethodParser {
+
+    private static final Logger logger = LoggerFactory.getLogger(MethodParser.class);
     private final ClassMethod method;
     private final String target;
     private ArrayList<Opcode> opcodes;

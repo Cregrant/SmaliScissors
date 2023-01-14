@@ -2,6 +2,8 @@ package com.github.cregrant.smaliscissors.removecode.method;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -9,6 +11,7 @@ import java.util.HashSet;
 
 public class MethodOpcodeCleaner {
 
+    private static final Logger logger = LoggerFactory.getLogger(MethodOpcodeCleaner.class);
     private final ClassMethod method;
     private final ArrayDeque<MethodCleaner.Line> stack;
     private final ArrayList<Opcode> opcodes;

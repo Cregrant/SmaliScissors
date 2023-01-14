@@ -12,6 +12,8 @@ import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledPa
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Scanner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -23,6 +25,8 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 public class Project {
+
+    private static final Logger logger = LoggerFactory.getLogger(Project.class);
     private final MemoryManager memoryManager;
     private final BackgroundWorker executor;
     private final SmaliKeeper smaliKeeper;
@@ -82,7 +86,7 @@ public class Project {
                     break;
                 }
 
-                Main.out.println("\n" + rule);
+                logger.info("\n" + rule);
                 rule.apply(this, patch);
                 if (rule.nextRuleName() != null) {
                     patch.jumpToRuleName(rule.nextRuleName());
@@ -90,15 +94,12 @@ public class Project {
             }
             patch.reset();
         } catch (IOException e) {
-            Main.out.println(patch.getName() + " failed. Reason: " + e.getMessage());
-            e.printStackTrace();
+            logger.error(patch.getName() + " failed", e);
         }
     }
 
     void writeChanges() {
-        if (Prefs.logLevel == Prefs.Log.DEBUG) {
-            Main.out.println("Writing changes...");
-        }
+        logger.debug("Writing changes...");
         properties.save();
         if (manifest != null) {
             manifest.save();

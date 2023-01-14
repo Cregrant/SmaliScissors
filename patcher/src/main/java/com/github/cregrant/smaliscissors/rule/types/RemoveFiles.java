@@ -1,10 +1,10 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.util.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +12,8 @@ import java.util.HashSet;
 import java.util.List;
 
 public class RemoveFiles implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemoveFiles.class);
     private String name;
     private List<String> targets;
 
@@ -56,9 +58,7 @@ public class RemoveFiles implements Rule {
                 File file = new File(project.getPath() + File.separator + str);
                 IO.delete(file);
                 possibleEmptyFolders.add(file.getParentFile());
-                if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                    Main.out.println(file + " deleted");
-                }
+                logger.debug("{} deleted", file);
             }
         }
 
@@ -70,9 +70,7 @@ public class RemoveFiles implements Rule {
                 subs = file.list();
             }
         }
-        if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-            Main.out.println(deletedCount + " files deleted");
-        }
+        logger.info(deletedCount + " files deleted");
     }
 
     public void setTargets(List<String> targets) {
@@ -90,7 +88,7 @@ public class RemoveFiles implements Rule {
         for (int i = 0; i < targets.size(); i++) {
             String target = targets.get(i);
             sb.append("    ").append(target).append("\n");
-            if (Prefs.logLevel.getLevel() >= Prefs.Log.INFO.getLevel() && i >= 30) {
+            if (i >= 30 && logger.isDebugEnabled()) {
                 sb.append("    ... + ").append(targets.size() - i - 1).append(" more lines\n");
                 break;
             }

@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 
 public class Dummy implements Rule {
+
     private String name;
 
     @Override

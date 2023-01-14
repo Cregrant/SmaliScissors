@@ -2,7 +2,8 @@ package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.BackgroundWorker;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
-import com.github.cregrant.smaliscissors.util.Misc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ import java.util.List;
 import static java.lang.System.currentTimeMillis;
 
 public class Worker {
+
+    private static final Logger logger = LoggerFactory.getLogger(Worker.class);
     private final BackgroundWorker executor = new BackgroundWorker();
     private final ArrayList<Project> projects = new ArrayList<>(5);
     private final ArrayList<Patch> patches = new ArrayList<>(5);
@@ -25,7 +28,7 @@ public class Worker {
                 Project project = new Project(path, executor);
                 projects.add(project);
             } catch (Exception e) {
-                Main.out.println("Error: skipping project \"" + path + "\"! (" + e.getMessage() + ")");
+                logger.error("Error: skipping project \"" + path + "\"! (" + e.getMessage() + ")");
             }
         }
     }
@@ -55,23 +58,23 @@ public class Worker {
             long globalStartTime = currentTimeMillis();
             for (Project project : projects) {
                 long projectStartTime = currentTimeMillis();
-                Main.out.println("Project - " + project.getName());
+                logger.info("Project - " + project.getName());
                 for (Patch patch : patches) {
                     project.scan(patch.isSmaliNeeded(), patch.isXmlNeeded());
-                    Main.out.println("Patch - " + patch.getName() + "\n");
+                    logger.info("Patch - " + patch.getName() + "\n");
                     long patchStartTime = currentTimeMillis();
                     project.applyPatch(patch);
-                    Main.out.println(patch.getName() + " applied in " + (currentTimeMillis() - patchStartTime) + "ms.");
+                    logger.info(patch.getName() + " applied in " + (currentTimeMillis() - patchStartTime) + "ms.");
                 }
                 project.writeChanges();
-                Main.out.println(project.getName() + " finished in " + (currentTimeMillis() - projectStartTime) + "ms." + "\n------------------");
+                logger.info(project.getName() + " finished in " + (currentTimeMillis() - projectStartTime) + "ms." + "\n------------------");
             }
-            Main.out.println("Tasks completed in " + (currentTimeMillis() - globalStartTime) + "ms." + "\n------------------");
+            logger.info("Tasks completed in " + (currentTimeMillis() - globalStartTime) + "ms." + "\n------------------");
         } catch (FileNotFoundException e) {
-            Main.out.println(e.getMessage());
-            Main.out.println("Note: probably patch require some files that haven't been decompiled yet.");
+            logger.error(e.getMessage());
+            logger.error("Probably patch require some files that haven't been decompiled yet.");
         } catch (Exception e) {
-            Main.out.println(Misc.stacktraceToString(e));
+            logger.error("Unexpected error", e);
         } finally {
             executor.stop();
         }

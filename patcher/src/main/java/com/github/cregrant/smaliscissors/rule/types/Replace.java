@@ -1,11 +1,11 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.util.Regex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 public class Replace implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(Replace.class);
     public ArrayList<Rule> mergedRules;
     private String name;
     private String target;
@@ -76,9 +78,7 @@ public class Replace implements Rule {
                     try {
                         boolean replaced = Replace.this.replace(dFile, targetCompiled, localMatchCompiled, localReplacement);
                         if (replaced) {
-                            if (Prefs.logLevel == Prefs.Log.DEBUG) {
-                                Main.out.println(dFile.getPath() + " patched.");
-                            }
+                            logger.debug("{} patched", dFile.getPath());
                             patchedFilesNum.getAndIncrement();
                         }
                     } catch (Exception e) {
@@ -90,13 +90,10 @@ public class Replace implements Rule {
             futures.add(project.getExecutor().submit(r));
         }
         project.getExecutor().waitForFinish(futures);
-
-        if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-            if (isSmali()) {
-                Main.out.println(patchedFilesNum + " smali files patched.");
-            } else {
-                Main.out.println(patchedFilesNum + " xml files patched.");
-            }
+        if (isSmali()) {
+            logger.info(patchedFilesNum + " smali files patched.");
+        } else {
+            logger.info(patchedFilesNum + " xml files patched.");
         }
     }
 

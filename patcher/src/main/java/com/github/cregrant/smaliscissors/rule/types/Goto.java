@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 
 public class Goto implements Rule {
+
     public String name;
     public String goTo;
 

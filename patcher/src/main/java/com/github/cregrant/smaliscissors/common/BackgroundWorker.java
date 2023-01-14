@@ -1,19 +1,24 @@
 package com.github.cregrant.smaliscissors.common;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.concurrent.*;
 
 public class BackgroundWorker {
-    private ExecutorService executor;
+
+    private static final Logger logger = LoggerFactory.getLogger(BackgroundWorker.class);
     private final int threadsNum = Runtime.getRuntime().availableProcessors();
+    private ExecutorService executor;
 
     public void waitForFinish(List<Future<?>> futures) {
         for (Future<?> future : futures) {
             try {
                 future.get();
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
+                logger.error("Computing background task failed:", e);
             }
         }
     }
@@ -28,6 +33,10 @@ public class BackgroundWorker {
 
     public int getThreadsNum() {
         return threadsNum;
+    }
+
+    public ExecutorService getExecutor() {
+        return executor;
     }
 
     public Future<?> submit(Runnable task) {

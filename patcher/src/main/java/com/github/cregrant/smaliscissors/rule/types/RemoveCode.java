@@ -1,11 +1,11 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
@@ -13,6 +13,8 @@ import java.util.List;
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.*;
 
 public class RemoveCode implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemoveCode.class);
     private String name;
     private List<String> targets;
     private boolean internal;
@@ -25,7 +27,7 @@ public class RemoveCode implements Rule {
             setLastTarget(project, "");
             int pos = targets.indexOf(lastTarget);
             if (pos == -1) {
-                Main.out.println("Hashcode collision happened? Patch won't be resumed from the last target");
+                logger.error("Hashcode collision happened? Patch won't be resumed from the last target");
             }
             return pos;
         }
@@ -124,7 +126,7 @@ public class RemoveCode implements Rule {
         for (int i = 0; i < targets.size(); i++) {
             String target = targets.get(i);
             sb.append("    ").append(target).append("\n");
-            if (Prefs.logLevel.getLevel() >= Prefs.Log.INFO.getLevel() && i >= 30) {
+            if (i >= 30 && !logger.isDebugEnabled()) {
                 sb.append("    ... + ").append(targets.size() - i - 1).append(" more lines\n");
                 break;
             }

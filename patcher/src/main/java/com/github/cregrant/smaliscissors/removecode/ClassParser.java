@@ -1,10 +1,14 @@
 package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.removecode.classparts.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
 public class ClassParser {
+
+    private static final Logger logger = LoggerFactory.getLogger(ClassParser.class);
     private final SmaliClass smaliClass;
     private final String body;
     private int pos;

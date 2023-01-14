@@ -1,10 +1,10 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.ProjectProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -12,6 +12,8 @@ import static com.github.cregrant.smaliscissors.common.ProjectProperties.Propert
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.removecode_action_type;
 
 public class RemoveCodeAction implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(RemoveCodeAction.class);
     private String name;
     private Action action;
     private int actionCount;
@@ -54,9 +56,8 @@ public class RemoveCodeAction implements Rule {
         if (currentAction.equals(action.name())) {     //the same action already scheduled
             properties.set(removecode_action_count, String.valueOf(currentActionCount + actionCount));
         } else {
-            if (currentActionCount > 0 && !currentAction.equals(action.name()) && Prefs.logLevel.getLevel() <= 2) {
-                //other action already scheduled
-                Main.out.println("Warning! Remove code action was changed from " + currentAction + " to " + action.name());
+            if (currentActionCount > 0 && !currentAction.equals(action.name())) {   //other action already scheduled
+                logger.warn("Remove code action was changed from " + currentAction + " to " + action.name());
             }
             properties.set(removecode_action_type, action.name());
             properties.set(removecode_action_count, String.valueOf(currentActionCount + actionCount));
@@ -64,9 +65,7 @@ public class RemoveCodeAction implements Rule {
 
         currentAction = properties.get(removecode_action_type);
         currentActionCount = Integer.parseInt(properties.get(removecode_action_count));
-        if (Prefs.logLevel.getLevel() <= 1) {
-            Main.out.println("Pending actions: " + currentAction + " " + currentActionCount + " next targets");
-        }
+        logger.info("Pending actions: " + currentAction + " " + currentActionCount + " next targets");
     }
 
     public void setAction(Action action) {

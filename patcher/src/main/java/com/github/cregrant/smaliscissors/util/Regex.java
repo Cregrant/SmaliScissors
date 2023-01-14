@@ -1,5 +1,8 @@
 package com.github.cregrant.smaliscissors.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,6 +11,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Regex {
+
+    private static final Logger logger = LoggerFactory.getLogger(Regex.class);
+
     public static ArrayList<String> matchMultiLines(CharSequence content, Pattern readyPattern, ResultFormat format) {
         Matcher matcher = readyPattern.matcher(content);
         ArrayList<String> matchedArr = new ArrayList<>();
@@ -190,8 +196,7 @@ public class Regex {
                 newBodyBuilder.replace(start + realOffset, matcher.end(0) + realOffset, replacementBuilder.toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println(body.length() + " " + newBodyBuilder.toString().length());
+            logger.error("Unexpected error", e);
         }
         return newBodyBuilder.toString();
     }

@@ -1,11 +1,15 @@
 package com.github.cregrant.smaliscissors.common;
 
 import com.github.cregrant.smaliscissors.Project;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Properties;
 
 public class ProjectProperties {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProjectProperties.class);
     private final File propertiesFile;
     private final Properties properties;
 
@@ -16,6 +20,7 @@ public class ProjectProperties {
             try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(propertiesFile))) {
                 properties.load(bis);
             } catch (IOException e) {
+                logger.error("Error accessing PatcherProperties.txt inside the project");
                 throw new RuntimeException(e);
             }
         }
@@ -44,7 +49,9 @@ public class ProjectProperties {
         if (!properties.isEmpty()) {
             try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(propertiesFile))) {
                 properties.store(bos, null);
+                logger.debug("PatcherProperties.txt saved");
             } catch (IOException e) {
+                logger.error("Error saving PatcherProperties.txt inside the project");
                 throw new RuntimeException(e);
             }
         }

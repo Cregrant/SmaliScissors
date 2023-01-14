@@ -1,14 +1,19 @@
 package com.github.cregrant.smaliscissors.removecode.manifestparsers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.zip.ZipFile;
 
 public class BinaryParser {
+
     private static final int END_DOC_TAG = 0x00100101;
     private static final int START_TAG = 0x00100102;
     private static final int END_TAG = 0x00100103;
+    private static final Logger logger = LoggerFactory.getLogger(BinaryParser.class);
     private final byte[] xml;
 
     public BinaryParser(String apkPath) {

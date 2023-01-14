@@ -1,5 +1,8 @@
 package com.github.cregrant.smaliscissors.removecode.manifestparsers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -9,7 +12,9 @@ import java.util.HashSet;
  * <a href="https://github.com/ibilux/ApkBinaryDecode">...</a>
  */
 public class BinaryStringPoolParser {
+
     private static final int RES_STRING_POOL_TYPE = 0x0001;
+    private static final Logger logger = LoggerFactory.getLogger(BinaryStringPoolParser.class);
 
     public HashSet<String> parseXmlStrings(byte[] buf) {
         try {

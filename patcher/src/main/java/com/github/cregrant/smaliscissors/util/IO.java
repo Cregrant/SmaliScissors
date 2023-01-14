@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.util;
 
-import com.github.cregrant.smaliscissors.Main;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,6 +17,8 @@ import java.util.zip.ZipInputStream;
 @SuppressWarnings("ResultOfMethodCallIgnored")
 public class IO {
 
+    private static final Logger logger = LoggerFactory.getLogger(IO.class);
+
     public static String read(String path) {
         String resultString;
         try (FileInputStream is = new FileInputStream(path)) {
@@ -28,13 +31,34 @@ public class IO {
         return resultString;
     }
 
+    public static byte[] readBytes(String path) {
+        try (FileInputStream is = new FileInputStream(path)) {
+            byte[] content = new byte[is.available()];
+            is.read(content);
+            return content;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static void write(String path, String content) {
         File file = new File(path);
         file.delete();
 
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(content.getBytes(StandardCharsets.UTF_8));
-            fos.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void writeBytes(String path, byte[] content) {
+        File file = new File(path);
+        file.delete();
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write(content);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -66,8 +90,7 @@ public class IO {
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
-            Main.out.println("Error during copying file...\nFrom " + src + "\nTo " + dst);
+            logger.error("Error during copying file...\nFrom " + src + "\nTo " + dst, e);
         }
     }
 
@@ -113,7 +136,6 @@ public class IO {
                     while ((len = zis.read(buffer)) != -1) {
                         fos.write(buffer, 0, len);
                     }
-                    fos.flush();
                     fos.close();
                     extractedPathList.add(filePath.getPath());
                 }

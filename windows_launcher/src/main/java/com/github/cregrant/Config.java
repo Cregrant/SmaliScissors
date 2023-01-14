@@ -1,10 +1,15 @@
 package com.github.cregrant;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Properties;
 
 public class Config {
+
+    private static final Logger logger = LoggerFactory.getLogger(Config.class);
     static String verboseLevel = "INFO";
 
     public static void loadConf() {
@@ -14,19 +19,17 @@ public class Config {
             FileInputStream input = new FileInputStream(settingsFilename);
             props.load(input);
             input.close();
-        }
-        catch (Exception e) {
-            com.github.cregrant.smaliscissors.Main.out.println("Error loading conf!");
+        } catch (Exception e) {
+            logger.error("Error loading conf!", e);
         }
         try {
             if (props.size() == 0) {
                 saveConf();
-                com.github.cregrant.smaliscissors.Main.out.println("Config file broken or unreachable. Using default one.");
+                logger.warn("Config file broken or unreachable. Using default one.");
             }
             verboseLevel = props.getProperty("Verbose level");
-        }
-        catch (Exception e) {
-            com.github.cregrant.smaliscissors.Main.out.println("Error reading conf!");
+        } catch (Exception e) {
+            logger.error("Error reading conf!", e);
             saveConf();
         }
 
@@ -39,9 +42,8 @@ public class Config {
             props.put("Verbose level", String.valueOf(verboseLevel));
             props.store(output, "");
             output.close();
-        }
-        catch (Exception e) {
-            com.github.cregrant.smaliscissors.Main.out.println("Error writing conf: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error writing conf!", e);
         }
     }
 }

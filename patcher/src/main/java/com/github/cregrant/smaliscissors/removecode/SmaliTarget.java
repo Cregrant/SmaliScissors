@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode;
 
 public class SmaliTarget {
+
     private String smaliRef;
     private String skipPath;    //filepath starts with skipPath will be skipped
     private boolean isClass = true;

@@ -1,11 +1,14 @@
 package com.github.cregrant;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.util.ArrayList;
 
-import static com.github.cregrant.Main.out;
-
 public class Scanner {
+
+    private static final Logger logger = LoggerFactory.getLogger(Scanner.class);
     File projectsFolder;
     File patchesFolder;
 
@@ -33,13 +36,13 @@ public class Scanner {
 
     private ArrayList<String> getProjects() {
         if (projectsFolder == null || !projectsFolder.isDirectory()) {
-            out.println("Error loading projects folder\n" + projectsFolder);
+            logger.error("Error loading projects folder\n" + projectsFolder);
             return new ArrayList<>(0);
         }
 
         File[] projects = projectsFolder.listFiles();
         if (projects == null || projects.length == 0) {
-            out.println("Projects folder is empty\n" + projectsFolder);
+            logger.error("Projects folder is empty\n" + projectsFolder);
             return new ArrayList<>(0);
         }
 
@@ -47,8 +50,9 @@ public class Scanner {
         for (File project : projects) {
             if (project.isDirectory()) {
                 String[] subfolders = project.list();
-                if (subfolders == null)
+                if (subfolders == null) {
                     continue;
+                }
                 for (String subfolder : subfolders) {
                     if (subfolder.equals("res") || subfolder.equals("smali")) {
                         result.add(project.toString());
@@ -57,27 +61,29 @@ public class Scanner {
                 }
             }
         }
-        if (result.isEmpty())
-            out.println("No decompiled projects found!");
+        if (result.isEmpty()) {
+            logger.error("No decompiled projects found!");
+        }
         return result;
     }
 
     private ArrayList<String> getPatches() {
         if (patchesFolder == null || !patchesFolder.isDirectory()) {
-            out.println("Error loading patches folder\n" + patchesFolder);
+            logger.error("Error loading patches folder\n" + patchesFolder);
             return new ArrayList<>(0);
         }
 
         File[] patches = patchesFolder.listFiles();
         if (patches == null || patches.length == 0) {
-            out.println("Patches folder is empty\n" + patchesFolder);
+            logger.error("Patches folder is empty\n" + patchesFolder);
             return new ArrayList<>(0);
         }
 
         ArrayList<String> result = new ArrayList<>(patches.length);
         for (File zip : patches) {
-            if (zip.toString().endsWith(".zip"))
+            if (zip.toString().endsWith(".zip")) {
                 result.add(zip.toString());
+            }
         }
         return result;
     }

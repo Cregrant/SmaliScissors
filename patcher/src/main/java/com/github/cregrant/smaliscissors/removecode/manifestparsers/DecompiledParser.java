@@ -1,8 +1,13 @@
 package com.github.cregrant.smaliscissors.removecode.manifestparsers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashSet;
 
 public class DecompiledParser {
+
+    private static final Logger logger = LoggerFactory.getLogger(DecompiledParser.class);
     private final String body;
     private int pos;
 
@@ -12,7 +17,7 @@ public class DecompiledParser {
 
     public HashSet<String> parse() {
         HashSet<String> classes = new HashSet<>();
-        String[] targets = new String[] {"<activity ", "<provider ", "<receiver ", "<service ", "<meta-data "};
+        String[] targets = new String[]{"<activity ", "<provider ", "<receiver ", "<service ", "<meta-data "};
         for (String target : targets) {
             while (hasNext(target)) {
                 classes.add(getNext());

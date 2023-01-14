@@ -3,9 +3,11 @@ package com.github.cregrant.smaliscissors;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Args {
@@ -44,7 +46,7 @@ public class Args {
         options.addOption(logFile);
     }
 
-    public void validate(CommandLine cmd) {
+    public void validate(CommandLine cmd) throws ParseException {
         StringBuilder errors = new StringBuilder();
 
         for (String projectPath : cmd.getOptionValues(project)) {    //project values is required and not null
@@ -80,18 +82,16 @@ public class Args {
         }
 
         if (cmd.hasOption(log)) {
-            String logValue = cmd.getOptionValue(log);
-            try {
-                Prefs.Log.valueOf(logValue);
-            } catch (Exception e) {
-                errors.append("The ").append(log.getLongOpt()).append(" parameter value \"")
-                        .append(logValue).append("\" is invalid\n");
+            String logValue = cmd.getOptionValue(log).toUpperCase();
+            boolean valid = Arrays.asList("OFF", "TRACE", "DEBUG", "INFO", "WARN", "ERROR").contains(logValue);
+            if (!valid) {
+                errors.append("The ").append(log.getLongOpt()).append(" parameter value \"").append(logValue)
+                        .append("\" is invalid\n");
             }
         }
 
         if (errors.length() > 0) {
-            Main.out.println("Execution aborted, please fix some errors:\n" + errors);
-            System.exit(1);
+            throw new ParseException("Execution aborted; please fix some errors:\n" + errors);
         }
     }
 

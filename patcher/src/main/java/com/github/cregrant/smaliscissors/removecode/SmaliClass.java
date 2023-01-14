@@ -1,6 +1,5 @@
 package com.github.cregrant.smaliscissors.removecode;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassHeader;
@@ -10,12 +9,15 @@ import com.github.cregrant.smaliscissors.removecode.method.MethodParser;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.Blank;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.Invoke;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.Opcode;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class SmaliClass {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(SmaliClass.class);
     private final Project project;
     private final SmaliFile file;
     private final String ref;
@@ -72,7 +74,7 @@ public class SmaliClass {
                 }
             }
         }
-        Main.out.println("Warning: <init> method not found inside the " + ref + " class!");
+        logger.warn("<init> method not found inside the " + ref + " class!");
         return false;   //just delete that strange class
     }
 

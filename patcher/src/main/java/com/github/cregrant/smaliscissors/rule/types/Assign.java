@@ -1,17 +1,19 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.util.Regex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
 public class Assign implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(Assign.class);
     private String name;
     private String target;
     private String match;
@@ -73,9 +75,9 @@ public class Assign implements Rule {
             }
             valueList = Regex.matchMultiLines(dFile.getBody(), Pattern.compile(patch.applyAssign(getMatch())), Regex.ResultFormat.FULL);
             if (keyList.size() < valueList.size()) {
-                Main.out.println("WARNING: MATCH_ASSIGN found excess results...");
+                logger.warn("MATCH_ASSIGN found excess results...");
             } else if (keyList.size() > valueList.size()) {
-                Main.out.println("WARNING: MATCH_ASSIGN found not enough results...");
+                logger.warn("MATCH_ASSIGN found not enough results...");
             }
 
             int min = Math.min(keyList.size(), valueList.size());
@@ -83,14 +85,16 @@ public class Assign implements Rule {
                 String key = keyList.get(i);
                 String value = valueList.get(i);
                 patch.addAssignment(key, value);
-                if (Prefs.logLevel == Prefs.Log.DEBUG) {
-                    if (value.length() > 300) {
-                        value = value.substring(0, 60) + " ... " + value.substring(value.length() - 60);
-                    }
-                    Main.out.println("Assigned \"" + value + "\" to \"" + key + "\"");
-                }
+                logger.debug("Assigned \"{}\" to \"{}\"", minifyLongString(value), key);
             }
         }
+    }
+
+    private String minifyLongString(String str) {
+        if (str.length() > 300) {
+            return str.substring(0, 60) + " ... " + str.substring(str.length() - 60);
+        }
+        return str;
     }
 
     public String getTarget() {

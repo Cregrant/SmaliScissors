@@ -9,10 +9,12 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.slf4j:slf4j-api:1.7.36'
+    implementation 'ch.qos.logback:logback-classic:1.2.11'
+
     runtimeOnly 'org.antlr:antlr4-runtime:4.6'
     implementation 'org.antlr:antlr4:4.6'
     implementation 'org.ow2.asm:asm-debug-all:5.2'
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':patcher')
 }
 
@@ -28,6 +30,8 @@ task fatJar(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.WARN
     delete(archiveFile.get())
 
+    from configurations.runtimeClasspath
+            .exclude(group: 'org.slf4j', module: 'slf4j-simple')
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } {

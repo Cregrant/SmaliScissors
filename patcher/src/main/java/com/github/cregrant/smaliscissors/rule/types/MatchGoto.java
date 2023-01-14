@@ -1,11 +1,11 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.util.Regex;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +13,8 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 public class MatchGoto implements Rule {
+
+    private static final Logger logger = LoggerFactory.getLogger(MatchGoto.class);
     private String name;
     private String target;
     private String match;
@@ -79,9 +81,7 @@ public class MatchGoto implements Rule {
                             String body = df.getBody();
                             if (Regex.matchSingleLine(body, matchPattern) != null) {
                                 found = true;
-                                if (Prefs.logLevel.getLevel() <= Prefs.Log.INFO.getLevel()) {
-                                    Main.out.println("Match found!");
-                                }
+                                logger.info("Match found!");
                             }
                         }
                     }
@@ -90,7 +90,7 @@ public class MatchGoto implements Rule {
             }
             project.getExecutor().waitForFinish(futures);
         } catch (Exception e) {
-            Main.out.println(e.getMessage());
+            logger.error("MatchGoto search failed", e);
         }
     }
 

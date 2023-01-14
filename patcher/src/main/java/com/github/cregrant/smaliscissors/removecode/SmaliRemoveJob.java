@@ -1,11 +1,10 @@
 package com.github.cregrant.smaliscissors.removecode;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
-import com.github.cregrant.smaliscissors.util.Misc;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +14,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliRemoveJob {
+
+    private static final Logger logger = LoggerFactory.getLogger(SmaliRemoveJob.class);
     private final Project project;
     private final ClassesPool pool;
     private final Patch patch;
@@ -49,8 +50,8 @@ public class SmaliRemoveJob {
                         project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
                         throw new IllegalStateException("Skipped to prevent some firebase errors.");
                     }
-                    if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                        Main.out.println("Cleaning " + smaliClass);
+                    if (!rule.isInternal()) {
+                        logger.debug("Cleaning {}", smaliClass);
                     }
                     Runnable r = new Runnable() {
                         @Override
@@ -70,9 +71,7 @@ public class SmaliRemoveJob {
                 project.getExecutor().waitForFinish(futures);
 
                 if (exception.get() != null) {
-                    if (Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                        Main.out.println(Misc.stacktraceToString(exception.get()));
-                    }
+                    logger.debug("", exception.get());
                     throw exception.get();
                 }
 
@@ -87,8 +86,8 @@ public class SmaliRemoveJob {
                     }
 
                     newTargets.add(dependency);
-                    if (!rule.isInternal() && Prefs.logLevel.getLevel() == Prefs.Log.DEBUG.getLevel()) {
-                        Main.out.println("Also deleting " + dependency);
+                    if (!rule.isInternal()) {
+                        logger.debug("Also deleting {}", dependency);
                     }
                 }
                 state.patchedClasses.removeAll(classes);

@@ -4,12 +4,16 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
 import com.github.cregrant.smaliscissors.util.ArraySplitter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SmaliFilter {
+
+    private static final Logger logger = LoggerFactory.getLogger(SmaliFilter.class);
     private final Project project;
     private final ClassesPool pool;
     private final State currentState;
