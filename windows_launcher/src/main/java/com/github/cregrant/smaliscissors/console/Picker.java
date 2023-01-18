@@ -1,4 +1,4 @@
-package com.github.cregrant;
+package com.github.cregrant.smaliscissors.console;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

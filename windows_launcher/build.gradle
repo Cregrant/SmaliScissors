@@ -12,26 +12,26 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
     implementation 'ch.qos.logback:logback-classic:1.2.11'
 
+    implementation 'commons-cli:commons-cli:1.5.0'
+
     runtimeOnly 'org.antlr:antlr4-runtime:4.6'
     implementation 'org.antlr:antlr4:4.6'
     implementation 'org.ow2.asm:asm-debug-all:5.2'
     implementation project(':patcher')
+    //implementation 'org.slf4j:slf4j-simple:1.7.36'
 }
-
 
 generateGrammarSource {
     arguments += ['-no-listener', '-visitor', '-package', 'com.googlecode.d2j.smali.antlr4']
 }
 
 task fatJar(type: Jar) {
-    manifest.attributes["Main-Class"] = "com.github.cregrant.Main"
+    manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.console.Main"
     archiveBaseName.set("windows_launcher")
     destinationDirectory.set(rootDir)
     duplicatesStrategy = DuplicatesStrategy.WARN
     delete(archiveFile.get())
 
-    from configurations.runtimeClasspath
-            .exclude(group: 'org.slf4j', module: 'slf4j-simple')
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } {

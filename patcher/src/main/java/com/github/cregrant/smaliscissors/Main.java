@@ -1,43 +1,27 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
-import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
-    public static DexExecutor dex;
 
-    public static void mainAsModule(String[] args, DexExecutor dexExecutor) {
-        dex = dexExecutor;
-        Args parsedArgs = new Args();
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd;
-
+    public static void runPatcher(DexExecutor dexExecutor, List<String> projects,
+                                  List<String> patches, List<String> smaliPaths) throws Exception {
         try {
-            cmd = parser.parse(parsedArgs.getOptions(), args);
-            parsedArgs.validate(cmd);
-            start(parsedArgs);
-        } catch (ParseException e) {
-            System.err.println(e.getMessage());
-            new HelpFormatter().printHelp(" ", parsedArgs.getOptions());
+            Worker worker = new Worker(dexExecutor, projects);
+            if (!smaliPaths.isEmpty()) {
+                worker.addSingleRemoveCodeRules(smaliPaths);
+            }
+            worker.addPatches(patches);
+            worker.run();
         } catch (Exception e) {
             logger.error("Execution interrupted:", e);
+            throw e;
         }
-    }
-
-    public static void main(String[] args) {        //jar archive entry (broken?)
-        mainAsModule(args, null);
-    }
-
-    private static void start(Args parsedArgs) {
-        Worker worker = new Worker(parsedArgs.getProjectsList());
-        worker.addPatches(parsedArgs.getPatchesList());
-        if (!parsedArgs.getRemoveList().isEmpty()) {
-            worker.addSingleRemoveCodeRules(parsedArgs.getRemoveList());
-        }
-        worker.run();
     }
 }

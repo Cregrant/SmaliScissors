@@ -1,8 +1,8 @@
 package com.github.cregrant.smaliscissors.rule.types;
 
-import com.github.cregrant.smaliscissors.Main;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +64,9 @@ public class ExecuteDex implements Rule {
             return;
         }
         String dexPath = extracted.get(0);
-        if (Main.dex != null) {
-            Main.dex.runDex(dexPath, getEntrance(), getMainClass(), apkPath, zipPath, projectPath, getParam(), patch.getTempDir().getPath());
+        DexExecutor dexExecutor = project.getDexExecutor();
+        if (dexExecutor != null) {
+            dexExecutor.runDex(dexPath, getEntrance(), getMainClass(), apkPath, zipPath, projectPath, getParam(), patch.getTempDir().getPath());
         } else {
             logger.error("Dex executor is not present.");
         }

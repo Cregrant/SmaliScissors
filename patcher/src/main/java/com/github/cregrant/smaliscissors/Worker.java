@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.BackgroundWorker;
+import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +16,19 @@ public class Worker {
 
     private static final Logger logger = LoggerFactory.getLogger(Worker.class);
     private final BackgroundWorker executor = new BackgroundWorker();
+    private final DexExecutor dexExecutor;
     private final ArrayList<Project> projects = new ArrayList<>(5);
     private final ArrayList<Patch> patches = new ArrayList<>(5);
 
-    public Worker(List<String> projectsList) {
+    public Worker(DexExecutor dexExecutor, List<String> projectsList) {
+        this.dexExecutor = dexExecutor;
         setProjects(projectsList);
     }
 
     void setProjects(List<String> projectsList) {
         for (String path : projectsList) {
             try {
-                Project project = new Project(path, executor);
+                Project project = new Project(path, executor, dexExecutor);
                 projects.add(project);
             } catch (Exception e) {
                 logger.error("Error: skipping project \"" + path + "\"! (" + e.getMessage() + ")");
@@ -39,10 +42,10 @@ public class Worker {
         }
     }
 
-    void addSingleRemoveCodeRules(List<String> removeList) {
+    void addSingleRemoveCodeRules(List<String> smaliPaths) {
         RemoveCode rule = new RemoveCode();
-        ArrayList<String> targetsList = new ArrayList<>(removeList.size());
-        for (String s : removeList) {
+        ArrayList<String> targetsList = new ArrayList<>(smaliPaths.size());
+        for (String s : smaliPaths) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
                 targetsList.add(trimmed);

@@ -6,6 +6,7 @@ import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
+import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
 import com.github.cregrant.smaliscissors.removecode.manifestparsers.BinaryParser;
 import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledParser;
@@ -29,6 +30,7 @@ public class Project {
     private static final Logger logger = LoggerFactory.getLogger(Project.class);
     private final MemoryManager memoryManager;
     private final BackgroundWorker executor;
+    private final DexExecutor dexExecutor;
     private final SmaliKeeper smaliKeeper;
     private final ProjectProperties properties;
     private final String apkPath;
@@ -43,9 +45,10 @@ public class Project {
     private boolean smaliCacheEnabled;
     private boolean xmlCacheEnabled;
 
-    public Project(String path, BackgroundWorker executor) {
+    public Project(String path, BackgroundWorker executor, DexExecutor dexExecutor) {
         this.path = path;
         this.executor = executor;
+        this.dexExecutor = dexExecutor;
         name = Regex.getFilename(path);
         memoryManager = new MemoryManager(this);
         apkPath = new ApkLocator().getApkPath(this);
@@ -193,6 +196,10 @@ public class Project {
             }
         }
         return manifest;
+    }
+
+    public DexExecutor getDexExecutor() {
+        return dexExecutor;
     }
 
     public String getApkPath() {
