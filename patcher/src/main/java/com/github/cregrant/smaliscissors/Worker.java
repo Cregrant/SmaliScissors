@@ -56,7 +56,6 @@ public class Worker {
     }
 
     void run() {
-        executor.start();
         try {
             long globalStartTime = currentTimeMillis();
             for (Project project : projects) {

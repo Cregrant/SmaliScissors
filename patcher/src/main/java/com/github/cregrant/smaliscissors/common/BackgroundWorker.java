@@ -10,8 +10,16 @@ import java.util.concurrent.*;
 public class BackgroundWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(BackgroundWorker.class);
-    private final int threadsNum = Runtime.getRuntime().availableProcessors();
-    private ExecutorService executor;
+    private static final int THREADS_COUNT = Runtime.getRuntime().availableProcessors() + 1;
+    private final ExecutorService executor;
+
+    public BackgroundWorker() {
+        this(THREADS_COUNT);
+    }
+
+    public BackgroundWorker(int threads) {
+        executor = Executors.newFixedThreadPool(threads);
+    }
 
     public void waitForFinish(List<Future<?>> futures) {
         for (Future<?> future : futures) {
@@ -23,16 +31,8 @@ public class BackgroundWorker {
         }
     }
 
-    public void start() {
-        executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 1);
-    }
-
     public void stop() {
         executor.shutdownNow();
-    }
-
-    public int getThreadsNum() {
-        return threadsNum;
     }
 
     public ExecutorService getExecutor() {
