@@ -53,7 +53,7 @@ public class SmaliFilter {
             }
 
             final Set<SmaliFile> scheduledSet = Collections.synchronizedSet(new HashSet<SmaliFile>(100));
-            final ArraySplitter splitter = new ArraySplitter(pool.getArray(), project.getExecutor().getThreadsNum());
+            final ArraySplitter splitter = new ArraySplitter(pool.getArray());
             final String finalClassRef = classRef;
             while (splitter.hasNext()) {
                 final int start = splitter.chunkStart();
@@ -167,7 +167,7 @@ public class SmaliFilter {
             }
 
             final List<SmaliFile> synchronizedDeletedFiles = Collections.synchronizedList(new ArrayList<SmaliFile>());
-            final ArraySplitter splitter = new ArraySplitter(smaliFilesArray, project.getExecutor().getThreadsNum());
+            final ArraySplitter splitter = new ArraySplitter(smaliFilesArray);
             while (splitter.hasNext()) {
                 final int start = splitter.chunkStart();
                 final int end = splitter.chunkEnd();

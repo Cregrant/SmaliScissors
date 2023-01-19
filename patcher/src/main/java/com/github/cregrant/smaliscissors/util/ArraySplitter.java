@@ -6,6 +6,10 @@ public class ArraySplitter {
     private final int chunkSize;
     private int currentPos;
 
+    public ArraySplitter(Object[] array) {
+        this(array, Runtime.getRuntime().availableProcessors());
+    }
+
     public ArraySplitter(Object[] array, int partsNum) {
         arrayLength = array.length;
         chunkSize = arrayLength / partsNum + partsNum;
