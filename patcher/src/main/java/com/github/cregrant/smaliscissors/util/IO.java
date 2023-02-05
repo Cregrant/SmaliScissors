@@ -50,7 +50,6 @@ public class IO {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static void writeBytes(String path, byte[] content) {
@@ -62,7 +61,6 @@ public class IO {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public static void copy(String src, String dst) {
@@ -70,8 +68,7 @@ public class IO {
         dst = dst.trim();
         File dstFile = new File(dst);
         File srcFile = new File(src);
-        if (!srcFile.isDirectory() && dstFile.isDirectory())    //someone is trying to copy file to name of folder
-        {
+        if (!srcFile.isDirectory() && dstFile.isDirectory()) {    //someone is trying to copy file to name of folder
             dst = dst + '/' + srcFile.getName();    //append file name
         }
         if (dstFile.exists()) {
@@ -94,7 +91,6 @@ public class IO {
         }
     }
 
-
     public static void delete(File file) throws IOException {
         try {
             if (file.isDirectory()) {
@@ -114,7 +110,6 @@ public class IO {
         } catch (NullPointerException e) {
             throw new IOException("Deleting " + file + "caused IO error.");
         }
-
     }
 
     public static ArrayList<String> extract(File zipFile, String dstPath, String exactName) {
