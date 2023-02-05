@@ -84,7 +84,7 @@ public class SmaliWorker {
                 job.remove(target, newState);
             } catch (Exception e) {
                 errorsNum++;
-                logger.error("Failed to remove " + target + " (" + e.getMessage() + ")");
+                logger.warn("Failed to remove " + target + " (" + e.getMessage() + ")");
                 newState = new State(currentState);
                 if (controller.canApply()) {
                     if (controller.applyAndCheckEnd(target)) {
