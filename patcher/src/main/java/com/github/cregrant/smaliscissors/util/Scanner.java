@@ -190,7 +190,7 @@ public class Scanner {
         ArrayList<File> deleted = new ArrayList<>(1);
         for (File file : filtered) {
             File[] subfolders = file.listFiles();
-            if (subfolders == null || subfolders.length == 0) {
+            if (subfolders == null) {
                 continue;
             }
 
