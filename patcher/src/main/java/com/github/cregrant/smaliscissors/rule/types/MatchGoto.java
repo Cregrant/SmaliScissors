@@ -50,7 +50,9 @@ public class MatchGoto implements Rule {
 
     @Override
     public String nextRuleName() {
-        return found ? getGoTo() : null;
+        boolean copy = found;
+        found = false;
+        return copy ? getGoTo() : null;
     }
 
     @Override
