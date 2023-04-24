@@ -7,19 +7,18 @@ import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.manifest.Manifest;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
-import com.github.cregrant.smaliscissors.removecode.manifestparsers.BinaryParser;
-import com.github.cregrant.smaliscissors.removecode.manifestparsers.DecompiledParser;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
 import com.github.cregrant.smaliscissors.util.Regex;
 import com.github.cregrant.smaliscissors.util.Scanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -36,10 +35,9 @@ public class Project {
     private final String apkPath;
     private final String path;
     private final String name;
-    private XmlFile manifest;
+    private final Manifest manifest;
     private ArrayList<SmaliFile> smaliList = new ArrayList<>();
     private ArrayList<XmlFile> xmlList = new ArrayList<>();
-    private HashSet<String> protectedClasses;
     private boolean smaliScanned;
     private boolean xmlScanned;
     private boolean smaliCacheEnabled;
@@ -50,6 +48,7 @@ public class Project {
         this.executor = executor;
         this.dexExecutor = dexExecutor;
         name = Regex.getFilename(path);
+        manifest = new Manifest(this);
         memoryManager = new MemoryManager(this);
         apkPath = new ApkLocator().getApkPath(this);
         smaliKeeper = new SmaliKeeper(this);
@@ -104,9 +103,6 @@ public class Project {
     void writeChanges() {
         logger.debug("Writing changes...");
         properties.save();
-        if (manifest != null) {
-            manifest.save();
-        }
         if (!isXmlCacheEnabled() && !isSmaliCacheEnabled()) {
             return;
         }
@@ -164,38 +160,21 @@ public class Project {
         return deleted;
     }
 
+    public List<DecompiledFile> applyTargetAssignments(String target) {
+        switch (target) {
+            case "[APPLICATION]":
+                return Collections.singletonList(manifest.getApplicationFile());
+            case "[ACTIVITIES]":
+                return manifest.getActivityFiles();
+            case "[LAUNCHER_ACTIVITIES]":
+                return manifest.getLauncherActivityFiles();
+            default:
+                return new ArrayList<>();
+        }
+    }
+
     public HashSet<String> getProtectedClasses() {
-        if (protectedClasses == null) {
-            protectedClasses = parseProtectedClasses();
-        }
-        return protectedClasses;
-    }
-
-    private HashSet<String> parseProtectedClasses() {
-        if (getManifest() != null) {
-            return new DecompiledParser(manifest.getBody()).parse();
-        }
-        if (apkPath != null) {
-            BinaryParser parser = new BinaryParser(apkPath);
-            return parser.getStrings();
-        }
-        return new HashSet<>();
-    }
-
-    public XmlFile getManifest() {
-        if (manifest == null) {
-            for (XmlFile file : xmlList) {
-                if (file.getPath().equals("AndroidManifest.xml")) {
-                    manifest = file;
-                    return manifest;
-                }
-            }
-            File manifestFile = new File(path + File.separator + "AndroidManifest.xml");
-            if (manifestFile.exists()) {
-                manifest = new XmlFile(this, "AndroidManifest.xml");
-            }
-        }
-        return manifest;
+        return manifest.getProtectedClasses();
     }
 
     public DexExecutor getDexExecutor() {

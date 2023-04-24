@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.removecode.manifestparsers;
+package com.github.cregrant.smaliscissors.manifest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

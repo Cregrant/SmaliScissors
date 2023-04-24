@@ -10,41 +10,32 @@ import java.io.IOException;
 
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.removecode_action_count;
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.removecode_action_type;
+import static com.github.cregrant.smaliscissors.rule.RuleParser.ACTION;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
 
-public class RemoveCodeAction implements Rule {
+public class RemoveCodeAction extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveCodeAction.class);
-    private String name;
     private Action action;
     private int actionCount;
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public RemoveCodeAction(String rawString) {
+        super(rawString);
+        String actionString = matchSingleLine(rawString, ACTION);
+        if (actionString != null) {
+            try {
+                int spacePos = actionString.lastIndexOf(' ');
+                action = RemoveCodeAction.Action.valueOf(actionString.substring(0, spacePos).toUpperCase());
+                actionCount = Integer.parseInt(actionString.substring(spacePos + 1));
+            } catch (Exception e) {
+                actionCount = -1;
+            }
+        }
     }
 
     @Override
     public boolean isValid() {
         return action != null && actionCount >= 0;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return true;
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return false;
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
     }
 
     @Override
@@ -66,14 +57,6 @@ public class RemoveCodeAction implements Rule {
         currentAction = properties.get(removecode_action_type);
         currentActionCount = Integer.parseInt(properties.get(removecode_action_count));
         logger.info("Pending actions: " + currentAction + " " + currentActionCount + " next targets");
-    }
-
-    public void setAction(Action action) {
-        this.action = action;
-    }
-
-    public void setActionCount(int actionCount) {
-        this.actionCount = actionCount;
     }
 
     @Override

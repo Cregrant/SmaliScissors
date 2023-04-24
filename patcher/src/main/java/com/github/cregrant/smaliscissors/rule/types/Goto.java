@@ -3,29 +3,21 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 
-public class Goto implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.GOTO;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
 
-    public String name;
-    public String goTo;
+public class Goto extends Rule {
 
-    @Override
-    public String getName() {
-        return name;
+    private final String goTo;
+
+    public Goto(String rawString) {
+        super(rawString);
+        goTo = matchSingleLine(rawString, GOTO);
     }
 
     @Override
     public boolean isValid() {
         return goTo != null;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return false;
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return false;
     }
 
     @Override

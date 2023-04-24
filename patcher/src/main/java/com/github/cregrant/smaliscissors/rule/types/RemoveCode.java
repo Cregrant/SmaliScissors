@@ -4,20 +4,34 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
+import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.*;
+import static com.github.cregrant.smaliscissors.rule.RuleParser.TARGET;
+import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
 
-public class RemoveCode implements Rule {
+public class RemoveCode extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveCode.class);
-    private String name;
-    private List<String> targets;
+    private final List<String> targets;
     private boolean internal;
+
+    public RemoveCode(String rawString) {
+        super(rawString);
+        targets = matchMultiLines(rawString, TARGET, Regex.ResultFormat.SPLIT_TRIM);
+        smali = true;
+    }
+
+    public RemoveCode(ArrayList<String> targets) {
+        super("");
+        this.targets = targets;
+    }
 
     public int getLastTargetIndex(Project project) {
         ProjectProperties properties = project.getProperties();
@@ -57,37 +71,13 @@ public class RemoveCode implements Rule {
         return 0;
     }
 
-    public void removeActionCount(Project project) {
+    public void removePendingActions(Project project) {
         project.getProperties().set(removecode_action_count, "0");
     }
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @Override
     public boolean isValid() {
-        return getTargets() != null && !getTargets().isEmpty();
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return true;
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return false;
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
+        return targets != null && !targets.isEmpty();
     }
 
     @Override
@@ -106,10 +96,6 @@ public class RemoveCode implements Rule {
 
     public List<String> getTargets() {
         return targets;
-    }
-
-    public void setTargets(List<String> targets) {
-        this.targets = targets;
     }
 
     @Override

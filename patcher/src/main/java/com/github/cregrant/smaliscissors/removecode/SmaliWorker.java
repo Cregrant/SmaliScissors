@@ -39,7 +39,7 @@ public class SmaliWorker {
             writeChanges(state);
         }
 
-        rule.removeActionCount(project);
+        rule.removePendingActions(project);
     }
 
     private State infiniteApplyRule() {
@@ -131,8 +131,7 @@ public class SmaliWorker {
                 deletedList.add(file.getPath());
             }
 
-            RemoveFiles removeFiles = new RemoveFiles();
-            removeFiles.setTargets(deletedList);
+            RemoveFiles removeFiles = new RemoveFiles(deletedList);
             try {
                 removeFiles.apply(project, patch);
             } catch (IOException e) {

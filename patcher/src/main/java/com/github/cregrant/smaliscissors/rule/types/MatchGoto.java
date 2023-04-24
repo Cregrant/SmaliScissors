@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,58 +13,48 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
-public class MatchGoto implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
+
+public class MatchGoto extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(MatchGoto.class);
-    private String name;
-    private String target;
+    private final String target;
+    private final String goTo;
     private String match;
-    private String goTo;
-    private boolean isRegex;
-    private boolean isSmali;
-    private boolean isXml;
+    private final boolean isRegex;
     private volatile boolean found;
 
-    @Override
-    public String getName() {
-        return name;
-    }
+    public MatchGoto(String rawString) {
+        super(rawString);
+        target = matchSingleLine(rawString, TARGET);
+        match = matchSingleLine(rawString, MATCH);
+        goTo = matchSingleLine(rawString, GOTO);
+        isRegex = RuleParser.parseBoolean(rawString, REGEX);
+        if (target != null) {
+            smali = target.endsWith("smali");
+            xml = target.endsWith("xml");
+        }
 
-    public void setName(String name) {
-        this.name = name;
+        if (isRegex) {
+            match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+        }
     }
 
     @Override
     public boolean isValid() {
-        return getTarget() != null && getMatch() != null && getGoTo() != null;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return isSmali();
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return isXml();
-    }
-
-    @Override
-    public String nextRuleName() {
-        boolean copy = found;
-        found = false;
-        return copy ? getGoTo() : null;
+        return target != null && match != null && goTo != null && (smali || xml);
     }
 
     @Override
     public void apply(Project project, Patch patch) {
-        final Pattern matchPattern = Pattern.compile(patch.applyAssign(getMatch()));
-        final Pattern targetPattern = Pattern.compile(Regex.globToRegex(getTarget()));
+        final Pattern matchPattern = Pattern.compile(patch.applyAssign(match));
+        final Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
 
         List<? extends DecompiledFile> files;
-        if (isSmali()) {
+        if (smali) {
             files = project.getSmaliList();
-        } else if (isXml()) {
+        } else if (xml) {
             files = project.getXmlList();
         } else {
             throw new IllegalStateException("Not smali nor xml rule.");
@@ -81,7 +72,7 @@ public class MatchGoto implements Rule {
                             }
 
                             String body = df.getBody();
-                            if (Regex.matchSingleLine(body, matchPattern) != null) {
+                            if (isRegex && Regex.matchSingleLine(body, matchPattern) != null || body.contains(match)) {
                                 found = true;
                                 logger.info("Match found!");
                             }
@@ -96,52 +87,13 @@ public class MatchGoto implements Rule {
         }
     }
 
-    public String getTarget() {
-        return target;
-    }
-
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
-    public String getMatch() {
-        return match;
-    }
-
-    public void setMatch(String match) {
-        this.match = match;
-    }
-
-    public String getGoTo() {
-        return goTo;
-    }
-
-    public void setGoTo(String goTo) {
-        this.goTo = goTo;
-    }
-
-    public boolean isRegex() {
-        return isRegex;
-    }
-
-    public void setRegex(boolean regex) {
-        isRegex = regex;
-    }
-
-    public boolean isSmali() {
-        return isSmali;
-    }
-
-    public void setSmali(boolean smali) {
-        isSmali = smali;
-    }
-
-    public boolean isXml() {
-        return isXml;
-    }
-
-    public void setXml(boolean xml) {
-        isXml = xml;
+    @Override
+    public String nextRuleName() {
+        if (found) {
+            found = false;
+            return goTo;
+        }
+        return null;
     }
 
     @Override

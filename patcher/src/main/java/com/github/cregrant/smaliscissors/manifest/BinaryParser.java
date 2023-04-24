@@ -1,4 +1,4 @@
-package com.github.cregrant.smaliscissors.removecode.manifestparsers;
+package com.github.cregrant.smaliscissors.manifest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +10,10 @@ import java.util.zip.ZipFile;
 
 public class BinaryParser {
 
+    private static final Logger logger = LoggerFactory.getLogger(BinaryParser.class);
     private static final int END_DOC_TAG = 0x00100101;
     private static final int START_TAG = 0x00100102;
     private static final int END_TAG = 0x00100103;
-    private static final Logger logger = LoggerFactory.getLogger(BinaryParser.class);
     private final byte[] xml;
 
     public BinaryParser(String apkPath) {
@@ -55,7 +55,7 @@ public class BinaryParser {
                         }
 
                         if (name.equals("activity") || name.equals("provider") || name.equals("service") ||
-                                        name.equals("receiver") || name.equals("meta-data")) {
+                                name.equals("receiver") || name.equals("meta-data")) {
                             String tmp = compXmlString(xml, sitOff, stOff, attrValueSi);
                             if (tmp != null) {
                                 classes.add(tmp.replace('.', '/'));

@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.util.IO;
+import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,39 +12,27 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 
-public class RemoveFiles implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.TARGET;
+import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
+
+public class RemoveFiles extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveFiles.class);
-    private String name;
-    private List<String> targets;
+    private final List<String> targets;
 
-    @Override
-    public String getName() {
-        return name;
+    public RemoveFiles(String rawString) {
+        super(rawString);
+        targets = matchMultiLines(rawString, TARGET, Regex.ResultFormat.SPLIT_TRIM);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public RemoveFiles(List<String> targets) {
+        super("");
+        this.targets = targets;
     }
 
     @Override
     public boolean isValid() {
         return targets != null && !targets.isEmpty();
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return false;
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return false;
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
     }
 
     @Override
@@ -71,10 +60,6 @@ public class RemoveFiles implements Rule {
             }
         }
         logger.info(deletedCount + " files deleted");
-    }
-
-    public void setTargets(List<String> targets) {
-        this.targets = targets;
     }
 
     @Override

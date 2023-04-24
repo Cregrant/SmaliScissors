@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,62 +14,71 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-public class Replace implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
+
+public class Replace extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(Replace.class);
     public ArrayList<Rule> mergedRules;
-    private String name;
     private String target;
     private String match;
     private String replacement;
-    private boolean isRegex;
-    private boolean isSmali;
-    private boolean isXml;
+    private boolean regex;
 
-    @Override
-    public String getName() {
-        return name;
+    public Replace(String rawString) {
+        super(rawString);
+        target = matchSingleLine(rawString, TARGET);
+        match = matchSingleLine(rawString, MATCH);
+        replacement = matchSingleLine(rawString, REPLACEMENT);
+        regex = RuleParser.parseBoolean(rawString, REGEX);
+        if (target != null) {
+            smali = target.endsWith("smali");
+            xml = target.endsWith("xml");
+            if (target.contains("[")) {
+                smali = true;
+            }
+        }
+
+        if (regex) {
+            match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+            replacement = xml ? replacement : fixRegexReplacement(replacement);
+        }
+        if (replacement != null && xml) {
+            replacement = replacement.replace("><", ">\n<");
+        }
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public Replace() {
+        super("");
     }
 
     @Override
     public boolean isValid() {
-        return getTarget() != null && getMatch() != null && getReplacement() != null;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return isSmali();
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return isXml();
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
+        return target != null && match != null && replacement != null && (smali || xml);
     }
 
     @Override
     public void apply(Project project, Patch patch) {
+        String localTarget = target;
+        List<? extends DecompiledFile> acceptedFiles = project.applyTargetAssignments(target);
         List<? extends DecompiledFile> files;
-        if (isSmali()) {
+
+        if (!acceptedFiles.isEmpty()) {
+            files = acceptedFiles;
+            localTarget = "**";
+        } else if (smali) {
             files = project.getSmaliList();
-        } else if (isXml()) {
+        } else if (xml) {
             files = project.getXmlList();
         } else {
             throw new IllegalStateException("Not smali nor xml rule.");
         }
 
         final AtomicInteger patchedFilesNum = new AtomicInteger();
-        final Pattern targetCompiled = Pattern.compile(Regex.globToRegex(getTarget()));
-        final Pattern localMatchCompiled = Pattern.compile(patch.applyAssign(getMatch()));
-        final String localReplacement = patch.applyAssign(getReplacement());
+        final Pattern targetCompiled = Pattern.compile(Regex.globToRegex(localTarget));
+        final Pattern localMatchCompiled = Pattern.compile(patch.applyAssign(match));
+        final String localReplacement = patch.applyAssign(replacement);
         ArrayList<Future<?>> futures = new ArrayList<>(files.size());
 
         for (final DecompiledFile dFile : files) {
@@ -90,7 +100,7 @@ public class Replace implements Rule {
             futures.add(project.getExecutor().submit(r));
         }
         project.getExecutor().waitForFinish(futures);
-        if (isSmali()) {
+        if (smali) {
             logger.info(patchedFilesNum + " smali files patched.");
         } else {
             logger.info(patchedFilesNum + " xml files patched.");
@@ -104,7 +114,7 @@ public class Replace implements Rule {
         }
         String smaliBody = dFile.getBody();
         String newBody;
-        if (isRegex()) {
+        if (regex) {
             newBody = Regex.replaceAll(smaliBody, match, replacement);
         } else {
             newBody = smaliBody.replace(match.pattern(), replacement);
@@ -122,70 +132,66 @@ public class Replace implements Rule {
             return false;
         }
         Replace replace = ((Replace) rule);
-        return isXml() == replace.isXml()
-                && isSmali() == replace.isSmali()
-                && getTarget().equals(replace.getTarget())
-                && getReplacement().equals(replace.getReplacement());
-    }
-
-    public String getTarget() {
-        return target;
+        return xml == replace.xml
+                && smali == replace.smali
+                && target.equals(replace.target)
+                && replacement.equals(replace.replacement);
     }
 
     public void setTarget(String target) {
         this.target = target;
     }
 
-    public String getMatch() {
-        return match;
-    }
-
     public void setMatch(String match) {
         this.match = match;
-    }
-
-    public String getReplacement() {
-        return replacement;
     }
 
     public void setReplacement(String replacement) {
         this.replacement = replacement;
     }
 
+    public String getTarget() {
+        return target;
+    }
+
+    public String getMatch() {
+        return match;
+    }
+
+    public String getReplacement() {
+        return replacement;
+    }
+
     public boolean isRegex() {
-        return isRegex;
+        return regex;
     }
 
     public void setRegex(boolean regex) {
-        isRegex = regex;
+        this.regex = regex;
     }
 
     public boolean isSmali() {
-        return isSmali;
+        return smali;
     }
 
     public void setSmali(boolean smali) {
-        isSmali = smali;
+        this.smali = smali;
     }
 
     public boolean isXml() {
-        return isXml;
-    }
-
-    public void setXml(boolean xml) {
-        isXml = xml;
+        return xml;
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:    MATCH_REPLACE.\n");
-        if (getName() != null) {
+        if (name != null) {
             sb.append("Name:  ").append(name).append('\n');
         }
         sb.append("Target:  ").append(target).append("\n");
         sb.append("Match:   ").append(match).append('\n');
-        sb.append("Regex:   ").append(isRegex).append('\n');
+        sb.append("Regex:   ").append(regex).append('\n');
         sb.append("Replace: ").append(replacement);
         return sb.toString();
     }

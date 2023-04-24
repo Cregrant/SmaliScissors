@@ -3,89 +3,108 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Assign implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
+import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
+
+public class Assign extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(Assign.class);
-    private String name;
-    private String target;
     private String match;
-    private boolean isRegex;
-    private boolean isSmali;
-    private boolean isXml;
-    private ArrayList<String> assignments;
+    private final String target;
+    private final boolean isRegex;
+    private Map<String, String> assignments;
 
-    @Override
-    public String getName() {
-        return name;
+    public Assign(String rawString) throws InputMismatchException {
+        super(rawString);
+        target = matchSingleLine(rawString, TARGET);
+        match = matchSingleLine(rawString, MATCH);
+        parseAssignments(matchMultiLines(rawString, ASSIGNMENT, Regex.ResultFormat.SPLIT));
+        isRegex = RuleParser.parseBoolean(rawString, REGEX);
+        if (!isRegex) {
+            throw new InputMismatchException("REGEX field must be true");
+        }
+        if (target != null) {
+            smali = target.endsWith("smali");
+            xml = target.endsWith("xml");
+            if (target.contains("[")) {
+                smali = true;
+            }
+        }
+        match = xml ? RuleParser.fixRegexMatchXml(match) : fixRegexMatch(match);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void parseAssignments(ArrayList<String> assignmentsList) {
+        assignments = new HashMap<>();
+        for (String string : assignmentsList) {
+            int firstCharPos = 0;
+            while (string.charAt(firstCharPos) == ' ') {
+                firstCharPos++;
+            }
+            int dividerPos = string.indexOf('=');
+            String key = string.substring(firstCharPos, dividerPos);
+
+            int endCharPos = string.length() - 1;
+            while (string.charAt(endCharPos) == ' ') {
+                endCharPos--;
+            }
+            String trimmedValue = string.substring(dividerPos + 1, endCharPos + 1);
+            assignments.put(key, trimmedValue);
+        }
     }
 
     @Override
     public boolean isValid() {
-        return getTarget() != null && getMatch() != null && getAssignments() != null && !getAssignments().isEmpty();
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return isSmali();
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return isXml();
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
+        return target != null && match != null && assignments != null && !assignments.isEmpty() && (smali || xml);
     }
 
     @Override
     public void apply(Project project, Patch patch) {
-        ArrayList<String> keyList = new ArrayList<>();
-        Pattern targetCompiled = Pattern.compile(getTarget());
-        ArrayList<String> valueList;
+        String localTarget = target;
+        List<? extends DecompiledFile> acceptedFiles = project.applyTargetAssignments(target);
         List<? extends DecompiledFile> files;
-        if (isSmali()) {
+
+        if (!acceptedFiles.isEmpty()) {
+            files = acceptedFiles;
+            localTarget = "**";
+        } else if (smali) {
             files = project.getSmaliList();
-        } else if (isXml()) {
+        } else if (xml) {
             files = project.getXmlList();
         } else {
             throw new IllegalStateException("Not smali nor xml rule.");
         }
 
+        Pattern targetCompiled = Pattern.compile(Regex.globToRegex(localTarget));
         for (DecompiledFile dFile : files) {
             if (!targetCompiled.matcher(dFile.getPath()).matches()) {
                 continue;
             }
 
-            for (String variable : getAssignments()) {
-                keyList.add(variable.substring(0, variable.indexOf('=')));
-            }
-            valueList = Regex.matchMultiLines(dFile.getBody(), Pattern.compile(patch.applyAssign(getMatch())), Regex.ResultFormat.FULL);
-            if (keyList.size() < valueList.size()) {
-                logger.warn("MATCH_ASSIGN found excess results...");
-            } else if (keyList.size() > valueList.size()) {
-                logger.warn("MATCH_ASSIGN found not enough results...");
-            }
+            Matcher matcher = Pattern.compile(patch.applyAssign(match)).matcher(dFile.getBody());
+            if (matcher.find()) {
+                ArrayList<Map.Entry<String, String>> unprocessedAssignments = new ArrayList<>(assignments.entrySet());
+                for (int i = 0; i <= matcher.groupCount(); i++) {
+                    String groupText = "${GROUP" + i + "}";
+                    for (Map.Entry<String, String> entry : unprocessedAssignments) {
+                        entry.setValue(entry.getValue().replace(groupText, matcher.group(i)));
+                    }
+                }
 
-            int min = Math.min(keyList.size(), valueList.size());
-            for (int i = 0; i < min; ++i) {
-                String key = keyList.get(i);
-                String value = valueList.get(i);
-                patch.addAssignment(key, value);
-                logger.debug("Assigned \"{}\" to \"{}\"", minifyLongString(value), key);
+                for (Map.Entry<String, String> entry : unprocessedAssignments) {
+                    patch.addAssignment(entry.getKey(), entry.getValue());
+                    logger.info("Assigned \"{}\" to \"{}\"", minifyLongString(entry.getValue()), entry.getKey());
+                }
+                return;
             }
         }
     }
@@ -101,48 +120,16 @@ public class Assign implements Rule {
         return target;
     }
 
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
     public String getMatch() {
         return match;
-    }
-
-    public void setMatch(String match) {
-        this.match = match;
     }
 
     public boolean isRegex() {
         return isRegex;
     }
 
-    public void setRegex(boolean regex) {
-        isRegex = regex;
-    }
-
-    public boolean isSmali() {
-        return isSmali;
-    }
-
-    public void setSmali(boolean smali) {
-        isSmali = smali;
-    }
-
-    public boolean isXml() {
-        return isXml;
-    }
-
-    public void setXml(boolean xml) {
-        isXml = xml;
-    }
-
-    public ArrayList<String> getAssignments() {
+    public Map<String, String> getAssignments() {
         return assignments;
-    }
-
-    public void setAssignments(ArrayList<String> assignments) {
-        this.assignments = assignments;
     }
 
     @Override
@@ -153,12 +140,12 @@ public class Assign implements Rule {
             sb.append("Name:  ").append(name).append('\n');
         }
         sb.append("Target: ").append(target).append('\n');
-        sb.append("Assignments:\n");
-        for (String assign : assignments) {
-            sb.append("    ").append(assign).append('\n');
-        }
         sb.append("Match: ").append(match).append('\n');
-        sb.append("Regex: ").append(isRegex);
+        sb.append("Regex: ").append(isRegex).append('\n');
+        sb.append("Assignments:\n");
+        for (Map.Entry<String, String> entry : assignments.entrySet()) {
+            sb.append("    ").append(entry.getKey()).append('=').append(entry.getValue()).append('\n');
+        }
         return sb.toString();
     }
 }

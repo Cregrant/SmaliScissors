@@ -43,7 +43,10 @@ public class Worker {
     }
 
     void addSingleRemoveCodeRules(List<String> smaliPaths) {
-        RemoveCode rule = new RemoveCode();
+        if (smaliPaths == null || smaliPaths.isEmpty()) {
+            return;
+        }
+
         ArrayList<String> targetsList = new ArrayList<>(smaliPaths.size());
         for (String s : smaliPaths) {
             String trimmed = s.trim();
@@ -51,7 +54,7 @@ public class Worker {
                 targetsList.add(trimmed);
             }
         }
-        rule.setTargets(targetsList);
+        RemoveCode rule = new RemoveCode(targetsList);
         patches.add(new Patch(rule));
     }
 

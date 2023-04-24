@@ -2,6 +2,7 @@ package com.github.cregrant.smaliscissors.rule.types;
 
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,110 +12,78 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Add implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
+
+public class Add extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(Add.class);
-    private String name;
-    private String target;
-    private String source;
-    private boolean extract;
+    private final String target;
+    private final String source;
+    private final boolean extract;
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public Add(String rawString) {
+        super(rawString);
+        target = matchSingleLine(rawString, TARGET);
+        source = matchSingleLine(rawString, SOURCE);
+        extract = RuleParser.parseBoolean(rawString, EXTRACT);
     }
 
     @Override
     public boolean isValid() {
-        return getTarget() != null && getSource() != null;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return false;
-    }
-
-    @Override
-    public boolean xmlNeeded() {
-        return false;
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
+        return target != null && source != null && !(extract && target.contains("\n"));
     }
 
     @Override
     public void apply(Project project, Patch patch) throws IOException {
         ArrayList<String> extractedPathList;
-        String dstLocation = project.getPath() + File.separator + getLastSmaliFolder(project);
-        if (isExtract()) {
+        String dstLocation = project.getPath() + File.separator + getFixedPath(project);
+        if (extract) {
             patch.createTempDir();
-            ArrayList<String> extractedList = IO.extract(patch.getFile(), patch.getTempDir().getPath(), getSource());
+            ArrayList<String> extractedList = IO.extract(patch.getFile(), patch.getTempDir().getPath(), source);
             if (extractedList.size() != 1) {
-                logger.error("Extracted {} files, expected 1 file", extractedList.size());
+                logger.error("Extracted {} files, expected 1 zip file", extractedList.size());
                 return;
             }
             File extractedZipFile = new File(extractedList.get(0));
             extractedPathList = IO.extract(extractedZipFile, dstLocation, null);
             patch.deleteTempDir();
         } else {
-            extractedPathList = IO.extract(patch.getFile(), dstLocation, getSource());
+            extractedPathList = IO.extract(patch.getFile(), dstLocation, source);
         }
 
         project.scan(extractedPathList);
     }
 
-    private String getLastSmaliFolder(Project project) {
-        if (!getTarget().startsWith("smali/")) {
-            return getTarget();
+    private String getFixedPath(Project project) {  //try to resolve "Exception occurred while writing code_item for method"
+        if (!target.startsWith("smali/")) {
+            return target;
         }
 
+        // smali/blahblah -> smali_classesX/blahblah
         String[] subfolders = new File(project.getPath()).list(new FilenameFilter() {
             @Override
             public boolean accept(File dir, String name) {
-                return name.startsWith("smali");
+                return name.startsWith("smali_classes");
             }
         });
-        if (subfolders == null || subfolders.length == 1) {
-            return getTarget();
+        if (subfolders == null || subfolders.length == 0) {
+            return target;
+        } else {
+            return subfolders[subfolders.length - 1] + target.substring(5);
         }
-
-        for (int i = subfolders.length - 1; i >= 0; i--) {
-            String sub = subfolders[i];
-            if (sub.startsWith("smali_classes")) {
-                return sub + getTarget().substring(5);
-            }
-        }
-        return getTarget();
     }
 
-    String getTarget() {
+    public String getTarget() {
         return target;
     }
 
-    public void setTarget(String target) {
-        this.target = target;
-    }
-
-    String getSource() {
+    public String getSource() {
         return source;
     }
 
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    boolean isExtract() {
+    public boolean isExtract() {
         return extract;
-    }
-
-    public void setExtract(boolean extract) {
-        this.extract = extract;
     }
 
     @Override

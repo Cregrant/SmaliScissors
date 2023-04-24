@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,43 +11,29 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class ExecuteDex implements Rule {
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
+
+public class ExecuteDex extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(ExecuteDex.class);
-    private String name;
-    private String script;
-    private String mainClass;
-    private String entrance;
-    private String param;
-    private boolean isSmali;
+    private final String script;
+    private final String mainClass;
+    private final String entrance;
+    private final String param;
 
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    public ExecuteDex(String rawString) {
+        super(rawString);
+        script = matchSingleLine(rawString, SCRIPT);
+        mainClass = matchSingleLine(rawString, MAIN_CLASS);
+        entrance = matchSingleLine(rawString, ENTRANCE);
+        param = matchSingleLine(rawString, PARAM);
+        smali = RuleParser.parseBoolean(rawString, SMALI_NEEDED);
     }
 
     @Override
     public boolean isValid() {
-        return getScript() != null && getMainClass() != null && getEntrance() != null && getParam() != null;
-    }
-
-    @Override
-    public boolean smaliNeeded() {
-        return isSmali();
-    }
-
-    @Override
-    public boolean xmlNeeded() {    //trying to guess
-        return !isSmali();
-    }
-
-    @Override
-    public String nextRuleName() {
-        return null;
+        return script != null && mainClass != null && entrance != null && param != null;
     }
 
     @Override
@@ -58,7 +45,7 @@ public class ExecuteDex implements Rule {
         String zipPath = patch.getFile().toString();
         String projectPath = project.getPath();
         patch.createTempDir();
-        ArrayList<String> extracted = IO.extract(patch.getFile(), patch.getTempDir().getPath(), getScript());
+        ArrayList<String> extracted = IO.extract(patch.getFile(), patch.getTempDir().getPath(), script);
         if (extracted.size() != 1) {
             logger.error("Dex script extract error.");
             return;
@@ -66,51 +53,11 @@ public class ExecuteDex implements Rule {
         String dexPath = extracted.get(0);
         DexExecutor dexExecutor = project.getDexExecutor();
         if (dexExecutor != null) {
-            dexExecutor.runDex(dexPath, getEntrance(), getMainClass(), apkPath, zipPath, projectPath, getParam(), patch.getTempDir().getPath());
+            dexExecutor.runDex(dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param, patch.getTempDir().getPath());
         } else {
             logger.error("Dex executor is not present.");
         }
         patch.deleteTempDir();
-    }
-
-    public String getScript() {
-        return script;
-    }
-
-    public void setScript(String script) {
-        this.script = script;
-    }
-
-    public String getMainClass() {
-        return mainClass;
-    }
-
-    public void setMainClass(String mainClass) {
-        this.mainClass = mainClass;
-    }
-
-    public String getEntrance() {
-        return entrance;
-    }
-
-    public void setEntrance(String entrance) {
-        this.entrance = entrance;
-    }
-
-    public String getParam() {
-        return param;
-    }
-
-    public void setParam(String param) {
-        this.param = param;
-    }
-
-    public boolean isSmali() {
-        return isSmali;
-    }
-
-    public void setSmali(boolean smali) {
-        isSmali = smali;
     }
 
     @Override
