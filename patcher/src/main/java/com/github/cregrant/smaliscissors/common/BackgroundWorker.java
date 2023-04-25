@@ -26,7 +26,8 @@ public class BackgroundWorker {
             try {
                 future.get();
             } catch (InterruptedException | ExecutionException e) {
-                logger.error("Computing background task failed:", e);
+                logger.error("Computing background task failed.");
+                throw new RuntimeException(e);
             }
         }
     }
