@@ -40,19 +40,27 @@ public class Add extends Rule {
         String dstLocation = project.getPath() + File.separator + getFixedPath(project);
         if (extract) {
             patch.createTempDir();
-            ArrayList<String> extractedList = IO.extract(patch.getFile(), patch.getTempDir().getPath(), source);
-            if (extractedList.size() != 1) {
-                logger.error("Extracted {} files, expected 1 zip file", extractedList.size());
-                return;
-            }
-            File extractedZipFile = new File(extractedList.get(0));
-            extractedPathList = IO.extract(extractedZipFile, dstLocation, null);
+            extractedPathList = extractArchive(patch.getFile(), dstLocation, patch.getTempDir().getPath(), source);
             patch.deleteTempDir();
         } else {
-            extractedPathList = IO.extract(patch.getFile(), dstLocation, source);
+            extractedPathList = addFile(patch.getFile(), dstLocation, source);
         }
 
         project.scan(extractedPathList);
+    }
+
+    private ArrayList<String> addFile(File zipFile, String dstPath, String exactName) {
+        return IO.extract(zipFile, dstPath, exactName);
+    }
+
+    private ArrayList<String> extractArchive(File zipFile, String dstPath, String tempDirPath, String exactName) {
+        ArrayList<String> extractedArchive = IO.extract(zipFile, tempDirPath, exactName);
+        if (extractedArchive.size() != 1) {
+            logger.error("Extracted {} files, expected 1 zip file", extractedArchive.size());
+            return new ArrayList<>(0);
+        }
+        File extractedZipFile = new File(extractedArchive.get(0));
+        return IO.extract(extractedZipFile, dstPath, null);
     }
 
     private String getFixedPath(Project project) {  //try to resolve "Exception occurred while writing code_item for method"

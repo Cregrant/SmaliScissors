@@ -21,14 +21,14 @@ public class MatchGoto extends Rule {
     private static final Logger logger = LoggerFactory.getLogger(MatchGoto.class);
     private final String target;
     private final String goTo;
-    private String match;
+    private final String match;
     private final boolean isRegex;
     private volatile boolean found;
 
     public MatchGoto(String rawString) {
         super(rawString);
         target = matchSingleLine(rawString, TARGET);
-        match = matchSingleLine(rawString, MATCH);
+        String match = matchSingleLine(rawString, MATCH);
         goTo = matchSingleLine(rawString, GOTO);
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
         if (target != null) {
@@ -37,7 +37,9 @@ public class MatchGoto extends Rule {
         }
 
         if (isRegex) {
-            match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+            this.match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+        } else {
+            this.match = match;
         }
     }
 
@@ -94,6 +96,22 @@ public class MatchGoto extends Rule {
             return goTo;
         }
         return null;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public String getGoTo() {
+        return goTo;
+    }
+
+    public String getMatch() {
+        return match;
+    }
+
+    public boolean isRegex() {
+        return isRegex;
     }
 
     @Override

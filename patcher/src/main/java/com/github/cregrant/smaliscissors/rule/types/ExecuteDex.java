@@ -60,6 +60,22 @@ public class ExecuteDex extends Rule {
         patch.deleteTempDir();
     }
 
+    public String getScript() {
+        return script;
+    }
+
+    public String getMainClass() {
+        return mainClass;
+    }
+
+    public String getEntrance() {
+        return entrance;
+    }
+
+    public String getParam() {
+        return param;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

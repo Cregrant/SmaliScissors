@@ -62,6 +62,10 @@ public class RemoveFiles extends Rule {
         logger.info(deletedCount + " files deleted");
     }
 
+    public List<String> getTargets() {
+        return targets;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

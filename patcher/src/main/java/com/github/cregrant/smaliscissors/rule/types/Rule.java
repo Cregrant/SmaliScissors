@@ -24,11 +24,17 @@ public class Rule {
         }
     }
 
-    public static Rule parseRule(String rawString) throws EnumConstantNotPresentException, InputMismatchException {
-        Rule rule;
+    public static Rule parseRule(String rawString) throws InputMismatchException {
         String typeString = rawString.substring(rawString.indexOf('[') + 1, rawString.indexOf(']'));
-        Rule.Type type = Rule.Type.valueOf(typeString);
+        Rule.Type type;
+        try {
+            type = Type.valueOf(typeString);
+        } catch (IllegalArgumentException e) {
+            logger.error("Unknown rule [{}]", typeString);
+            throw new InputMismatchException();
+        }
 
+        Rule rule;
         switch (type) {
             case MATCH_ASSIGN:
                 rule = new Assign(rawString);
@@ -61,12 +67,14 @@ public class Rule {
                 rule = new RemoveCodeAction(rawString);
                 break;
             default:
+                logger.error("Unknown rule: {}", typeString);
                 throw new InputMismatchException();
         }
 
         if (rule.isValid()) {
             return rule;
         } else {
+            logger.error("Rule parsing error: \n{}\n", rule);
             throw new InputMismatchException();
         }
     }

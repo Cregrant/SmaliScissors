@@ -29,6 +29,10 @@ public class Goto extends Rule {
     public void apply(Project project, Patch patch) {
     }
 
+    public String getGoTo() {
+        return goTo;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

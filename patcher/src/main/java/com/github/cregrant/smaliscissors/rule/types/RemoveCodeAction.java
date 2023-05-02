@@ -24,6 +24,7 @@ public class RemoveCodeAction extends Rule {
         String actionString = matchSingleLine(rawString, ACTION);
         if (actionString != null) {
             try {
+                actionString = actionString.trim();
                 int spacePos = actionString.lastIndexOf(' ');
                 action = RemoveCodeAction.Action.valueOf(actionString.substring(0, spacePos).toUpperCase());
                 actionCount = Integer.parseInt(actionString.substring(spacePos + 1));
@@ -57,6 +58,14 @@ public class RemoveCodeAction extends Rule {
         currentAction = properties.get(removecode_action_type);
         currentActionCount = Integer.parseInt(properties.get(removecode_action_count));
         logger.info("Pending actions: " + currentAction + " " + currentActionCount + " next targets");
+    }
+
+    public Action getAction() {
+        return action;
+    }
+
+    public int getActionCount() {
+        return actionCount;
     }
 
     @Override

@@ -19,16 +19,16 @@ import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
 public class Assign extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(Assign.class);
-    private String match;
+    private final String match;
     private final String target;
     private final boolean isRegex;
-    private Map<String, String> assignments;
+    private final Map<String, String> assignments;
 
     public Assign(String rawString) throws InputMismatchException {
         super(rawString);
+        String match = matchSingleLine(rawString, MATCH);
         target = matchSingleLine(rawString, TARGET);
-        match = matchSingleLine(rawString, MATCH);
-        parseAssignments(matchMultiLines(rawString, ASSIGNMENT, Regex.ResultFormat.SPLIT));
+        assignments = parseAssignments(matchMultiLines(rawString, ASSIGNMENT, Regex.ResultFormat.SPLIT));
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
         if (!isRegex) {
             throw new InputMismatchException("REGEX field must be true");
@@ -36,15 +36,15 @@ public class Assign extends Rule {
         if (target != null) {
             smali = target.endsWith("smali");
             xml = target.endsWith("xml");
-            if (target.contains("[")) {
+            if (target.contains("[")) {  //static replacement like [APPLICATION]
                 smali = true;
             }
         }
-        match = xml ? RuleParser.fixRegexMatchXml(match) : fixRegexMatch(match);
+        this.match = xml ? RuleParser.fixRegexMatchXml(match) : fixRegexMatch(match);
     }
 
-    public void parseAssignments(ArrayList<String> assignmentsList) {
-        assignments = new HashMap<>();
+    static HashMap<String, String> parseAssignments(ArrayList<String> assignmentsList) {
+        HashMap<String, String> result = new HashMap<>();
         for (String string : assignmentsList) {
             int firstCharPos = 0;
             while (string.charAt(firstCharPos) == ' ') {
@@ -58,8 +58,9 @@ public class Assign extends Rule {
                 endCharPos--;
             }
             String trimmedValue = string.substring(dividerPos + 1, endCharPos + 1);
-            assignments.put(key, trimmedValue);
+            result.put(key, trimmedValue);
         }
+        return result;
     }
 
     @Override
@@ -109,7 +110,7 @@ public class Assign extends Rule {
         }
     }
 
-    private String minifyLongString(String str) {
+    static String minifyLongString(String str) {
         if (str.length() > 300) {
             return str.substring(0, 60) + " ... " + str.substring(str.length() - 60);
         }
