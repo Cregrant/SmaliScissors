@@ -21,8 +21,8 @@ public class RuleParser {
     public static final Pattern SOURCE = Pattern.compile("SOURCE:\\s+(.+?)\\s*\\R");
     public static final Pattern EXTRACT = Pattern.compile("EXTRACT:\\s+(.+?)\\s*\\R");
     public static final Pattern ASSIGNMENT = Pattern.compile("ASSIGN:\\R((?:.+?=.+\\R)*)");
-    public static final Pattern REPLACEMENT = Pattern.compile("REPLACE:\\R([\\S\\s]*?)\\R?\\[/MATCH_REPLACE]");
-    public static final Pattern TARGET = Pattern.compile("TARGET:\\s+([\\s\\S]*?)\\s+(?:MATCH|EXTRACT|SOURCE|\\[)");
+    public static final Pattern REPLACEMENT = Pattern.compile("REPLACE:\\R(\\R?|[\\S\\s]*?\\R)(?:[A-Z]+?:\\R|\\[)");  //issue: match extra \n at the end
+    public static final Pattern TARGET = Pattern.compile("TARGET:\\s+([\\s\\S]*?)\\R(?:[A-Z]+?:\\R|\\[)");
     public static final Pattern MATCH = Pattern.compile("MATCH:\\R(.+)");
     public static final Pattern PAT_NAME = Pattern.compile("NAME:\\s+(.+?)\\s*\\R");
     public static final Pattern REGEX = Pattern.compile("REGEX:\\s+(.+?)\\s*\\R");
@@ -30,7 +30,7 @@ public class RuleParser {
     public static final Pattern SMALI_NEEDED = Pattern.compile("SMALI_NEEDED:\\s+(.+?)\\s*\\R");
     public static final Pattern MAIN_CLASS = Pattern.compile("MAIN_CLASS:\\s+(.+?)\\s*\\R");
     public static final Pattern ENTRANCE = Pattern.compile("ENTRANCE:\\s+(.+?)\\s*\\R");
-    public static final Pattern PARAM = Pattern.compile("PARAM:\\s+([\\S\\s]*?)\\R\\[/EXECUTE_DEX]");
+    public static final Pattern PARAM = Pattern.compile("PARAM:\\s+([\\S\\s]*?)\\R(?:[A-Z]+?:\\R|\\[)");
     public static final Pattern GOTO = Pattern.compile("GOTO:\\s+(.+?)\\s*\\R");
     public static final Pattern ACTION = Pattern.compile("ACTION:\\s+(.+?)\\s*\\R");
     private final ArrayList<Rule> rules;
@@ -100,10 +100,6 @@ public class RuleParser {
     Rule parseSingleRule(String ruleString, int num) {
         try {
             return Rule.parseRule(ruleString);
-        } catch (IllegalArgumentException e) {
-            String type = ruleString.substring(ruleString.indexOf('['), ruleString.indexOf(']') + 1);
-            logger.error("Unknown rule " + num + ": " + type);
-            throw new InputMismatchException();
         } catch (Exception e) {
             logger.error("Unable to parse rule " + num + ":\n------------\n" + ruleString + "\n--------------", e);
             throw new InputMismatchException();

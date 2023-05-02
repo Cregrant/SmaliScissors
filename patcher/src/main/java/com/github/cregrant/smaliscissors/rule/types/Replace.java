@@ -30,7 +30,13 @@ public class Replace extends Rule {
         super(rawString);
         target = matchSingleLine(rawString, TARGET);
         match = matchSingleLine(rawString, MATCH);
-        replacement = matchSingleLine(rawString, REPLACEMENT);
+        String replacement = matchSingleLine(rawString, REPLACEMENT);
+        // a fix for regexp
+        if (replacement != null && replacement.length() > 1) {
+            this.replacement = replacement.substring(0, replacement.length() - 1);
+        } else {
+            this.replacement = replacement;
+        }
         regex = RuleParser.parseBoolean(rawString, REGEX);
         if (target != null) {
             smali = target.endsWith("smali");
