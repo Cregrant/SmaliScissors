@@ -136,13 +136,13 @@ public class Assign extends Rule {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type:  MATCH_ASSIGN\n");
+        sb.append("Type:   MATCH_ASSIGN\n");
         if (name != null) {
-            sb.append("Name:  ").append(name).append('\n');
+            sb.append("Name:   ").append(name).append('\n');
         }
         sb.append("Target: ").append(target).append('\n');
-        sb.append("Match: ").append(match).append('\n');
-        sb.append("Regex: ").append(isRegex).append('\n');
+        sb.append("Match:  ").append(match).append('\n');
+        sb.append("Regex:  ").append(isRegex).append('\n');
         sb.append("Assignments:\n");
         for (Map.Entry<String, String> entry : assignments.entrySet()) {
             sb.append("    ").append(entry.getKey()).append('=').append(entry.getValue()).append('\n');

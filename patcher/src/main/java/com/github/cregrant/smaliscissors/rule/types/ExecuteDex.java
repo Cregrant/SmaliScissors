@@ -81,8 +81,13 @@ public class ExecuteDex extends Rule {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:  EXECUTE_DEX.\n");
         if (name != null) {
-            sb.append("Name:  ").append(name);
+            sb.append("Name:      ").append(name);
         }
+        sb.append("Script:    ").append(script).append('\n');
+        sb.append("MainClass: ").append(mainClass).append('\n');
+        sb.append("Entrance:  ").append(entrance).append('\n');
+        sb.append("Param:     ").append(param).append('\n');
+        sb.append("Smali:     ").append(smali).append('\n');
         return sb.toString();
     }
 }

@@ -71,12 +71,12 @@ public class RemoveCodeAction extends Rule {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type: REMOVE_CODE_ACTION.\n");
+        sb.append("Type:   REMOVE_CODE_ACTION.\n");
         if (name != null) {
-            sb.append("Name: ").append(name).append('\n');
+            sb.append("Name:   ").append(name).append('\n');
         }
         sb.append("Action: ").append(action.name()).append('\n');
-        sb.append("Count: ").append(actionCount).append('\n');
+        sb.append("Count:  ").append(actionCount).append('\n');
         return sb.toString();
     }
 

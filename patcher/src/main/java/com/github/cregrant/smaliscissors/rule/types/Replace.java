@@ -193,12 +193,20 @@ public class Replace extends Rule {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:    MATCH_REPLACE.\n");
         if (name != null) {
-            sb.append("Name:  ").append(name).append('\n');
+            sb.append("Name:    ").append(name).append('\n');
         }
         sb.append("Target:  ").append(target).append("\n");
         sb.append("Match:   ").append(match).append('\n');
         sb.append("Regex:   ").append(regex).append('\n');
-        sb.append("Replace: ").append(replacement);
+        String verboseReplacement;
+        if (replacement.equals("")) {
+            verboseReplacement = "'none' (this means delete matched result)";
+        } else if (replacement.equals("\n")) {
+            verboseReplacement = "'\\n' (the new line character)";
+        } else {
+            verboseReplacement = replacement;
+        }
+        sb.append("Replace: ").append(verboseReplacement).append('\n');
         return sb.toString();
     }
 }
