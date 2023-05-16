@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -37,7 +36,7 @@ public class Add extends Rule {
     @Override
     public void apply(Project project, Patch patch) throws IOException {
         ArrayList<String> extractedPathList;
-        String dstLocation = project.getPath() + File.separator + getFixedPath(project);
+        String dstLocation = project.getPath() + File.separator + target;
         if (extract) {
             patch.createTempDir();
             extractedPathList = extractArchive(patch.getFile(), dstLocation, patch.getTempDir().getPath(), source);
@@ -61,25 +60,6 @@ public class Add extends Rule {
         }
         File extractedZipFile = new File(extractedArchive.get(0));
         return IO.extract(extractedZipFile, dstPath, null);
-    }
-
-    private String getFixedPath(Project project) {  //try to resolve "Exception occurred while writing code_item for method"
-        if (!target.startsWith("smali/")) {
-            return target;
-        }
-
-        // smali/blahblah -> smali_classesX/blahblah
-        String[] subfolders = new File(project.getPath()).list(new FilenameFilter() {
-            @Override
-            public boolean accept(File dir, String name) {
-                return name.startsWith("smali_classes");
-            }
-        });
-        if (subfolders == null || subfolders.length == 0) {
-            return target;
-        } else {
-            return subfolders[subfolders.length - 1] + target.substring(5);
-        }
     }
 
     public String getTarget() {
