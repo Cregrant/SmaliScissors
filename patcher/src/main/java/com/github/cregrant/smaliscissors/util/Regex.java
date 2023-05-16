@@ -20,7 +20,7 @@ public class Regex {
         while (matcher.find()) {
             int size = matcher.groupCount();
             for (int i = 1; i <= size; ++i) {
-                String textMatched = matcher.group(i);
+                String textMatched = matcher.group(i).replace("\r", "");
                 switch (format) {
                     case FULL:
                         matchedArr.add(textMatched);
@@ -43,9 +43,9 @@ public class Regex {
         Matcher matcher = readyPattern.matcher(content);
         if (matcher.find()) {
             if (matcher.groupCount() == 0) {
-                return matcher.group(0);
+                return matcher.group(0).replace("\r", "");
             }
-            return matcher.group(1);
+            return matcher.group(1).replace("\r", "");
         }
         return null;
     }
