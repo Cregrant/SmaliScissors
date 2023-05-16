@@ -45,7 +45,7 @@ public class MatchGoto extends Rule {
 
     @Override
     public boolean isValid() {
-        return target != null && match != null && goTo != null && (smali || xml);
+        return target != null && match != null && goTo != null;
     }
 
     @Override
@@ -53,13 +53,14 @@ public class MatchGoto extends Rule {
         final Pattern matchPattern = Pattern.compile(patch.applyAssign(match));
         final Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
 
-        List<? extends DecompiledFile> files;
+        List<DecompiledFile> files = new ArrayList<>();
         if (smali) {
-            files = project.getSmaliList();
+            files.addAll(project.getSmaliList());
         } else if (xml) {
-            files = project.getXmlList();
+            files.addAll(project.getXmlList());
         } else {
-            throw new IllegalStateException("Not smali nor xml rule.");
+            files.addAll(project.getSmaliList());
+            files.addAll(project.getXmlList());
         }
 
         try {

@@ -65,24 +65,25 @@ public class Assign extends Rule {
 
     @Override
     public boolean isValid() {
-        return target != null && match != null && assignments != null && !assignments.isEmpty() && (smali || xml);
+        return target != null && match != null && assignments != null && !assignments.isEmpty();
     }
 
     @Override
     public void apply(Project project, Patch patch) {
         String localTarget = target;
-        List<? extends DecompiledFile> acceptedFiles = project.applyTargetAssignments(target);
-        List<? extends DecompiledFile> files;
+        List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
+        List<DecompiledFile> files = new ArrayList<>();
 
-        if (!acceptedFiles.isEmpty()) {
-            files = acceptedFiles;
+        if (!providedFiles.isEmpty()) {
+            files = providedFiles;
             localTarget = "**";
         } else if (smali) {
-            files = project.getSmaliList();
+            files.addAll(project.getSmaliList());
         } else if (xml) {
-            files = project.getXmlList();
+            files.addAll(project.getXmlList());
         } else {
-            throw new IllegalStateException("Not smali nor xml rule.");
+            files.addAll(project.getSmaliList());
+            files.addAll(project.getXmlList());
         }
 
         Pattern targetCompiled = Pattern.compile(Regex.globToRegex(localTarget));

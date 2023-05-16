@@ -61,24 +61,25 @@ public class Replace extends Rule {
 
     @Override
     public boolean isValid() {
-        return target != null && match != null && replacement != null && (smali || xml);
+        return target != null && match != null && replacement != null;
     }
 
     @Override
     public void apply(Project project, Patch patch) {
         String localTarget = target;
-        List<? extends DecompiledFile> acceptedFiles = project.applyTargetAssignments(target);
-        List<? extends DecompiledFile> files;
+        List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
+        List<DecompiledFile> files = new ArrayList<>();
 
-        if (!acceptedFiles.isEmpty()) {
-            files = acceptedFiles;
+        if (!providedFiles.isEmpty()) {
+            files = providedFiles;
             localTarget = "**";
         } else if (smali) {
-            files = project.getSmaliList();
+            files.addAll(project.getSmaliList());
         } else if (xml) {
-            files = project.getXmlList();
+            files.addAll(project.getXmlList());
         } else {
-            throw new IllegalStateException("Not smali nor xml rule.");
+            files.addAll(project.getSmaliList());
+            files.addAll(project.getXmlList());
         }
 
         final AtomicInteger patchedFilesNum = new AtomicInteger();
