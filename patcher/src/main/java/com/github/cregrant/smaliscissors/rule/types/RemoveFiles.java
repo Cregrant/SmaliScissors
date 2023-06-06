@@ -49,6 +49,11 @@ public class RemoveFiles extends Rule {
                 possibleEmptyFolders.add(file.getParentFile());
                 logger.debug("{} deleted", file);
             }
+            File targetFile = new File(project.getPath(), target);
+            if (targetFile.exists()) {
+                IO.delete(targetFile);
+                logger.debug("{} deleted", targetFile);
+            }
         }
 
         for (File file : possibleEmptyFolders) {
