@@ -30,12 +30,9 @@ public class Replace extends Rule {
         super(rawString);
         target = matchSingleLine(rawString, TARGET);
         match = matchSingleLine(rawString, MATCH);
-        String replacement = matchSingleLine(rawString, REPLACEMENT);
-        // a fix for regexp
-        if (replacement != null && replacement.length() > 1) {
-            this.replacement = replacement.substring(0, replacement.length() - 1);
-        } else {
-            this.replacement = replacement;
+        String parsedReplacement = matchSingleLine(rawString, REPLACEMENT);
+        if (parsedReplacement == null) {
+            return;
         }
         regex = RuleParser.parseBoolean(rawString, REGEX);
         if (target != null) {
@@ -45,14 +42,18 @@ public class Replace extends Rule {
                 smali = true;
             }
         }
-
         if (regex) {
             match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
-            replacement = xml ? replacement : fixRegexReplacement(replacement);
+            parsedReplacement = xml ? parsedReplacement : fixRegexReplacement(parsedReplacement);
         }
-        if (replacement != null && xml) {
-            replacement = replacement.replace("><", ">\n<");
+        if (xml) {
+            parsedReplacement = parsedReplacement.replace("><", ">\n<");
         }
+        // remove extra \n at the end after my parsing regexp
+        if (parsedReplacement.length() > 1 && parsedReplacement.endsWith("\n")) {
+            parsedReplacement = parsedReplacement.substring(0, parsedReplacement.length() - 1);
+        }
+        this.replacement = parsedReplacement;
     }
 
     public Replace() {
