@@ -19,11 +19,18 @@ public class SmaliKeeper {
 
     private static final Logger logger = LoggerFactory.getLogger(SmaliKeeper.class);
     private final Project project;
+    private boolean scanned = false;
     private boolean firebaseCrashlyticsFound = false;
     private boolean firebaseAnalyticsFound = false;
 
     public SmaliKeeper(Project project) {
         this.project = project;
+    }
+
+    private void scan() {
+        if (scanned) {
+            return;
+        }
 
         for (String s : project.getProtectedClasses()) {
             if (s.startsWith("com/google/firebase/components:com/google/firebase/crashlytics/")) {
@@ -32,6 +39,7 @@ public class SmaliKeeper {
                 firebaseAnalyticsFound = true;
             }
         }
+        scanned = true;
     }
 
     void changeTargets(Patch patch, RemoveCode rule) {
@@ -39,6 +47,7 @@ public class SmaliKeeper {
     }
 
     void keepClasses(State state) {
+        scan();
         HashSet<SmaliClass> returned = new HashSet<>();
         for (SmaliFile file : state.deletedFiles) {      //keep activities, services anf other AndroidManifest.xml things
             String path = file.getPath();
@@ -56,6 +65,7 @@ public class SmaliKeeper {
     }
 
     private void keepClass(State state, HashSet<SmaliClass> set, SmaliClass smaliClass) {
+        scan();
         smaliClass.makeStub();
         set.add(smaliClass);
         String superclassPath = smaliClass.getSuperclass().substring(1, smaliClass.getSuperclass().length() - 1);
@@ -71,6 +81,7 @@ public class SmaliKeeper {
     }
 
     private void changeFirebaseCrashlytics(Patch patch, RemoveCode rule) {
+        scan();
         if (firebaseCrashlyticsFound) {      //keep the code but delete network calls
             List<String> crashlyticsList = Arrays.asList("com/crashlytics/", "com/google/firebase/crashlytics/",
                     "com/google/firebase/crash/", "io/fabric/", "io/invertase/firebase/crashlytics/");
@@ -88,6 +99,7 @@ public class SmaliKeeper {
     }
 
     void changeFirebaseAnalytics(Patch patch, RemoveCode rule) {
+        scan();
         if (firebaseAnalyticsFound) {      //keep the code but delete network calls
             if (rule.getTargets().contains("com/google/firebase/analytics/")
                     || rule.getTargets().contains("com/google/firebase/firebase_analytics/")) {
