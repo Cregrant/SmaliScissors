@@ -45,19 +45,14 @@ public class RemoveCodeAction extends Rule {
         String currentAction = properties.get(removecode_action_type);
         int currentActionCount = Integer.parseInt(properties.get(removecode_action_count));
 
-        if (currentAction.equals(action.name())) {     //the same action already scheduled
-            properties.set(removecode_action_count, String.valueOf(currentActionCount + actionCount));
-        } else {
-            if (currentActionCount > 0 && !currentAction.equals(action.name())) {   //other action already scheduled
-                logger.warn("Remove code action was changed from " + currentAction + " to " + action.name());
-            }
-            properties.set(removecode_action_type, action.name());
-            properties.set(removecode_action_count, String.valueOf(currentActionCount + actionCount));
+        int newActionCount = currentActionCount + actionCount;
+        if (currentActionCount > 0) {   //other action already scheduled
+            logger.warn("Remove code action was changed from " + currentAction + " to " + action.name());
+            newActionCount = actionCount;
         }
-
-        currentAction = properties.get(removecode_action_type);
-        currentActionCount = Integer.parseInt(properties.get(removecode_action_count));
-        logger.info("Pending actions: " + currentAction + " " + currentActionCount + " next targets");
+        properties.set(removecode_action_type, action.name());
+        properties.set(removecode_action_count, String.valueOf(newActionCount));
+        logger.info("Pending actions: " + action.name() + " " + newActionCount + " next targets");
     }
 
     public Action getAction() {
