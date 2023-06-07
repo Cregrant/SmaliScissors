@@ -51,7 +51,7 @@ public class Manifest {
             for (File folder : Objects.requireNonNull(projectFolders)) {
                 File file = new File(folder, innerPath);
                 if (file.exists()) {
-                    result.add(new SmaliFile(project, file.getPath().replace(project.getPath(), "")));
+                    result.add(new SmaliFile(project, file.getPath().substring(project.getPath().length() + 1)));
                     success = true;
                     break;
                 }
