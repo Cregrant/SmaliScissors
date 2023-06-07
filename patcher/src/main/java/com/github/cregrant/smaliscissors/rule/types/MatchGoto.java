@@ -52,9 +52,13 @@ public class MatchGoto extends Rule {
     public void apply(Project project, Patch patch) {
         final Pattern matchPattern = Pattern.compile(patch.applyAssign(match));
         final Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
-
+        
+        List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
         List<DecompiledFile> files = new ArrayList<>();
-        if (smali) {
+
+        if (!providedFiles.isEmpty()) {
+            files = providedFiles;
+        } else if (smali) {
             files.addAll(project.getSmaliList());
         } else if (xml) {
             files.addAll(project.getXmlList());
