@@ -1,27 +1,16 @@
 package com.github.cregrant.smaliscissors;
 
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.github.cregrant.smaliscissors.common.outer.PatcherTask;
+import com.github.cregrant.smaliscissors.common.outer.SmaliGenerator;
 
-import java.util.List;
+import java.util.Collection;
 
 public class Main {
 
-    private static final Logger logger = LoggerFactory.getLogger(Main.class);
-
-    public static void runPatcher(DexExecutor dexExecutor, List<String> projects,
-                                  List<String> patches, List<String> smaliPaths) throws Exception {
-        try {
-            Worker worker = new Worker(dexExecutor, projects);
-            if (!smaliPaths.isEmpty()) {
-                worker.addSingleRemoveCodeRules(smaliPaths);
-            }
-            worker.addPatches(patches);
-            worker.run();
-        } catch (Exception e) {
-            logger.error("Execution interrupted:", e);
-            throw e;
-        }
+    public static void runPatcher(DexExecutor dexExecutor, SmaliGenerator smaliGenerator,
+                                  Collection<PatcherTask> tasks) throws Exception {
+        Patcher worker = new Patcher(dexExecutor, smaliGenerator, tasks);
+        worker.run();
     }
 }

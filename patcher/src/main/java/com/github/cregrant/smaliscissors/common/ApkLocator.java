@@ -1,7 +1,6 @@
 package com.github.cregrant.smaliscissors.common;
 
 import com.github.cregrant.smaliscissors.Project;
-import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,18 +13,6 @@ public class ApkLocator {
     private static final Logger logger = LoggerFactory.getLogger(ApkLocator.class);
 
     public String getApkPath(Project project) {
-        DexExecutor dexExecutor = project.getDexExecutor();
-        if (dexExecutor != null) {
-            String apkPathSupplied = dexExecutor.getApkPath();
-            if (apkPathSupplied != null) {
-                File file = new File(apkPathSupplied);
-                if (file.exists()) {
-                    logger.debug("Apk path supplied: {}", apkPathSupplied);
-                    return apkPathSupplied;
-                }
-            }
-        }
-
         File[] files = new File(project.getPath()).listFiles();
         if (files != null) {
             for (File str : files) {

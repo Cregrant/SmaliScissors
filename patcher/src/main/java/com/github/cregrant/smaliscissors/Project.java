@@ -7,6 +7,7 @@ import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.XmlFile;
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.common.outer.SmaliGenerator;
 import com.github.cregrant.smaliscissors.manifest.Manifest;
 import com.github.cregrant.smaliscissors.removecode.SmaliKeeper;
 import com.github.cregrant.smaliscissors.rule.types.Rule;
@@ -27,30 +28,25 @@ import java.util.regex.Pattern;
 public class Project {
 
     private static final Logger logger = LoggerFactory.getLogger(Project.class);
+    private final Patcher patcher;
     private final MemoryManager memoryManager;
-    private final BackgroundWorker executor;
-    private final DexExecutor dexExecutor;
     private final SmaliKeeper smaliKeeper;
     private final ProjectProperties properties;
     private final String apkPath;
     private final String path;
     private final String name;
     private final Manifest manifest;
+    private final ProjectState state = new ProjectState();
     private ArrayList<SmaliFile> smaliList = new ArrayList<>();
     private ArrayList<XmlFile> xmlList = new ArrayList<>();
-    private boolean smaliScanned;
-    private boolean xmlScanned;
-    private boolean smaliCacheEnabled;
-    private boolean xmlCacheEnabled;
 
-    public Project(String path, BackgroundWorker executor, DexExecutor dexExecutor) {
-        this.path = path;
-        this.executor = executor;
-        this.dexExecutor = dexExecutor;
-        name = Regex.getFilename(path);
+    public Project(String projectPath, String apkPath, Patcher patcher) {
+        this.path = projectPath;
+        this.patcher = patcher;
+        name = Regex.getFilename(projectPath);
         manifest = new Manifest(this);
         memoryManager = new MemoryManager(this);
-        apkPath = new ApkLocator().getApkPath(this);
+        this.apkPath = apkPath != null ? apkPath : new ApkLocator().getApkPath(this);
         smaliKeeper = new SmaliKeeper(this);
         properties = new ProjectProperties(this);
     }
@@ -59,13 +55,18 @@ public class Project {
         Scanner scanner = new Scanner(this);
         if (scanSmali && !isSmaliScanned()) {
             smaliList = scanner.scanSmali();
-            smaliScanned = true;
+            state.smaliScanned = true;
         }
         if (scanXml && !isXmlScanned()) {
             xmlList = scanner.scanXml();
-            xmlScanned = true;
+            state.xmlScanned = true;
         }
         getMemoryManager().tryEnableCache();
+    }
+
+    public void rescanSmali() throws FileNotFoundException {
+        state.smaliScanned = false;
+        scan(true, false);
     }
 
     public void scan(ArrayList<String> files) {
@@ -90,9 +91,7 @@ public class Project {
 
                 logger.info("\n" + rule);
                 rule.apply(this, patch);
-                if (rule.nextRuleName() != null) {
-                    patch.jumpToRuleName(rule.nextRuleName());
-                }
+                patch.jumpToRuleName(rule.nextRuleName());  //if a next rule name is not null
             }
             patch.reset();
         } catch (IOException e) {
@@ -110,14 +109,14 @@ public class Project {
         list.addAll(xmlList);
         ArrayList<Future<?>> futures = new ArrayList<>(list.size());
         for (final DecompiledFile dFile : list) {
-            futures.add(executor.submit(new Runnable() {
+            futures.add(patcher.getExecutor().submit(new Runnable() {
                 @Override
                 public void run() {
                     dFile.save();
                 }
             }));
         }
-        executor.waitForFinish(futures);
+        patcher.getExecutor().waitForFinish(futures);
     }
 
 
@@ -178,7 +177,11 @@ public class Project {
     }
 
     public DexExecutor getDexExecutor() {
-        return dexExecutor;
+        return patcher.getDexExecutor();
+    }
+
+    public SmaliGenerator getSmaliGenerator() {
+        return patcher.getSmaliGenerator();
     }
 
     public String getApkPath() {
@@ -202,27 +205,27 @@ public class Project {
     }
 
     public boolean isSmaliCacheEnabled() {
-        return smaliCacheEnabled;
+        return state.smaliCacheEnabled;
     }
 
     public void setSmaliCacheEnabled(boolean smaliCacheEnabled) {
-        this.smaliCacheEnabled = smaliCacheEnabled;
+        state.smaliCacheEnabled = smaliCacheEnabled;
     }
 
     public boolean isXmlCacheEnabled() {
-        return xmlCacheEnabled;
+        return state.xmlCacheEnabled;
     }
 
     public void setXmlCacheEnabled(boolean xmlCacheEnabled) {
-        this.xmlCacheEnabled = xmlCacheEnabled;
+        state.xmlCacheEnabled = xmlCacheEnabled;
     }
 
     public boolean isSmaliScanned() {
-        return smaliScanned;
+        return state.smaliScanned;
     }
 
     public boolean isXmlScanned() {
-        return xmlScanned;
+        return state.xmlScanned;
     }
 
     public MemoryManager getMemoryManager() {
@@ -230,7 +233,7 @@ public class Project {
     }
 
     public BackgroundWorker getExecutor() {
-        return executor;
+        return patcher.getExecutor();
     }
 
     public SmaliKeeper getSmaliKeeper() {
@@ -239,5 +242,12 @@ public class Project {
 
     public ProjectProperties getProperties() {
         return properties;
+    }
+
+    private static class ProjectState {
+        private boolean smaliScanned;
+        private boolean xmlScanned;
+        private boolean smaliCacheEnabled;
+        private boolean xmlCacheEnabled;
     }
 }

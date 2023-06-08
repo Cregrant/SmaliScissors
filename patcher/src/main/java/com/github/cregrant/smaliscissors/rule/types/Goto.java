@@ -36,7 +36,7 @@ public class Goto extends Rule {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Type: GOTO.\n");
+        sb.append("Type: GOTO\n");
         if (name != null) {
             sb.append("Name: ").append(name).append('\n');
         }

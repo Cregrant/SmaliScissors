@@ -1,6 +1,8 @@
 package com.github.cregrant.smaliscissors.console;
 
+import com.github.cregrant.smaliscissors.Patcher;
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.common.outer.PatcherTask;
 import com.googlecode.dex2jar.tools.Dex2jarCmd;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +11,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -41,7 +44,14 @@ public class Main {
             smaliPaths = Collections.emptyList();
         }
 
-        com.github.cregrant.smaliscissors.Main.runPatcher(new DexExecutorWindows(), projects, patches, smaliPaths);
+        ArrayList<PatcherTask> tasks = new ArrayList<>();
+        for (String projectPath : projects) {
+            PatcherTask task = new PatcherTask(projectPath)
+                    .addPatchPaths(patches)
+                    .addSmaliPaths(smaliPaths);
+            tasks.add(task);
+        }
+        new Patcher(new DexExecutorWindows(), null, tasks).run();
     }
 
     static class DexExecutorWindows implements DexExecutor {
@@ -64,9 +74,5 @@ public class Main {
             }
         }
 
-        @Override
-        public String getApkPath() {
-            return null;
-        }
     }
 }

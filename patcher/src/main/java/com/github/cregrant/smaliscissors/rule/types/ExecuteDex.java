@@ -3,11 +3,13 @@ package com.github.cregrant.smaliscissors.rule.types;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
+import com.github.cregrant.smaliscissors.common.outer.SmaliGenerator;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.IO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -42,6 +44,9 @@ public class ExecuteDex extends Rule {
         if (apkPath == null) {
             logger.warn("Apk file not found. Dex script may fail.");
         }
+        if (smali && project.getSmaliList().isEmpty()) {
+            generateSmaliFiles(project);
+        }
         String zipPath = patch.getFile().toString();
         String projectPath = project.getPath();
         patch.createTempDir();
@@ -58,6 +63,23 @@ public class ExecuteDex extends Rule {
             logger.error("Dex executor is not present.");
         }
         patch.deleteTempDir();
+    }
+
+    private void generateSmaliFiles(Project project) throws FileNotFoundException {
+        logger.info("Smali files is not found! Generating smali files...");
+        SmaliGenerator smaliGenerator = project.getSmaliGenerator();
+        if (smaliGenerator != null) {
+            smaliGenerator.generateSmaliFiles(project.getPath().replace('\\', '/'));
+            project.rescanSmali();
+            if (project.getSmaliList().isEmpty()) {
+                logger.error("Smali files generation failed");
+                throw new FileNotFoundException();
+            }
+        } else {
+            logger.error("Smali files generation canceled: no smali generator provided.");
+            throw new FileNotFoundException();
+        }
+
     }
 
     public String getScript() {

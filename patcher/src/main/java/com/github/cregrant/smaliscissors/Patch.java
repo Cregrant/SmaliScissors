@@ -45,13 +45,13 @@ public class Patch {
         name = "Single REMOVE_CODE rule";
     }
 
-    public void jumpToRuleName(String someName) {
-        if (someName == null) {
+    public void jumpToRuleName(String name) {
+        if (name == null) {
             return;
         }
         for (int i = 0; i < rules.size(); i++) {
             String ruleName = rules.get(i).getName();
-            if (someName.equalsIgnoreCase(ruleName)) {
+            if (name.equalsIgnoreCase(ruleName)) {
                 currentRuleNum = i;
                 break;
             }
