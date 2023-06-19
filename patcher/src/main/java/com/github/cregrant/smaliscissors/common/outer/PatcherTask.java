@@ -38,9 +38,14 @@ public class PatcherTask {
         return this;
     }
 
+    public PatcherTask addSmaliPath(String smaliPath) {
+        this.smaliPaths.add(smaliPath);
+        return this;
+    }
+
     public ArrayList<Patch> getPatches() {
         ArrayList<Patch> patches = new ArrayList<>();
-        for (String patchPath : getPatchPaths()) {
+        for (String patchPath : patchPaths) {
             patches.add(new Patch(patchPath));
         }
 
