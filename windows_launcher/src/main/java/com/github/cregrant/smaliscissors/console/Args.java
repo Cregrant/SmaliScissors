@@ -16,41 +16,43 @@ public class Args {
     private final ArrayList<String> projects = new ArrayList<>();
     private final ArrayList<String> patches = new ArrayList<>();
     private final ArrayList<String> smaliPaths = new ArrayList<>();
-    Option project;
-    Option patch;
-    Option remove;
-    Option select;
-    Option log;
-    Option logFile;
+    private final Option projectOption;
+    private final Option patchOption;
     private boolean interactiveSelectMode;
+    private final Option removeOption;
+    private final Option selectOption;
+    private final Option logLevelOption;
+    private final Option logFileOption;
+    private File logFile;
+    private String logLevel;
 
     public Args() {
         String projectDescription = "Path to a decompiled project folder";
-        project = new Option("i", "input", true, projectDescription);
-        project.setRequired(true);
-        options.addOption(project);
+        projectOption = new Option("i", "input", true, projectDescription);
+        projectOption.setRequired(true);
+        options.addOption(projectOption);
 
         String patchDescription = "Path to a patch in the common form of a .zip file";
-        patch = new Option("p", "patch", true, patchDescription);
-        options.addOption(patch);
+        patchOption = new Option("p", "patch", true, patchDescription);
+        options.addOption(patchOption);
 
         String removeDescription = "Smali path that should be removed from the project. " +
                 "A quick alternative version for running the single REMOVE_CODE patch";
-        remove = new Option("r", "remove", true, removeDescription);
-        options.addOption(remove);
+        removeOption = new Option("r", "remove", true, removeDescription);
+        options.addOption(removeOption);
 
         String selectDescription = "Enables the interactive project and patch selection mode. " +
                 "Note that now these paths should point to a root folder that contains projects/patches";
-        select = new Option("s", "select", false, selectDescription);
-        options.addOption(select);
+        selectOption = new Option("s", "select", false, selectDescription);
+        options.addOption(selectOption);
 
-        String logDescription = "Level of verbosity: DEBUG, INFO, WARN or ERROR (default: INFO)";
-        log = new Option("l", "log", true, logDescription);
-        options.addOption(log);
+        String logDescription = "Level of verbosity: DEBUG, INFO, WARN, ERROR or OFF (default: INFO)";
+        logLevelOption = new Option("l", "log", true, logDescription);
+        options.addOption(logLevelOption);
 
         String logFileDescription = "Path to save the application log as a file";
-        logFile = new Option("f", "log-file", true, logFileDescription);
-        options.addOption(logFile);
+        logFileOption = new Option("w", "log-file", true, logFileDescription);
+        options.addOption(logFileOption);
     }
 
     public static Args parseArgs(String[] args) {
@@ -58,7 +60,7 @@ public class Args {
 
         try {
             CommandLine cmd = new DefaultParser().parse(parsedArgs.getOptions(), args);
-            parsedArgs.validate(cmd);
+            parsedArgs.parse(cmd);
             return parsedArgs;
         } catch (ParseException e) {
             logger.error(e.getMessage());
@@ -67,15 +69,15 @@ public class Args {
         }
     }
 
-    public void validate(CommandLine cmd) throws ParseException {
+    private void parse(CommandLine cmd) throws ParseException {
         StringBuilder errors = new StringBuilder();
 
-        if (cmd.hasOption(select)) {
+        if (cmd.hasOption(selectOption)) {
             interactiveSelectMode = true;
         }
 
         if (!interactiveSelectMode) {
-            for (String projectPath : cmd.getOptionValues(project)) {    //project values is required and not null
+            for (String projectPath : cmd.getOptionValues(projectOption)) {    //project values is required and not null
                 projects.add(convertBackslashes(projectPath));
 
                 File projectFolder = new File(projectPath);
@@ -86,13 +88,12 @@ public class Args {
                 }
             }
         } else {
-            checkSingleRoot(cmd, errors, project);
-            projects.add(cmd.getOptionValue(project));
+            checkSingleRoot(cmd, errors, projectOption);
+            projects.add(cmd.getOptionValue(projectOption));
         }
-
-        if (cmd.hasOption(patch)) {
+        if (cmd.hasOption(patchOption)) {
             if (!interactiveSelectMode) {
-                for (String patchPath : cmd.getOptionValues(patch)) {
+                for (String patchPath : cmd.getOptionValues(patchOption)) {
                     patches.add(convertBackslashes(patchPath));
 
                     File patchFile = new File(patchPath);
@@ -103,13 +104,13 @@ public class Args {
                     }
                 }
             } else {
-                checkSingleRoot(cmd, errors, patch);
-                patches.add(cmd.getOptionValue(patch));
+                checkSingleRoot(cmd, errors, patchOption);
+                patches.add(cmd.getOptionValue(patchOption));
             }
         }
 
-        if (cmd.hasOption(remove)) {
-            for (String removePath : cmd.getOptionValues(remove)) {
+        if (cmd.hasOption(removeOption)) {
+            for (String removePath : cmd.getOptionValues(removeOption)) {
                 smaliPaths.add(convertBackslashes(removePath));
             }
         }
@@ -118,12 +119,22 @@ public class Args {
             errors.append("Both --patch and --remove parameters are empty. Use one of them to run some actions\n");
         }
 
-        if (cmd.hasOption(log)) {
-            String logValue = cmd.getOptionValue(log).toUpperCase();
-            boolean valid = Arrays.asList("OFF", "TRACE", "DEBUG", "INFO", "WARN", "ERROR").contains(logValue);
-            if (!valid) {
-                errors.append("The --log parameter value \"").append(logValue)
+        if (cmd.hasOption(logLevelOption)) {
+            logLevel = cmd.getOptionValue(logLevelOption).toUpperCase();
+            boolean isValid = Arrays.asList("OFF", "DEBUG", "INFO", "WARN", "ERROR").contains(logLevel);
+            if (!isValid) {
+                errors.append("The --log parameter value \"").append(logLevel)
                         .append("\" is invalid\n");
+            }
+        }
+
+        if (cmd.hasOption(logFileOption)) {
+            logFile = new File(convertBackslashes(cmd.getOptionValue(logFileOption)));
+            File parentFolder = logFile.getParentFile();
+            if (!parentFolder.exists() && !parentFolder.mkdirs()) {
+                errors.append("The log file parent folder ").append(parentFolder).append(" could not be created.\n");
+            } else if (!parentFolder.canWrite()) {
+                errors.append("The log file ").append(logFile).append(" is not writable.\n");
             }
         }
 
@@ -136,7 +147,7 @@ public class Args {
         String[] rootDir = cmd.getOptionValues(option);
         if (rootDir.length != 1) {
             errors.append("Multiple --").append(option.getLongOpt())
-                    .append(" arguments is not allowed for a --").append(select.getLongOpt()).append(" mode");
+                    .append(" arguments is not allowed for a --").append(selectOption.getLongOpt()).append(" mode");
         }
     }
 
@@ -154,6 +165,14 @@ public class Args {
 
     public List<String> getSmaliPaths() {
         return smaliPaths;
+    }
+
+    public String getLogLevelOption() {
+        return logLevel;
+    }
+
+    public File getLogFile() {
+        return logFile;
     }
 
     public boolean isInteractiveSelectMode() {

@@ -47,7 +47,7 @@
         </encoder>
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <appender name="SC_FILE_DEBUG" class="ch.qos.logback.core.FileAppender">
         <File>nul</File>    <!--write file to dev/null unless specified in runtime-->
         <append>false</append>
         <immediateFlush>true</immediateFlush>
@@ -57,10 +57,10 @@
         </encoder>
     </appender>
 
-    <root level="INFO">    <!--level may be changed in runtime-->
+    <logger name="com.github.cregrant.smaliscissors" level="INFO">    <!--level may be changed in runtime-->
         <appender-ref ref="STDOUT_DEBUG"/>
         <appender-ref ref="STDOUT_INFO"/>
         <appender-ref ref="STDERR"/>
-        <appender-ref ref="FILE"/>
-    </root>
+        <appender-ref ref="SC_FILE_DEBUG"/>
+    </logger>
 </configuration>

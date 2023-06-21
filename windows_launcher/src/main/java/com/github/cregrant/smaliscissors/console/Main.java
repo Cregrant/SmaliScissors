@@ -24,6 +24,7 @@ public class Main {
         if (parsedArgs == null) {
             return;
         }
+        LogbackConfig.useArgs(parsedArgs);
 
         List<String> projects;
         List<String> patches;
@@ -49,12 +50,13 @@ public class Main {
             PatcherTask task = new PatcherTask(projectPath)
                     .addPatchPaths(patches)
                     .addSmaliPaths(smaliPaths);
+            task.validate();
             tasks.add(task);
         }
-        new Patcher(new DexExecutorWindows(), null, tasks).run();
+        new Patcher(new Dex2JarExecutor(), null, tasks).run();
     }
 
-    static class DexExecutorWindows implements DexExecutor {
+    static class Dex2JarExecutor implements DexExecutor {
 
         @Override
         public void runDex(String dexPath, String entrance, String mainClass,
