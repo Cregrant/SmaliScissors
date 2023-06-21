@@ -85,8 +85,7 @@ public class RuleParser {
         return match
                 .replace("><", ">\\s*?<")
                 .replace("\" />", "\" ?/>")
-                .replaceAll(" +", "\\\\s+?");
-
+                .replaceAll(" +|\t+", "(?:\\\\s+?)");
     }
 
     public static String fixRegexReplacement(String replacement) {   //force locals to fix some old patches compatibility
