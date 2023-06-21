@@ -21,12 +21,13 @@ public class Assign extends Rule {
     private static final Logger logger = LoggerFactory.getLogger(Assign.class);
     private final String match;
     private final String target;
+    private final String originalMatch;
     private final boolean isRegex;
     private final Map<String, String> assignments;
 
     public Assign(String rawString) throws InputMismatchException {
         super(rawString);
-        String match = matchSingleLine(rawString, MATCH);
+        originalMatch = matchSingleLine(rawString, MATCH);
         target = matchSingleLine(rawString, TARGET);
         assignments = parseAssignments(matchMultiLines(rawString, ASSIGNMENT, Regex.ResultFormat.SPLIT));
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
@@ -40,7 +41,7 @@ public class Assign extends Rule {
                 smali = true;
             }
         }
-        this.match = xml ? RuleParser.fixRegexMatchXml(match) : fixRegexMatch(match);
+        this.match = xml ? RuleParser.fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
     }
 
     static HashMap<String, String> parseAssignments(ArrayList<String> assignmentsList) {
@@ -142,7 +143,7 @@ public class Assign extends Rule {
             sb.append("Name:   ").append(name).append('\n');
         }
         sb.append("Target: ").append(target).append('\n');
-        sb.append("Match:  ").append(match).append('\n');
+        sb.append("Match:  ").append(originalMatch).append('\n');
         sb.append("Regex:  ").append(isRegex).append('\n');
         sb.append("Assignments:\n");
         for (Map.Entry<String, String> entry : assignments.entrySet()) {

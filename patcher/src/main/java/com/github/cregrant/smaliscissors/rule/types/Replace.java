@@ -24,14 +24,16 @@ public class Replace extends Rule {
     private String target;
     private String match;
     private String replacement;
+    private String originalMatch;
+    private String originalReplacement;
     private boolean regex;
 
     public Replace(String rawString) {
         super(rawString);
         target = matchSingleLine(rawString, TARGET);
-        match = matchSingleLine(rawString, MATCH);
-        String parsedReplacement = matchSingleLine(rawString, REPLACEMENT);
-        if (parsedReplacement == null) {
+        originalMatch = matchSingleLine(rawString, MATCH);
+        originalReplacement = matchSingleLine(rawString, REPLACEMENT);
+        if (originalReplacement == null) {
             return;
         }
         regex = RuleParser.parseBoolean(rawString, REGEX);
@@ -42,8 +44,9 @@ public class Replace extends Rule {
                 smali = true;
             }
         }
+        String parsedReplacement = originalReplacement;
         if (regex) {
-            match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+            match = xml ? fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
             parsedReplacement = xml ? parsedReplacement : fixRegexReplacement(parsedReplacement);
         }
         if (xml) {
@@ -198,15 +201,15 @@ public class Replace extends Rule {
             sb.append("Name:    ").append(name).append('\n');
         }
         sb.append("Target:  ").append(target).append("\n");
-        sb.append("Match:   ").append(match).append('\n');
+        sb.append("Match:   ").append(originalMatch).append('\n');
         sb.append("Regex:   ").append(regex).append('\n');
         String verboseReplacement;
-        if (replacement.equals("")) {
+        if (originalReplacement.equals("")) {
             verboseReplacement = "'none' (this means delete matched result)";
-        } else if (replacement.equals("\n")) {
+        } else if (originalReplacement.equals("\n")) {
             verboseReplacement = "'\\n' (the new line character)";
         } else {
-            verboseReplacement = replacement;
+            verboseReplacement = originalReplacement;
         }
         sb.append("Replace: ").append(verboseReplacement).append('\n');
         return sb.toString();

@@ -22,13 +22,14 @@ public class MatchGoto extends Rule {
     private final String target;
     private final String goTo;
     private final String match;
+    private final String originalMatch;
     private final boolean isRegex;
     private volatile boolean found;
 
     public MatchGoto(String rawString) {
         super(rawString);
         target = matchSingleLine(rawString, TARGET);
-        String match = matchSingleLine(rawString, MATCH);
+        originalMatch = matchSingleLine(rawString, MATCH);
         goTo = matchSingleLine(rawString, GOTO);
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
         if (target != null) {
@@ -37,9 +38,9 @@ public class MatchGoto extends Rule {
         }
 
         if (isRegex) {
-            this.match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
+            this.match = xml ? fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
         } else {
-            this.match = match;
+            this.match = originalMatch;
         }
     }
 
@@ -52,7 +53,7 @@ public class MatchGoto extends Rule {
     public void apply(Project project, Patch patch) {
         final Pattern matchPattern = Pattern.compile(patch.applyAssign(match));
         final Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
-        
+
         List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
         List<DecompiledFile> files = new ArrayList<>();
 
@@ -127,7 +128,7 @@ public class MatchGoto extends Rule {
             sb.append("Name:   ").append(name).append('\n');
         }
         sb.append("Target: ").append(target).append("\n");
-        sb.append("Match:  ").append(match).append('\n');
+        sb.append("Match:  ").append(originalMatch).append('\n');
         sb.append("Goto:   ").append(goTo);
         return sb.toString();
     }
