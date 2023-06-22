@@ -58,7 +58,15 @@ public class ExecuteDex extends Rule {
         String dexPath = extracted.get(0);
         DexExecutor dexExecutor = project.getDexExecutor();
         if (dexExecutor != null) {
-            dexExecutor.runDex(dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param, patch.getTempDir().getPath());
+            try {
+                dexExecutor.runDex(dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param, patch.getTempDir().getPath());
+            } catch (Throwable e) {
+                logger.error("Error executing dex script\n");
+                if (e instanceof NoClassDefFoundError || e.getCause() instanceof NoClassDefFoundError) {
+                    logger.error("This dex script supports only Android platform!\n");
+                }
+                throw new RuntimeException(e);
+            }
         } else {
             logger.error("Dex executor is not present.");
         }

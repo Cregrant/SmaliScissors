@@ -60,19 +60,15 @@ public class Main {
 
         @Override
         public void runDex(String dexPath, String entrance, String mainClass,
-                           String apkPath, String zipPath, String projectPath, String param, String tempDir) {
-            new Dex2jarCmd().doMain(dexPath);
-            try {
-                URL jarUrl = Paths.get(dexPath.replace(".dex", ".jar")).toUri().toURL();
-                try (URLClassLoader cl = new URLClassLoader(new URL[]{jarUrl}, Main.class.getClassLoader())) {
-                    Class<?> loadedClass = cl.loadClass(mainClass);
-                    Object instance = loadedClass.getDeclaredConstructor().newInstance();
-                    Method method = loadedClass
-                            .getMethod(entrance, String.class, String.class, String.class, String.class);
-                    method.invoke(instance, apkPath, zipPath, projectPath, param);
-                }
-            } catch (Exception e) {
-                logger.error("Error executing dex script", e);
+                           String apkPath, String zipPath, String projectPath, String param, String tempDir) throws Exception {
+            String jarPath = dexPath.replace(".dex", ".jar");
+            new Dex2jarCmd().doMain(dexPath, "-o", jarPath, "--force");
+            URL jarUrl = Paths.get(jarPath).toUri().toURL();
+            try (URLClassLoader cl = new URLClassLoader(new URL[]{jarUrl}, Main.class.getClassLoader())) {
+                Class<?> loadedClass = cl.loadClass(mainClass);
+                Object instance = loadedClass.getDeclaredConstructor().newInstance();
+                Method method = loadedClass.getMethod(entrance, String.class, String.class, String.class, String.class);
+                method.invoke(instance, apkPath, zipPath, projectPath, param);
             }
         }
 
