@@ -58,7 +58,7 @@ public class Patcher {
             logger.error(e.getMessage());
             logger.error("Probably patch require some files that haven't been decompiled yet.");
             throw e;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("Unexpected error", e);
             throw e;
         } finally {

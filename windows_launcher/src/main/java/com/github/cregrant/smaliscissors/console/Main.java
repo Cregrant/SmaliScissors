@@ -19,7 +19,7 @@ public class Main {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Args parsedArgs = Args.parseArgs(args);
         if (parsedArgs == null) {
             return;
@@ -53,7 +53,11 @@ public class Main {
             task.validate();
             tasks.add(task);
         }
-        new Patcher(new Dex2JarExecutor(), null, tasks).run();
+        try {
+            new Patcher(new Dex2JarExecutor(), null, tasks).run();
+        } catch (Exception e) {
+            //error already logged
+        }
     }
 
     static class Dex2JarExecutor implements DexExecutor {
