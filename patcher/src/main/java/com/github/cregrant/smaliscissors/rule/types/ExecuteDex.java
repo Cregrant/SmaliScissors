@@ -35,7 +35,7 @@ public class ExecuteDex extends Rule {
 
     @Override
     public boolean isValid() {
-        return script != null && mainClass != null && entrance != null && param != null;
+        return script != null && mainClass != null && entrance != null;
     }
 
     @Override
