@@ -17,6 +17,10 @@ compileTestJava {
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.36'
 
+    testImplementation 'ch.qos.logback:logback-classic:1.2.11'
+    testImplementation 'org.apache.commons:commons-compress:1.22'
+    testRuntimeOnly 'org.tukaani:xz:1.9'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine:5.9.0'
@@ -25,6 +29,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    jvmArgs = ['-Xms512m', '-Xmx4096m']
 }
 
 task fatJar(type: Jar) {

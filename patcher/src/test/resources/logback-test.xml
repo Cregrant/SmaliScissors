@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<configuration>
+
+    <!--    <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/>-->
+    <property name="COMPACT_ERROR_PATTERN" value="%level: %msg%n"/>
+    <property name="COMPACT_INFO_PATTERN" value="%msg%n"/>
+    <property name="COMPACT_DEBUG_PATTERN" value="%level %logger: %msg%n"/>
+
+    <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.err</target>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <encoder>
+            <pattern>${COMPACT_ERROR_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT_INFO" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>${COMPACT_INFO_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="STDOUT_DEBUG" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <encoder>
+            <pattern>${COMPACT_DEBUG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.github.cregrant.smaliscissors" level="INFO">    <!--level may be changed in runtime-->
+        <appender-ref ref="STDOUT_DEBUG"/>
+        <appender-ref ref="STDOUT_INFO"/>
+        <appender-ref ref="STDERR"/>
+    </logger>
+</configuration>
