@@ -14,10 +14,11 @@ dependencies {
 
     implementation 'commons-cli:commons-cli:1.5.0'
 
-    runtimeOnly 'org.antlr:antlr4-runtime:4.6'
-    implementation 'org.antlr:antlr4:4.6'
+    //runtimeOnly 'org.antlr:antlr4-runtime:4.6'
+    //implementation 'org.antlr:antlr4:4.6'
     implementation 'org.ow2.asm:asm-debug-all:5.2'
     implementation project(':patcher')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     //implementation 'org.slf4j:slf4j-simple:1.7.36'
 }
 
