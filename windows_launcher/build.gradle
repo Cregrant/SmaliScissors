@@ -14,31 +14,29 @@ dependencies {
 
     implementation 'commons-cli:commons-cli:1.5.0'
 
-    //runtimeOnly 'org.antlr:antlr4-runtime:4.6'
-    //implementation 'org.antlr:antlr4:4.6'
     implementation 'org.ow2.asm:asm-debug-all:5.2'
     implementation project(':patcher')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    //implementation 'org.slf4j:slf4j-simple:1.7.36'
-}
-
-generateGrammarSource {
-    arguments += ['-no-listener', '-visitor', '-package', 'com.googlecode.d2j.smali.antlr4']
 }
 
 task fatJar(type: Jar) {
     manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.console.Main"
     archiveBaseName.set("windows_launcher")
     destinationDirectory.set(rootDir)
-    duplicatesStrategy = DuplicatesStrategy.WARN
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     delete(archiveFile.get())
 
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     } {
-        exclude "META-INF/**"
-        exclude "assets/**"
-        exclude "res/**"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    } with jar
+
+    from('..') {
+        include 'LICENSE.txt'
+        include 'NOTICE.txt'
+        into 'META-INF/SmaliScissors/'
     }
-    with jar
 }

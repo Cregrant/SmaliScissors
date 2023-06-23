@@ -35,6 +35,7 @@ test {
 task fatJar(type: Jar) {
     archiveBaseName.set("patcher")
     destinationDirectory.set(rootDir)
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     delete(archiveFile.get())
 
     from {
@@ -44,4 +45,10 @@ task fatJar(type: Jar) {
         exclude "META-INF/*.DSA"
         exclude "META-INF/*.RSA"
     } with jar
+
+    from('..') {
+        include 'LICENSE.txt'
+        include 'NOTICE.txt'
+        into 'META-INF/SmaliScissors/'
+    }
 }
