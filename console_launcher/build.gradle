@@ -21,7 +21,7 @@ dependencies {
 
 task fatJar(type: Jar) {
     manifest.attributes["Main-Class"] = "com.github.cregrant.smaliscissors.console.Main"
-    archiveBaseName.set("windows_launcher")
+    archiveBaseName.set("console_patcher")
     destinationDirectory.set(rootDir)
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
     delete(archiveFile.get())

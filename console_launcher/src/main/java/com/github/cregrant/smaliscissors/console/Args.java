@@ -18,11 +18,11 @@ public class Args {
     private final ArrayList<String> smaliPaths = new ArrayList<>();
     private final Option projectOption;
     private final Option patchOption;
-    private boolean interactiveSelectMode;
     private final Option removeOption;
     private final Option selectOption;
     private final Option logLevelOption;
     private final Option logFileOption;
+    private boolean interactiveSelectMode;
     private File logFile;
     private String logLevel;
 

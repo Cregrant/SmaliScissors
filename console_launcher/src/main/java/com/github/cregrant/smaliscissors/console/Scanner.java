@@ -11,15 +11,6 @@ public class Scanner {
     private static final Logger logger = LoggerFactory.getLogger(Scanner.class);
     File projectsFolder;
     File patchesFolder;
-
-    public ArrayList<String> getScannedProjects() {
-        return scannedProjects;
-    }
-
-    public ArrayList<String> getScannedPatches() {
-        return scannedPatches;
-    }
-
     ArrayList<String> scannedProjects;
     ArrayList<String> scannedPatches;
 
@@ -28,6 +19,14 @@ public class Scanner {
         this.patchesFolder = patchesFolder;
         scannedProjects = getProjects();
         scannedPatches = getPatches();
+    }
+
+    public ArrayList<String> getScannedProjects() {
+        return scannedProjects;
+    }
+
+    public ArrayList<String> getScannedPatches() {
+        return scannedPatches;
     }
 
     boolean scanFailed() {
