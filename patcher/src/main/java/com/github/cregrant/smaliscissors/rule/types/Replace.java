@@ -36,6 +36,7 @@ public class Replace extends Rule {
         if (originalReplacement == null) {
             return;
         }
+
         regex = RuleParser.parseBoolean(rawString, REGEX);
         if (target != null) {
             smali = target.endsWith("smali");
@@ -44,19 +45,20 @@ public class Replace extends Rule {
                 smali = true;
             }
         }
-        String parsedReplacement = originalReplacement;
+
+        match = originalMatch;
+        replacement = originalReplacement;
         if (regex) {
             match = xml ? fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
-            parsedReplacement = xml ? parsedReplacement : fixRegexReplacement(parsedReplacement);
+            replacement = xml ? replacement : fixRegexReplacement(replacement);
         }
         if (xml) {
-            parsedReplacement = parsedReplacement.replace("><", ">\n<");
+            replacement = replacement.replace("><", ">\n<");
         }
         // remove extra \n at the end after my parsing regexp
-        if (parsedReplacement.length() > 1 && parsedReplacement.endsWith("\n")) {
-            parsedReplacement = parsedReplacement.substring(0, parsedReplacement.length() - 1);
+        if (replacement.length() > 1 && replacement.endsWith("\n")) {
+            replacement = replacement.substring(0, replacement.length() - 1);
         }
-        this.replacement = parsedReplacement;
     }
 
     public Replace() {

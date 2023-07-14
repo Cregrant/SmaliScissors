@@ -21,8 +21,8 @@ public class MatchGoto extends Rule {
     private static final Logger logger = LoggerFactory.getLogger(MatchGoto.class);
     private final String target;
     private final String goTo;
-    private final String match;
     private final String originalMatch;
+    private String match;
     private final boolean isRegex;
     private volatile boolean found;
 
@@ -37,10 +37,9 @@ public class MatchGoto extends Rule {
             xml = target.endsWith("xml");
         }
 
+        match = originalMatch;
         if (isRegex) {
-            this.match = xml ? fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
-        } else {
-            this.match = originalMatch;
+            match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
         }
     }
 
