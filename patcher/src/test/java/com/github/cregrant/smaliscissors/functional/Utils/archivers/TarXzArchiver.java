@@ -24,7 +24,7 @@ public class TarXzArchiver {
     public static byte[] createTarXz(File rootFolder, Collection<File> files) {
         Concurrent.compressSemaphore.acquireUninterruptibly();
         byte[] tarBytes = TarArchiver.createTar(rootFolder, files);
-        byte[] tarXzBytes = createTarXz(tarBytes);
+        byte[] tarXzBytes = createXz(tarBytes);
         Concurrent.compressSemaphore.release();
         return tarXzBytes;
     }
@@ -36,7 +36,7 @@ public class TarXzArchiver {
         }
     }
 
-    public static byte[] createTarXz(byte[] bytes) {
+    public static byte[] createXz(byte[] bytes) {
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream(bytes.length);
              XZCompressorOutputStream xzo = new XZCompressorOutputStream(byteStream, 5)) {
             xzo.write(bytes);
@@ -50,7 +50,7 @@ public class TarXzArchiver {
     public static void extractTarXz2(byte[] bytes, File path) {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
              XZCompressorInputStream xzi = new XZCompressorInputStream(byteStream);
-             TarArchiveInputStream tarStream = new TarArchiveInputStream(xzi)) {
+             TarArchiveInputStream tarStream = new TarArchiveInputStream(xzi, StandardCharsets.UTF_8.name())) {
 
             BackgroundTasks tasks = new BackgroundTasks(Concurrent.WORKER);
             ArchiveEntry entry;
@@ -97,7 +97,7 @@ public class TarXzArchiver {
     public static ConcurrentHashMap<String, String> previewTarXz(byte[] bytes) {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
              XZCompressorInputStream xzi = new XZCompressorInputStream(byteStream);
-             ArchiveInputStream tarStream = new TarArchiveInputStream(xzi)) {
+             ArchiveInputStream tarStream = new TarArchiveInputStream(xzi, StandardCharsets.UTF_8.name())) {
             ArchiveEntry entry;
 
             ConcurrentHashMap<String, String> result = new ConcurrentHashMap<>(10000);

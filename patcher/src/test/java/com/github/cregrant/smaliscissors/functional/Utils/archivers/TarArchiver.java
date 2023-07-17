@@ -11,6 +11,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,7 +25,7 @@ public class TarArchiver {
 
     public static byte[] createTar(File rootFolder, Collection<File> files) {
         try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream(200000000);
-             TarArchiveOutputStream outputStream = new TarArchiveOutputStream(byteStream)) {
+             TarArchiveOutputStream outputStream = new TarArchiveOutputStream(byteStream, StandardCharsets.UTF_8.name())) {
 
             outputStream.setAddPaxHeadersForNonAsciiNames(true);
             outputStream.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
@@ -38,7 +39,7 @@ public class TarArchiver {
 
     public static void extractTar(byte[] tarBytes, File path) {
         try (ByteArrayInputStream byteStream = new ByteArrayInputStream(tarBytes);
-             ArchiveInputStream tarStream = new TarArchiveInputStream(byteStream)) {
+             ArchiveInputStream tarStream = new TarArchiveInputStream(byteStream, StandardCharsets.UTF_8.name())) {
             ArchiveEntry entry;
             while ((entry = tarStream.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
