@@ -37,6 +37,7 @@ public class TestProject {
         this.lock = lock;
         this.projectName = rootDir.getName();
         this.sourceDirectory = new SourceDirectory(new File(rootDir, "source"));
+        tryUseRamdisk();
     }
 
     public void run(TestPatch patch) throws Exception {
@@ -138,6 +139,19 @@ public class TestProject {
     public void compress() {
         synchronized (lock) {
             sourceDirectory.compressIfNeeded(sourceDirectory.getSourcesArchive().getPath());
+        }
+    }
+
+    private void tryUseRamdisk() {
+        File[] files = File.listRoots();
+        for (File f : files) {
+            String diskName = FileSystemView.getFileSystemView().getSystemDisplayName(f);
+            if (diskName.contains("RamDisk")) {
+                File tempFolder = new File(f, "temp");
+                tempFolder.mkdirs();
+                temporaryFolder = new TemporaryFolder(tempFolder);
+                break;
+            }
         }
     }
 
