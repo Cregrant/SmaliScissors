@@ -14,6 +14,7 @@ public abstract class TestDirectory {
 
     protected TestDirectory(File rootFolder) {
         this.rootFolder = rootFolder;
+        rescan();
     }
 
     public abstract void rescan();
@@ -31,7 +32,7 @@ public abstract class TestDirectory {
         if (sources.isEmpty()) {
             return;
         }
-        if (sourcesArchive != null) {
+        if (sourcesArchive.exists()) {
             throw new IllegalArgumentException("Detected both uncompressed sources and compressed archive inside " +
                     rootFolder);
         }
@@ -70,5 +71,10 @@ public abstract class TestDirectory {
 
     public File getRootFolder() {
         return rootFolder;
+    }
+
+    @Override
+    public String toString() {
+        return rootFolder.getPath();
     }
 }

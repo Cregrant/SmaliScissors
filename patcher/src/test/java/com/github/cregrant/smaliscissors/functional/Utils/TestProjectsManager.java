@@ -41,23 +41,25 @@ public class TestProjectsManager {
         suite.deleteFiles();
     }
 
-    private void loadTestSuites(File testFolder) {
+    private static File[] getProjectDirs(File testFolder) {
         File[] projectDirs = testFolder.listFiles();
         if (projectDirs == null || projectDirs.length == 0) {
             throw new IllegalArgumentException("No test projects found");
         }
+        return projectDirs;
+    }
 
+    private void loadTestSuites(File testFolder) {
         testSuites = new ArrayList<>();
-        for (File rootDir : projectDirs) {
+        for (File rootDir : getProjectDirs(testFolder)) {
             if (rootDir.isFile()) {
                 logger.warn("Unknown file inside a tests folder: " + rootDir.getPath());
                 continue;
             }
             try {
                 Object projectLock = new Object();
-                TestProject project = new TestProject(rootDir, projectLock);
-                for (TestPatch patch : project.getPatches()) {
-                    TestSuite testSuite = new TestSuite(project, patch);
+                for (TestPatch patch : getPatches(rootDir)) {
+                    TestSuite testSuite = new TestSuite(new TestProject(rootDir, projectLock), patch);
                     testSuites.add(testSuite);
                 }
             } catch (Exception e) {
@@ -67,12 +69,28 @@ public class TestProjectsManager {
         }
     }
 
+    public ArrayList<TestPatch> getPatches(File rootDir) {
+        ArrayList<TestPatch> patches = new ArrayList<>();
+        File[] patchDirs = rootDir.listFiles(file -> !file.getName().equals("source"));
+        if (patchDirs == null || patchDirs.length == 0) {
+            throw new IllegalArgumentException("Test patches not found inside " + rootDir);
+        }
+        for (File patchDir : patchDirs) {
+            if (patchDir.isFile()) {
+                logger.warn("Unknown file inside a test project folder: " + patchDir.getPath());
+                continue;
+            }
+            patches.add(new TestPatch(patchDir));
+        }
+        return patches;
+    }
+
     public void compressTestSuites() {
         BackgroundTasks tasks = new BackgroundTasks(Concurrent.LONG_WORKER);
         for (TestSuite suite : testSuites) {
             Runnable r = () -> {
                 try {
-                    suite.compress();
+                    suite.compressAll();
                 } catch (Exception e) {
                     logger.error("Error compressing " + suite, e);
                 }

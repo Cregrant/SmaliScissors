@@ -31,16 +31,17 @@ public class TestSuite {
     }
 
     public void regenerate() throws Exception {
-        patch.getPatchedSourcesArchive().delete();
+        patch.deletePatchedSourcesArchive();
         for (File file : patch.getPatchDirectory().getSources()) {
             IO.delete(file);
         }
 
         File patchRootFolder = patch.getPatchDirectory().getRootFolder();
+        project.compress();
         project.extractSources(patchRootFolder);
         project.runOnDirectory(patchRootFolder, patch);
         project.cleanupFiles();
-        compress();
+        patch.compress();
     }
 
     @Override
@@ -48,7 +49,7 @@ public class TestSuite {
         return project + " + " + patch;
     }
 
-    public void compress() {
+    public void compressAll() {
         BackgroundTasks tasks = new BackgroundTasks(Concurrent.LONG_WORKER);
         tasks.submitTask(project::compress);
         tasks.submitTask(patch::compress);

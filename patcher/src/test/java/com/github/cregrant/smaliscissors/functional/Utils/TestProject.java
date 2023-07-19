@@ -8,6 +8,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -24,39 +25,18 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class TestProject {
 
-    public static final String SOURCES_ARCHIVE_FILENAME = "source.tar.xz";
     private static final Logger logger = LoggerFactory.getLogger(TestProjectsManager.class);
-    private final TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final ArrayList<File> deleteList = new ArrayList<>();
-    private final ArrayList<TestPatch> patches = new ArrayList<>();
     private final String projectName;
-    private final File sourcesArchive;
     private final SourceDirectory sourceDirectory;
-    private final Object lock;      //same projects share the same lock
+    private final Object lock;                            //same projects share the same compress lock
+    private TemporaryFolder temporaryFolder = new TemporaryFolder();
     private File extractedProjectDir;
 
-    public TestProject(File baseDir, Object lock) {
+    public TestProject(File rootDir, Object lock) {
         this.lock = lock;
-        this.projectName = baseDir.getName();
-        File sourceDir = new File(baseDir, "source");
-        this.sourcesArchive = new File(sourceDir, SOURCES_ARCHIVE_FILENAME);
-        this.sourceDirectory = new SourceDirectory(sourceDir);
-
-        if (sourceDirectory.getApkFile() == null) {
-            throw new IllegalArgumentException("Apk file not found inside " + sourceDir);
-        }
-
-        File[] patchDirs = baseDir.listFiles(file -> !file.getName().equals("source"));
-        if (patchDirs == null || patchDirs.length == 0) {
-            throw new IllegalArgumentException("Test patches not found inside " + sourceDir);
-        }
-        for (File patchDir : patchDirs) {
-            if (patchDir.isFile()) {
-                logger.warn("Unknown file inside a test project folder: " + patchDir.getPath());
-                continue;
-            }
-            patches.add(new TestPatch(patchDir));
-        }
+        this.projectName = rootDir.getName();
+        this.sourceDirectory = new SourceDirectory(new File(rootDir, "source"));
     }
 
     public void run(TestPatch patch) throws Exception {
@@ -152,12 +132,12 @@ public class TestProject {
     }
 
     public void extractSources(File dstDir) {
-        TarXzArchiver.extractTarXz(sourcesArchive, dstDir);
+        TarXzArchiver.extractTarXz(sourceDirectory.getSourcesArchive(), dstDir);
     }
 
-    public synchronized void compress() {
+    public void compress() {
         synchronized (lock) {
-            sourceDirectory.compressIfNeeded(sourcesArchive.getPath());
+            sourceDirectory.compressIfNeeded(sourceDirectory.getSourcesArchive().getPath());
         }
     }
 
@@ -166,11 +146,7 @@ public class TestProject {
     }
 
     public File getSourcesArchive() {
-        return sourcesArchive;
-    }
-
-    public ArrayList<TestPatch> getPatches() {
-        return patches;
+        return sourceDirectory.getSourcesArchive();
     }
 
     @Override
