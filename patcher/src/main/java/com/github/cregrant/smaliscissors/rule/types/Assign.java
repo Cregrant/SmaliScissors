@@ -34,14 +34,20 @@ public class Assign extends Rule {
         if (!isRegex) {
             throw new InputMismatchException("REGEX field must be true");
         }
-        if (target != null) {
-            smali = target.endsWith("smali");
-            xml = target.endsWith("xml");
-            if (target.contains("[")) {  //static replacement like [APPLICATION]
-                smali = true;
-            }
+
+        if (target == null) {
+            targetType = TargetType.UNKNOWN;
+        } else if (target.startsWith("smali") || target.endsWith("smali") || target.contains("[")) {  // '[' means static replacement like [APPLICATION]
+            targetType = TargetType.SMALI;
+        } else if (target.startsWith("res") || target.endsWith("xml")) {
+            targetType = TargetType.XML;
         }
-        this.match = xml ? RuleParser.fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
+
+        if (targetType == TargetType.XML) {
+            this.match = fixRegexMatchXml(originalMatch);
+        } else {
+            this.match = fixRegexMatch(originalMatch);
+        }
     }
 
     static HashMap<String, String> parseAssignments(ArrayList<String> assignmentsList) {
@@ -73,18 +79,13 @@ public class Assign extends Rule {
     public void apply(Project project, Patch patch) {
         String localTarget = target;
         List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
-        List<DecompiledFile> files = new ArrayList<>();
+        List<DecompiledFile> files;
 
         if (!providedFiles.isEmpty()) {
             files = providedFiles;
             localTarget = "**";
-        } else if (smali) {
-            files.addAll(project.getSmaliList());
-        } else if (xml) {
-            files.addAll(project.getXmlList());
         } else {
-            files.addAll(project.getSmaliList());
-            files.addAll(project.getXmlList());
+            files = getFilteredDecompiledFiles(project);
         }
 
         Pattern targetCompiled = Pattern.compile(Regex.globToRegex(localTarget));

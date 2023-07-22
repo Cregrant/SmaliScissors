@@ -30,7 +30,7 @@ public class ExecuteDex extends Rule {
         mainClass = matchSingleLine(rawString, MAIN_CLASS);
         entrance = matchSingleLine(rawString, ENTRANCE);
         param = matchSingleLine(rawString, PARAM);
-        smali = RuleParser.parseBoolean(rawString, SMALI_NEEDED);
+        targetType = RuleParser.parseBoolean(rawString, SMALI_NEEDED) ? TargetType.SMALI : TargetType.UNKNOWN;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class ExecuteDex extends Rule {
         if (apkPath == null) {
             logger.warn("Apk file not found. Dex script may fail.");
         }
-        if (smali && project.getSmaliList().isEmpty()) {
+        if (targetType == TargetType.SMALI && project.getSmaliList().isEmpty()) {
             generateSmaliFiles(project);
         }
         String zipPath = patch.getFile().toString();
@@ -74,7 +74,7 @@ public class ExecuteDex extends Rule {
     }
 
     private void generateSmaliFiles(Project project) throws FileNotFoundException {
-        logger.info("Smali files is not found! Generating smali files...");
+        logger.info("Smali files are not found! Generating smali files...");
         SmaliGenerator smaliGenerator = project.getSmaliGenerator();
         if (smaliGenerator != null) {
             smaliGenerator.generateSmaliFiles(project.getPath().replace('\\', '/'));
@@ -117,7 +117,7 @@ public class ExecuteDex extends Rule {
         sb.append("MainClass: ").append(mainClass).append('\n');
         sb.append("Entrance:  ").append(entrance).append('\n');
         sb.append("Param:     ").append(param).append('\n');
-        sb.append("Smali:     ").append(smali).append('\n');
+        sb.append("Smali:     ").append(targetType == TargetType.SMALI).append('\n');
         return sb.toString();
     }
 }

@@ -5,6 +5,7 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.Replace;
+import com.github.cregrant.smaliscissors.rule.types.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,7 +122,7 @@ public class SmaliKeeper {
         replaceRule.setMatch(match);
         replaceRule.setReplacement("\"a\"");
         replaceRule.setRegex(true);
-        replaceRule.setSmali(true);
+        replaceRule.setTargetType(Rule.TargetType.SMALI);
         return replaceRule;
     }
 }

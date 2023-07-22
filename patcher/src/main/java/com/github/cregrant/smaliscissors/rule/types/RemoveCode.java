@@ -25,7 +25,7 @@ public class RemoveCode extends Rule {
     public RemoveCode(String rawString) {
         super(rawString);
         targets = matchMultiLines(rawString, TARGET, Regex.ResultFormat.SPLIT_TRIM);
-        smali = true;
+        targetType = TargetType.SMALI;
     }
 
     public RemoveCode(ArrayList<String> targets) {

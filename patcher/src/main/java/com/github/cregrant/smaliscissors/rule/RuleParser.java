@@ -83,6 +83,8 @@ public class RuleParser {
             return null;
         }
         return match
+                .replace("\\r\\n", "\\R")
+                .replace("\\n", "\\R")
                 .replace("><", ">\\s*?<")
                 .replace("\" />", "\" ?/>")
                 .replaceAll(" +|\t+", "(?:\\\\s+?)");

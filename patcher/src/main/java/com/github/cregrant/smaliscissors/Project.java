@@ -196,11 +196,11 @@ public class Project {
         return path;
     }
 
-    public List<SmaliFile> getSmaliList() {
+    public ArrayList<SmaliFile> getSmaliList() {
         return smaliList;
     }
 
-    public List<XmlFile> getXmlList() {
+    public ArrayList<XmlFile> getXmlList() {
         return xmlList;
     }
 

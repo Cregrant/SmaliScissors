@@ -32,12 +32,16 @@ public class MatchGoto extends Rule {
         originalMatch = matchSingleLine(rawString, MATCH);
         goTo = matchSingleLine(rawString, GOTO);
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
-        if (target != null) {
-            smali = target.endsWith("smali");
-            xml = target.endsWith("xml");
+        if (target == null) {
+            targetType = TargetType.UNKNOWN;
+        } else if (target.startsWith("smali") || target.endsWith("smali") || target.contains("[")) {  // '[' means static replacement like [APPLICATION]
+            targetType = TargetType.SMALI;
+        } else if (target.startsWith("res") || target.endsWith("xml")) {
+            targetType = TargetType.XML;
         }
 
         match = originalMatch;
+        boolean xml = targetType == TargetType.XML;
         if (isRegex) {
             match = xml ? fixRegexMatchXml(match) : fixRegexMatch(match);
         }
@@ -54,17 +58,11 @@ public class MatchGoto extends Rule {
         final Pattern targetPattern = Pattern.compile(Regex.globToRegex(target));
 
         List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
-        List<DecompiledFile> files = new ArrayList<>();
-
+        List<DecompiledFile> files;
         if (!providedFiles.isEmpty()) {
             files = providedFiles;
-        } else if (smali) {
-            files.addAll(project.getSmaliList());
-        } else if (xml) {
-            files.addAll(project.getXmlList());
         } else {
-            files.addAll(project.getSmaliList());
-            files.addAll(project.getXmlList());
+            files = getFilteredDecompiledFiles(project);
         }
 
         try {

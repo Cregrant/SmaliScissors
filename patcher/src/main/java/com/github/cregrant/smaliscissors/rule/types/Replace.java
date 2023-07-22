@@ -38,16 +38,17 @@ public class Replace extends Rule {
         }
 
         regex = RuleParser.parseBoolean(rawString, REGEX);
-        if (target != null) {
-            smali = target.endsWith("smali");
-            xml = target.endsWith("xml");
-            if (target.contains("[")) {
-                smali = true;
-            }
+        if (target == null) {
+            targetType = TargetType.UNKNOWN;
+        } else if (target.startsWith("smali") || target.endsWith("smali") || target.contains("[")) {  // '[' means static replacement like [APPLICATION]
+            targetType = TargetType.SMALI;
+        } else if (target.startsWith("res") || target.endsWith("xml")) {
+            targetType = TargetType.XML;
         }
 
         match = originalMatch;
         replacement = originalReplacement;
+        boolean xml = targetType == TargetType.XML;
         if (regex) {
             match = xml ? fixRegexMatchXml(originalMatch) : fixRegexMatch(originalMatch);
             replacement = xml ? replacement : fixRegexReplacement(replacement);
@@ -74,18 +75,13 @@ public class Replace extends Rule {
     public void apply(Project project, Patch patch) {
         String localTarget = target;
         List<DecompiledFile> providedFiles = project.applyTargetAssignments(target);
-        List<DecompiledFile> files = new ArrayList<>();
+        List<DecompiledFile> files;
 
         if (!providedFiles.isEmpty()) {
             files = providedFiles;
             localTarget = "**";
-        } else if (smali) {
-            files.addAll(project.getSmaliList());
-        } else if (xml) {
-            files.addAll(project.getXmlList());
         } else {
-            files.addAll(project.getSmaliList());
-            files.addAll(project.getXmlList());
+            files = getFilteredDecompiledFiles(project);
         }
 
         final AtomicInteger patchedFilesNum = new AtomicInteger();
@@ -113,7 +109,7 @@ public class Replace extends Rule {
             futures.add(project.getExecutor().submit(r));
         }
         project.getExecutor().waitForFinish(futures);
-        if (smali) {
+        if (targetType == TargetType.SMALI) {
             logger.info(patchedFilesNum + " smali files patched.");
         } else {
             logger.info(patchedFilesNum + " xml files patched.");
@@ -145,8 +141,7 @@ public class Replace extends Rule {
             return false;
         }
         Replace replace = ((Replace) rule);
-        return xml == replace.xml
-                && smali == replace.smali
+        return targetType == replace.targetType
                 && target.equals(replace.target)
                 && replacement.equals(replace.replacement);
     }
@@ -183,16 +178,8 @@ public class Replace extends Rule {
         this.regex = regex;
     }
 
-    public boolean isSmali() {
-        return smali;
-    }
-
-    public void setSmali(boolean smali) {
-        this.smali = smali;
-    }
-
-    public boolean isXml() {
-        return xml;
+    public void setTargetType(TargetType targetType) {
+        this.targetType = targetType;
     }
 
     @Override

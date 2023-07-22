@@ -26,6 +26,14 @@ public class Add extends Rule {
         target = matchSingleLine(rawString, TARGET);
         source = matchSingleLine(rawString, SOURCE);
         extract = RuleParser.parseBoolean(rawString, EXTRACT);
+
+        if (extract || target == null) {
+            targetType = TargetType.UNKNOWN;
+        } else if (target.startsWith("smali")) {
+            targetType = TargetType.SMALI;
+        } else if (target.startsWith("res")) {
+            targetType = TargetType.XML;
+        }
     }
 
     @Override

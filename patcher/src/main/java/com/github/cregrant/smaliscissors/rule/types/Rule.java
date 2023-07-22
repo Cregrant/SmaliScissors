@@ -2,10 +2,12 @@ package com.github.cregrant.smaliscissors.rule.types;
 
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.InputMismatchException;
 
 import static com.github.cregrant.smaliscissors.rule.RuleParser.PAT_NAME;
@@ -15,8 +17,7 @@ public class Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(Rule.class);
     protected String name;
-    protected boolean smali;
-    protected boolean xml;
+    protected TargetType targetType = TargetType.UNKNOWN;
 
     protected Rule(String rawString) {
         if (!rawString.isEmpty()) {
@@ -79,6 +80,19 @@ public class Rule {
         }
     }
 
+    public ArrayList<DecompiledFile> getFilteredDecompiledFiles(Project project) {
+        ArrayList<DecompiledFile> files = new ArrayList<>();
+        if (targetType == TargetType.SMALI) {
+            files.addAll(project.getSmaliList());
+        } else if (targetType == TargetType.XML) {
+            files.addAll(project.getXmlList());
+        } else if (targetType == TargetType.UNKNOWN) {
+            files.addAll(project.getSmaliList());
+            files.addAll(project.getXmlList());
+        }
+        return files;
+    }
+
     public String getName() {
         return name;
     }
@@ -88,11 +102,11 @@ public class Rule {
     }
 
     public boolean smaliNeeded() {
-        return smali;
+        return targetType == TargetType.SMALI;
     }
 
     public boolean xmlNeeded() {
-        return xml;
+        return targetType == TargetType.XML;
     }
 
     public String nextRuleName() {
@@ -102,7 +116,7 @@ public class Rule {
     public void apply(Project project, Patch patch) throws IOException {
     }
 
-    enum Type {
+    public enum Type {
         MATCH_ASSIGN,
         MATCH_REPLACE,
         MATCH_GOTO,
@@ -113,5 +127,11 @@ public class Rule {
         DUMMY,
         GOTO,
         EXECUTE_DEX
+    }
+
+    public enum TargetType {
+        XML,
+        SMALI,
+        UNKNOWN
     }
 }
