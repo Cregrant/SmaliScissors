@@ -23,7 +23,6 @@ public class DecompiledParser {
             pos = 0;
             return result;
         }
-        pos = 0;
         throw new InputMismatchException();
     }
 
@@ -41,8 +40,12 @@ public class DecompiledParser {
 
     public ArrayList<String> getLauncherActivityPaths() {
         ArrayList<String> result = new ArrayList<>();
-        while (hasNext("<activity ") && hasLauncherIntent()) {
-            result.add(getNext());
+        while (hasNext("<activity ")) {
+            if (hasLauncherIntent()) {
+                result.add(getNext());
+            } else {
+                pos++;
+            }
         }
         pos = 0;
         if (result.isEmpty()) {
@@ -58,8 +61,8 @@ public class DecompiledParser {
             while (hasNext(target)) {
                 classes.add(getNext());
             }
+            pos = 0;
         }
-        pos = 0;
         return classes;
     }
 
