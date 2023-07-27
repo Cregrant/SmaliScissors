@@ -53,7 +53,7 @@ public class Patcher {
                 logger.info(project.getName() + " finished in " + (currentTimeMillis() - projectStartTime) + "ms." + "\n------------------");
             }
 
-            logger.info("Tasks completed in " + (currentTimeMillis() - globalStartTime) + "ms." + "\n------------------");
+            logger.info("Tasks completed in " + (currentTimeMillis() - globalStartTime) + "ms." + "\n------------------\n");
         } catch (FileNotFoundException e) {
             logger.error(e.getMessage());
             logger.error("Probably patch require some files that haven't been decompiled yet.");

@@ -52,8 +52,7 @@ public class ExecuteDex extends Rule {
         patch.createTempDir();
         ArrayList<String> extracted = IO.extract(patch.getFile(), patch.getTempDir().getPath(), script);
         if (extracted.size() != 1) {
-            logger.error("Dex script extract error.");
-            return;
+            throw new IOException("Dex script extract error.");
         }
         String dexPath = extracted.get(0);
         DexExecutor dexExecutor = project.getDexExecutor();
@@ -63,12 +62,13 @@ public class ExecuteDex extends Rule {
             } catch (Throwable e) {
                 logger.error("Error executing the dex script\n");
                 if (e instanceof NoClassDefFoundError || e.getCause() instanceof NoClassDefFoundError) {
-                    logger.error("This dex script supports only Android platform!\n");
+                    logger.debug("", e);
+                    throw new IOException("This dex script supports only the Android platform!\n");
                 }
                 throw new RuntimeException(e);
             }
         } else {
-            logger.error("Dex executor is not present.");
+            throw new IOException("The dex executor is not present. Contact your app developer.");
         }
         patch.deleteTempDir();
     }

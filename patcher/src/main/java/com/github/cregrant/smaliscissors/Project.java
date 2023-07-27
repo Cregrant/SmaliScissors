@@ -95,7 +95,8 @@ public class Project {
             }
             patch.reset();
         } catch (IOException e) {
-            logger.error(patch.getName() + " failed", e);
+            logger.debug("", e);
+            logger.error("Patch {} failed: {}", patch.getName(), e.getMessage());
         }
     }
 
