@@ -110,9 +110,9 @@ public class Replace extends Rule {
         }
         project.getExecutor().waitForFinish(futures);
         if (targetType == TargetType.SMALI) {
-            logger.info(patchedFilesNum + " smali files patched.");
+            logger.info(patchedFilesNum + " smali files were patched.");
         } else {
-            logger.info(patchedFilesNum + " xml files patched.");
+            logger.info(patchedFilesNum + " xml files were patched.");
         }
     }
 
@@ -194,7 +194,7 @@ public class Replace extends Rule {
         sb.append("Regex:   ").append(regex).append('\n');
         String verboseReplacement;
         if (originalReplacement.equals("")) {
-            verboseReplacement = "'none' (this means delete matched result)";
+            verboseReplacement = "'none' (delete matched result)";
         } else if (originalReplacement.equals("\n")) {
             verboseReplacement = "'\\n' (the new line character)";
         } else {

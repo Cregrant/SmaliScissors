@@ -42,7 +42,7 @@ public class ExecuteDex extends Rule {
     public void apply(Project project, Patch patch) throws IOException {
         String apkPath = project.getApkPath();
         if (apkPath == null) {
-            logger.warn("Apk file not found. Dex script may fail.");
+            logger.warn("Apk file not found. The dex script may fail.");
         }
         if (targetType == TargetType.SMALI && project.getSmaliList().isEmpty()) {
             generateSmaliFiles(project);
@@ -61,7 +61,7 @@ public class ExecuteDex extends Rule {
             try {
                 dexExecutor.runDex(dexPath, entrance, mainClass, apkPath, zipPath, projectPath, param, patch.getTempDir().getPath());
             } catch (Throwable e) {
-                logger.error("Error executing dex script\n");
+                logger.error("Error executing the dex script\n");
                 if (e instanceof NoClassDefFoundError || e.getCause() instanceof NoClassDefFoundError) {
                     logger.error("This dex script supports only Android platform!\n");
                 }
@@ -80,11 +80,11 @@ public class ExecuteDex extends Rule {
             smaliGenerator.generateSmaliFiles(project.getPath().replace('\\', '/'));
             project.rescanSmali();
             if (project.getSmaliList().isEmpty()) {
-                logger.error("Smali files generation failed");
+                logger.error("Smali files were not generated");
                 throw new FileNotFoundException();
             }
         } else {
-            logger.error("Smali files generation canceled: no smali generator provided.");
+            logger.error("Smali file generation canceled: no smali generator provided.");
             throw new FileNotFoundException();
         }
 

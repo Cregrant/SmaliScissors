@@ -55,7 +55,7 @@ public class MethodArrayCleaner {
         if (arrayCluster == null) {
             NewArray array = cleaner.searchNewArray(register);      //happens when stack points between array creation and usage
             if (array == null) {
-                throw new IllegalArgumentException("NewArray not found?");      //is new-array inside the method arguments?
+                throw new IllegalArgumentException("NewArray not found?");      //is new-array provided through the method arguments?
             } else {
                 ArrayCluster newCluster = new ArrayCluster(array);
                 tracked.put(register, newCluster);
