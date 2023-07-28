@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.IO;
+import com.github.cregrant.smaliscissors.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +81,21 @@ public class Add extends Rule {
 
     public boolean isExtract() {
         return extract;
+    }
+
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Adding ");
+        if (extract) {
+            sb.append("and extracting ");
+        }
+        sb.append("\n  ").append(Misc.trimToSize(source, 35));
+        sb.append("\nTO:");
+        sb.append("\n  ").append(Misc.trimToSize(target, 35));
+        return sb.toString();
     }
 
     @Override

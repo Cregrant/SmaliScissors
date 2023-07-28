@@ -116,6 +116,10 @@ public class Rule {
     public void apply(Project project, Patch patch) throws IOException {
     }
 
+    public String toStringShort() {
+        return null;
+    }
+
     public enum Type {
         MATCH_ASSIGN,
         MATCH_REPLACE,

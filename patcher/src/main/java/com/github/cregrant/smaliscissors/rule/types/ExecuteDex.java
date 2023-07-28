@@ -6,6 +6,7 @@ import com.github.cregrant.smaliscissors.common.outer.DexExecutor;
 import com.github.cregrant.smaliscissors.common.outer.SmaliGenerator;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.IO;
+import com.github.cregrant.smaliscissors.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,6 +106,19 @@ public class ExecuteDex extends Rule {
     public String getParam() {
         return param;
     }
+
+    @Override
+
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Executing dex script");
+        sb.append("\n  ").append(Misc.trimToSize(script, 35)).append('\n');
+        return sb.toString();
+    }
+
 
     @Override
     public String toString() {

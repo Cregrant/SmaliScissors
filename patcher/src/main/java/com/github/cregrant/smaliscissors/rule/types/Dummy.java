@@ -19,6 +19,12 @@ public class Dummy extends Rule {
     }
 
     @Override
+
+    public String toStringShort() {
+        return "(" + name + ") dummy rule\n";
+    }
+
+    @Override
     public String toString() {
         return "Type: DUMMY\nName: " + name + '\n';
     }

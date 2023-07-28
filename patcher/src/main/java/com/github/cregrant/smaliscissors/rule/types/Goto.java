@@ -34,6 +34,19 @@ public class Goto extends Rule {
     }
 
     @Override
+
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Jumping to the rule named ");
+        sb.append("\n  (").append(goTo).append(")\n");
+        return sb.toString();
+    }
+
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Type: GOTO\n");

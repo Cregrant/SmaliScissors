@@ -47,10 +47,10 @@ public class Patcher {
                     long patchStartTime = currentTimeMillis();
                     logger.info("Patch - " + patch.getName() + "\n");
                     project.applyPatch(patch);
-                    logger.info(patch.getName() + " applied in " + (currentTimeMillis() - patchStartTime) + "ms.");
+                    logger.info("\n" + patch.getName() + " applied in " + (currentTimeMillis() - patchStartTime) + "ms.");
                 }
                 project.writeChanges();
-                logger.info(project.getName() + " finished in " + (currentTimeMillis() - projectStartTime) + "ms." + "\n------------------");
+                logger.info("\n" + project.getName() + " finished in " + (currentTimeMillis() - projectStartTime) + "ms." + "\n------------------");
             }
 
             logger.info("Tasks completed in " + (currentTimeMillis() - globalStartTime) + "ms." + "\n------------------\n");

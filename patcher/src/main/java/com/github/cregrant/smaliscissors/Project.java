@@ -89,7 +89,7 @@ public class Project {
                     break;
                 }
 
-                logger.info("\n" + rule);
+                logger.info("\n" + rule.toStringShort());
                 rule.apply(this, patch);
                 patch.jumpToRuleName(rule.nextRuleName());  //if a next rule name is not null
             }

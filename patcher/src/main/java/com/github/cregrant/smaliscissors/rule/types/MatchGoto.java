@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
+import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,6 +117,23 @@ public class MatchGoto extends Rule {
     public boolean isRegex() {
         return isRegex;
     }
+
+    @Override
+
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Jumping to the rule named ");
+        sb.append("\n  (").append(goTo).append(")");
+        sb.append("\nIF FOUND:");
+        sb.append("\n  ").append(Misc.trimToSize(originalMatch, 35));
+        sb.append("\nIN:");
+        sb.append("\n  ").append(Misc.trimToSize(target, 35)).append('\n');
+        return sb.toString();
+    }
+
 
     @Override
     public String toString() {

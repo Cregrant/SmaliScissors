@@ -64,6 +64,17 @@ public class RemoveCodeAction extends Rule {
     }
 
     @Override
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Removing code action:");
+        sb.append("\n  ").append(action.name()).append(" next ").append(actionCount).append(" targets\n");
+        return sb.toString();
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("Type:   REMOVE_CODE_ACTION.\n");

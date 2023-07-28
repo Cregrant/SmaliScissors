@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
+import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +97,17 @@ public class RemoveCode extends Rule {
 
     public List<String> getTargets() {
         return targets;
+    }
+
+    @Override
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Removing code:\n");
+        sb.append(Misc.trimToSize(targets, "  ", 10, 35));
+        return sb.toString();
     }
 
     @Override

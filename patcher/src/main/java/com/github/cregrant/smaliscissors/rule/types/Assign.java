@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
+import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,18 +107,11 @@ public class Assign extends Rule {
 
                 for (Map.Entry<String, String> entry : unprocessedAssignments) {
                     patch.addAssignment(entry.getKey(), entry.getValue());
-                    logger.info("Assigned \"{}\" to \"{}\"", minifyLongString(entry.getValue()), entry.getKey());
+                    logger.info("\nAssigned \"{}\" to \"{}\"", Misc.trimToSize(entry.getValue(), 35), entry.getKey());
                 }
                 return;
             }
         }
-    }
-
-    static String minifyLongString(String str) {
-        if (str.length() > 300) {
-            return str.substring(0, 60) + " ... " + str.substring(str.length() - 60);
-        }
-        return str;
     }
 
     public String getTarget() {
@@ -134,6 +128,28 @@ public class Assign extends Rule {
 
     public Map<String, String> getAssignments() {
         return assignments;
+    }
+
+    public String toStringShort() {
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Assigning ");
+        if (isRegex) {
+            sb.append("regex ");
+        }
+        sb.append("\n  ").append(Misc.trimToSize(originalMatch, 35));
+        sb.append("\nTO:\n");
+
+        ArrayList<String> lines = new ArrayList<>();
+        for (Map.Entry<String, String> entry : assignments.entrySet()) {
+            lines.add(entry.getKey() + '=' + entry.getValue());
+        }
+        sb.append(Misc.trimToSize(lines, "  ", 10, 35));
+        sb.append("IN:");
+        sb.append("\n  ").append(Misc.trimToSize(target, 35));
+        return sb.toString();
     }
 
     @Override

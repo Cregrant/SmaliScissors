@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.rule.RuleParser;
+import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,6 +181,33 @@ public class Replace extends Rule {
 
     public void setTargetType(TargetType targetType) {
         this.targetType = targetType;
+    }
+
+    @Override
+    public String toStringShort() {
+        String verboseReplacement;
+        if (replacement.equals("")) {
+            verboseReplacement = "'none' (delete matched result)";
+        } else if (replacement.equals("\n")) {
+            verboseReplacement = "'\\n' (the new line character)";
+        } else {
+            verboseReplacement = originalReplacement;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (name != null) {
+            sb.append("(").append(name).append(") ");
+        }
+        sb.append("Replacing ");
+        if (regex) {
+            sb.append("regex ");
+        }
+        sb.append("\n  ").append(Misc.trimToSize(originalMatch, 35));
+        sb.append("\nTO:");
+        sb.append("\n  ").append(Misc.trimToSize(verboseReplacement, 35));
+        sb.append("\nIN:");
+        sb.append("\n  ").append(Misc.trimToSize(target, 35)).append('\n');
+        return sb.toString();
     }
 
     @Override
