@@ -1,6 +1,5 @@
 rootProject.name = 'SmaliScissors'
 include 'patcher'
-include 'jmh'
 include 'console_launcher'
 include 'Benchmark'
 

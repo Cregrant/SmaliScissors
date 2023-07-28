@@ -8,3 +8,7 @@ repositories {
 
 dependencies {
 }
+
+allprojects {
+    version = '1.0.0'
+}
