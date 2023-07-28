@@ -21,7 +21,7 @@ More information about patches can be found on the wiki. 
 # Build
 Clone this repository:
 ```
-git clone https://github.com/Cregrant/SmaliScissors.git
+git clone https://github.com/Cregrant/SmaliScissors.git & cd SmaliScissors
 ```
 
 And build a minimalistic `patcher.jar` library to include it in your application:
@@ -31,23 +31,23 @@ gradlew :patcher:fatJar
 
 Or build a `console_patcher.jar` file to run patches from the command line:
 ```
-gradlew fatJar
+gradlew :console_launcher:fatJar
 ```
 
 # Usage
-Print usage:
+Print usage (use Tab to find a jar file):
 ```
-java -jar console_patcher.jar
+java -jar console_patcher-<version>.jar
 ```
 
 You can use interactive selection:
 ```
-java -jar console_patcher.jar -i C:\your_decompiled_folder -p C:\your_patches_folder -s
+java -jar console_patcher-<version>.jar -i C:\projects_root -p C:\patches_folder -s
 ```
 
 Or use predefined values:
 ```
-java -jar console_patcher.jar -i C:\your_decompiled_folder -p "C:\your best patch.zip"
+java -jar console_patcher-<version>.jar -i C:\projects_root\decompiled_project_folder -p "C:\patches_folder\your best patch.zip"
 ```
 SmaliScissors prints its logs using The Simple Logging Facade for Java (SLF4J).
 
