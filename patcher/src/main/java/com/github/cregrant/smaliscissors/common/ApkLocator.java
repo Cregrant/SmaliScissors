@@ -17,10 +17,16 @@ public class ApkLocator {
         if (files != null) {
             for (File str : files) {
                 if (str.getName().startsWith("apktool.")) {
-                    return parseApktoolConfig(project, str);
+                    String apkPath = parseApktoolConfig(project, str);
+                    if (apkPath != null) {
+                        logger.debug("Apk path found in an apktool config: {}", apkPath);
+                        return apkPath;
+                    }
+                    logger.debug("Apktool config does not contain an apk path");
                 }
             }
         }
+        logger.debug("Apktool config is not found");
         return parseParentFolder(project);
     }
 
@@ -39,11 +45,15 @@ public class ApkLocator {
             start++;
         }
 
-        String filename = content.substring(start + 2, end + 4);
-        File parentFile = new File(project.getPath()).getParentFile();
-        File apkFile = new File(parentFile, filename);
+        String parsedString = content.substring(start + 2, end + 4).replace("\\/", "/");
+        File apkFile = new File(parsedString);          //parsedString is a path
         if (apkFile.exists()) {
-            logger.debug("Apk path found in an apktool config: {}", apkFile.getPath());
+            return apkFile.getPath();
+        }
+
+        File parentFile = new File(project.getPath()).getParentFile();
+        apkFile = new File(parentFile, parsedString);   //parsedString is a filename
+        if (apkFile.exists()) {
             return apkFile.getPath();
         }
         return null;
