@@ -49,7 +49,7 @@ public class MethodOpcodeCleaner {
                     boolean isReturn = op instanceof Return;
                     boolean registerOverwrote = outputRegister.equals(register);
                     if (op.inputRegisterUsed(register)) {
-                        removeObjectIfIncomplete(op);
+                        removeObjectIfIncomplete(op, i);
                         if (isReturn) {
                             broken = true;
                         }
@@ -79,12 +79,12 @@ public class MethodOpcodeCleaner {
         }
     }
 
-    void removeObjectIfIncomplete(Opcode op) {    //delete new-instance if constructor has deleted
+    void removeObjectIfIncomplete(Opcode op, int pos) {    //delete new-instance if constructor has deleted
         if (op instanceof Invoke) {
             Invoke invoke = ((Invoke) op);
             if (invoke.isConstructor() && !invoke.isSoftRemove()) {
                 String target = invoke.getInputRegisters().get(0);
-                if (!deleteInvokeInstance(target, i)) {
+                if (!deleteInvokeInstance(target, pos)) {
                     broken = true;    //instance too far away? Let's just delete this method
                 }
             }
@@ -157,8 +157,10 @@ public class MethodOpcodeCleaner {
         for (int j = pos - 1; j > 0; j--) {
             Opcode op = opcodes.get(j);
             if (op instanceof NewInstance && op.getOutputRegister().equals(register)) {
-                op.deleteLine();
-                stack.add(new MethodCleaner.Line(register, j));
+                if (!op.isDeleted()) {
+                    op.deleteLine();
+                    stack.add(new MethodCleaner.Line(register, j));
+                }
                 return true;
             } else if (op instanceof Move) {
                 Move move = ((Move) op);

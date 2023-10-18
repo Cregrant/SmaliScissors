@@ -107,7 +107,7 @@ public class MethodCleaner {
             if (!op.isDeleted() && op.toString().contains(removeString)) {
                 String register = op.getOutputRegister();
                 op.deleteLine();
-                cleaner.removeObjectIfIncomplete(op);
+                cleaner.removeObjectIfIncomplete(op, i);
                 if (!register.isEmpty()) {
                     cleaner.getStack().add(new Line(register, i + 1));
                 }
