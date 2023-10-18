@@ -101,6 +101,10 @@ public class RemoveCode extends Rule {
 
     @Override
     public String toStringShort() {
+        if (isInternal()) {
+            return "Auto-removing crash reporters...";
+        }
+
         StringBuilder sb = new StringBuilder();
         if (name != null) {
             sb.append("(").append(name).append(") ");
@@ -113,7 +117,7 @@ public class RemoveCode extends Rule {
     @Override
     public String toString() {
         if (internal) {
-            return "";
+            return "Auto-removing crash reporters...";
         }
         StringBuilder sb = new StringBuilder();
         sb.append("Type: REMOVE_CODE.\n");
