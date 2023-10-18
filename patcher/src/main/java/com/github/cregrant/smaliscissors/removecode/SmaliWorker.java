@@ -16,7 +16,7 @@ public class SmaliWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(SmaliWorker.class);
     public static boolean DEBUG_BENCHMARK = false;
-    public static boolean DEBUG_NOT_WRITE = true;
+    public static boolean DEBUG_NOT_WRITE = false;
     private final Project project;
     private final Patch patch;
     private final RemoveCode rule;
