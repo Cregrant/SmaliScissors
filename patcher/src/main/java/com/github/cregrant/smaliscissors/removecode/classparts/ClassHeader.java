@@ -12,9 +12,13 @@ public class ClassHeader implements ClassPart {
     public ClassHeader(String string, int pos) {
         end = string.indexOf("\n\n", pos) + 2;
         if (end == 1) {
-            throw new IllegalStateException("Bug detected - class body contains \"\\r\" symbols.");
+            if (string.contains("\r")) {
+                throw new IllegalStateException("Bug detected - class body contains \"\\r\" symbols.");
+            } else {
+                end = string.length();      //class consists only of a header
+            }
         }
-        if (string.charAt(end) != '\n') {
+        if (end < string.length() && string.charAt(end) != '\n') {
             end--;     //there are 1 or 2 line breaks after header
         }
         text = string.substring(pos, end);
