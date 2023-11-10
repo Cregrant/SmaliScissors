@@ -61,7 +61,7 @@ public class SmaliClass {
         return parts;
     }
 
-    public boolean changeSuperclass(String classRef) {
+    public boolean changeSuperclassOk(String deletedSuperclassRef) {
         for (ClassPart part : parts) {
             if (part instanceof ClassMethod) {
                 ClassMethod method = ((ClassMethod) part);
@@ -69,7 +69,7 @@ public class SmaliClass {
                     if (method.getLine().contains(" synthetic ")) {
                         return false;
                     }
-                    fixConstructor(method, classRef);     //fix for a deleted superclass
+                    fixConstructor(method, deletedSuperclassRef);     //fix for a deleted superclass
                     return true;
                 }
             }
@@ -78,9 +78,9 @@ public class SmaliClass {
         return false;   //just delete that strange class
     }
 
-    private void fixConstructor(ClassMethod classMethod, String deletedSuperClass) {
+    private void fixConstructor(ClassMethod classMethod, String deletedSuperclassRef) {
         String curBody = classMethod.getBody();
-        int pos = curBody.indexOf(deletedSuperClass + "-><init>(");
+        int pos = curBody.indexOf(deletedSuperclassRef + "-><init>(");
         if (pos == -1) {
             String newBody = tryFixComplexConstructor(classMethod);   //todo probably useless because app already broken
             if (newBody == null) {

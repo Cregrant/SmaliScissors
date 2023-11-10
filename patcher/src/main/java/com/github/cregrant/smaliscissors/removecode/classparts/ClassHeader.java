@@ -7,6 +7,7 @@ public class ClassHeader implements ClassPart {
     private String text;
     private String superclass;
     private int end;
+    private final boolean isAbstract;
     private boolean deleted;
 
     public ClassHeader(String string, int pos) {
@@ -24,6 +25,7 @@ public class ClassHeader implements ClassPart {
         text = string.substring(pos, end);
         int start = text.indexOf(".super") + 7;
         superclass = text.substring(start, text.indexOf(';', start) + 1);
+        isAbstract = text.contains(" abstract ");
     }
 
     @Override
@@ -34,8 +36,9 @@ public class ClassHeader implements ClassPart {
             }
 
             text = text.replace(superclass, "Ljava/lang/Object;");
+            String deletedSuperclassRef = superclass;
             superclass = "Ljava/lang/Object;";
-            if (!smaliClass.changeSuperclass(superclass)) {
+            if (!isAbstract && !smaliClass.changeSuperclassOk(deletedSuperclassRef)) {
                 return new SmaliTarget().setRef(smaliClass.getRef());
             }
             deleted = true;
