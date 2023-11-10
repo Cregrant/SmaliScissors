@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode;
 
+import com.github.cregrant.smaliscissors.Flags;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
@@ -15,8 +16,6 @@ import java.util.List;
 public class SmaliWorker {
 
     private static final Logger logger = LoggerFactory.getLogger(SmaliWorker.class);
-    public static boolean DEBUG_BENCHMARK = false;
-    public static boolean DEBUG_NOT_WRITE = false;
     private final Project project;
     private final Patch patch;
     private final RemoveCode rule;
@@ -26,20 +25,20 @@ public class SmaliWorker {
         this.patch = patch;
         this.rule = rule;
 
-        if (DEBUG_BENCHMARK || DEBUG_NOT_WRITE) {
+        if (Flags.SMALI_DEBUG_BENCHMARK || Flags.SMALI_DEBUG_NOT_WRITE) {
             logger.warn("DEBUG FLAG ENABLED");
         }
     }
 
     public void run() {
         State state;
-        if (DEBUG_BENCHMARK) {
+        if (Flags.SMALI_DEBUG_BENCHMARK) {
             state = infiniteApplyRule();
         } else {
             state = applyRule();
         }
 
-        if (!DEBUG_NOT_WRITE) {
+        if (!Flags.SMALI_DEBUG_NOT_WRITE) {
             writeChanges(state);
         }
 

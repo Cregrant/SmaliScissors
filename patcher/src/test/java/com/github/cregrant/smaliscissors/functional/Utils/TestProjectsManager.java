@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.functional.Utils;
 
+import com.github.cregrant.smaliscissors.Flags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,7 @@ public class TestProjectsManager {
     }
 
     public void runSuite(TestSuite suite) throws Exception {
-        if (error) {
+        if (Flags.STOP_IF_TEST_FAILED && error) {
             throw new Exception("Skipped due to previous error");
         }
 

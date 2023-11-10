@@ -1,7 +1,7 @@
 package com.github.cregrant.smaliscissors.functional;
 
+import com.github.cregrant.smaliscissors.Flags;
 import com.github.cregrant.smaliscissors.functional.Utils.TestProjectsManager;
-import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -34,8 +34,8 @@ class FunctionalProjectsPatchTest {
 
     @TestFactory
     Stream<DynamicTest> patchTestProjects() throws Exception {
-        SmaliWorker.DEBUG_BENCHMARK = false;
-        SmaliWorker.DEBUG_NOT_WRITE = false;
+        Flags.SMALI_DEBUG_BENCHMARK = false;
+        Flags.SMALI_DEBUG_NOT_WRITE = false;
 
         TestProjectsManager manager = new TestProjectsManager(getTestDir());
         manager.compressTestSuites();
