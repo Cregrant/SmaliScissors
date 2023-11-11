@@ -25,8 +25,10 @@ public class MethodOpcodeCleaner {
         this.stack = stack;
     }
 
-    void processBody(MethodArrayCleaner methodArrayCleaner) {
+    void processBody() {
         try {
+            OpcodeArrayCleaner methodArrayCleaner = new OpcodeArrayCleaner(this);
+
             while (!stack.isEmpty()) {
                 MethodCleaner.Line line = stack.pop();
                 String register = line.register;
@@ -41,11 +43,10 @@ public class MethodOpcodeCleaner {
                     String outputRegister = op.getOutputRegister();
                     if (op instanceof Jump) {
                         processCondition(register, op);
-                        if (op.getClass() == Goto.class) {      //real Goto
+                        if (op.getClass() == Goto.class) {      //real Goto, can't use instanceof here
                             break;
                         }
                     }
-                    methodArrayCleaner.track(op);
                     boolean isReturn = op instanceof Return;
                     boolean registerOverwrote = outputRegister.equals(register);
                     if (op.inputRegisterUsed(register)) {
@@ -53,12 +54,12 @@ public class MethodOpcodeCleaner {
                         if (isReturn) {
                             broken = true;
                         }
-                        String arrayRegister = methodArrayCleaner.delete(op);
-                        if (arrayRegister != null) {
-                            stack.add(new MethodCleaner.Line(arrayRegister, i));     //delete opcodes that use the array register
+                        if (op instanceof ArrayPut || op instanceof ArrayGet) {
+                            stack.addAll(methodArrayCleaner.delete(op));
                         }
 
                         op.deleteLine();
+
                         registerOverwrote = false;
                         if (op instanceof Invoke && ((Invoke) op).isSoftRemove()) {
                             insertOpcodes(((Invoke) op).getAndClearInsertList());
@@ -124,26 +125,6 @@ public class MethodOpcodeCleaner {
         i += ops.size();
     }
 
-    public NewArray searchNewArray(String register) {
-        for (int j = i; j >= 0; j--) {
-            Opcode op = opcodes.get(j);
-            if (op instanceof NewArray) {
-                NewArray array = ((NewArray) op);
-                if (array.getArrayRegister().equals(register)) {
-                    return array;
-                }
-            } else if (op instanceof Move) {
-                Move move = ((Move) op);
-                if (move.getOutputRegister().equals(register)) {
-                    register = move.getInputRegisters().get(0);
-                }
-            } else if (op instanceof Tag) {
-                return new NewArray("    new-array " + register + ",");      //probably array is created by Get opcode, and we shouldn't delete it
-            }
-        }
-        return null;
-    }
-
     public int searchTag(Tag tag) {
         int index = opcodes.indexOf(tag);
         if (index == -1) {
@@ -176,5 +157,9 @@ public class MethodOpcodeCleaner {
 
     public ArrayDeque<MethodCleaner.Line> getStack() {
         return stack;
+    }
+
+    public ArrayList<Opcode> getOpcodes() {
+        return opcodes;
     }
 }

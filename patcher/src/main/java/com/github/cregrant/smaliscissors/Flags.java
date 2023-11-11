@@ -6,4 +6,5 @@ public class Flags {
     //remove code flags
     public static boolean SMALI_DEBUG_BENCHMARK = false;
     public static boolean SMALI_DEBUG_NOT_WRITE = false;
+    public static boolean SMALI_PRESERVE_PARTIALLY_CLEANED_ARRAYS = false;
 }

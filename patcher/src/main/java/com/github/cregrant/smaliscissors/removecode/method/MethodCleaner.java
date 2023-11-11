@@ -30,7 +30,7 @@ public class MethodCleaner {
         opcodes = new MethodParser(method, removeString).parse();
         MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, stack);
         scanMethodBody(cleaner);
-        cleaner.processBody(new MethodArrayCleaner(cleaner));
+        cleaner.processBody();
         returnBroken = cleaner.isBroken();
         checkInfinityLoops();
         fixEmptyCatchBlocks();

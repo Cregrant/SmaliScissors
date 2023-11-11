@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
 import java.util.LinkedList;
+import java.util.Objects;
 
 public class Opcode {
     protected final LinkedList<String> inputRegisters = new LinkedList<>();
@@ -154,6 +155,23 @@ public class Opcode {
 
     public boolean isDeleted() {
         return deleted;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Opcode opcode = (Opcode) o;
+        return deleted == opcode.deleted && line.equals(opcode.line);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(deleted, line);
     }
 
     @Override
