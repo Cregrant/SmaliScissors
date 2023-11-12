@@ -47,12 +47,17 @@ public class MethodOpcodeCleaner {
                             break;
                         }
                     }
-                    boolean isReturn = op instanceof Return;
+                    boolean isReturningOpcode = op instanceof Return || op instanceof Throw;
                     boolean registerOverwrote = outputRegister.equals(register);
                     if (op.inputRegisterUsed(register)) {
                         removeObjectIfIncomplete(op, i);
-                        if (isReturn) {
-                            broken = true;
+                        if (isReturningOpcode) {
+                            if (op instanceof Throw && method.getReturnObject().equals("V")) {
+                                ((Throw) op).replaceToReturn();
+                                break;
+                            } else {
+                                broken = true;
+                            }
                         }
                         if (op instanceof ArrayPut || op instanceof ArrayGet) {
                             stack.addAll(methodArrayCleaner.delete(op));
@@ -70,7 +75,7 @@ public class MethodOpcodeCleaner {
                             return;
                         }
                     }
-                    if (isReturn || registerOverwrote) {
+                    if (isReturningOpcode || registerOverwrote) {
                         break;
                     }
                 }

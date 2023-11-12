@@ -256,4 +256,8 @@ public class ClassMethod implements ClassPart {
     public String getLine() {
         return line;
     }
+
+    public String getReturnObject() {
+        return returnObject;
+    }
 }

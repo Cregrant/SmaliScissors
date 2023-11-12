@@ -46,6 +46,8 @@ public class Opcode {
             result = new Tag(str);
         } else if (str.startsWith("return", offset)) {
             result = new Return(str);
+        } else if (str.startsWith("throw", offset)) {
+            result = new Throw(str);
         } else if (str.startsWith("instance-of", offset) || str.startsWith("array-length", offset) ||
                 str.startsWith("neg-", offset) || str.startsWith("not-", offset) ||
                 str.contains("-to-") || str.startsWith("rsub-int", offset) ||
