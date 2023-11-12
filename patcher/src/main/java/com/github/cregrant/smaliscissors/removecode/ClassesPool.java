@@ -78,7 +78,7 @@ class ClassesPool {
             if (body.charAt(body.lastIndexOf('\n', pos) + 1) != '#') {   //line is not commented out
                 int nextLinePos = body.indexOf('\n', pos);
                 if (nextLinePos < endPos) {         //not a ref
-                    pos = endPos;
+                    pos = nextLinePos;
                     continue;
                 }
                 String ref = body.substring(pos, endPos + 1);
