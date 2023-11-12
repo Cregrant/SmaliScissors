@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.common;
 
 
+import com.github.cregrant.smaliscissors.Flags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,11 @@ public class BackgroundWorker {
     }
 
     public BackgroundWorker(int threads) {
-        executor = Executors.newFixedThreadPool(threads);
+        if (Flags.DEBUG_NO_MULTITHREADING) {
+            executor = Executors.newFixedThreadPool(1);
+        } else {
+            executor = Executors.newFixedThreadPool(threads);
+        }
     }
 
     public void waitForFinish(List<Future<?>> futures) {
