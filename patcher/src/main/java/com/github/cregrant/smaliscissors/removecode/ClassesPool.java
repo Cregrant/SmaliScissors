@@ -81,9 +81,9 @@ class ClassesPool {
                     pos = nextLinePos;
                     continue;
                 }
-                String ref = body.substring(pos, endPos + 1);
-                if (!ref.startsWith("Ljava") && !ref.startsWith("Ldalvik")) {     //skip internal classes
-                    strings.add(ref);
+
+                if (!body.startsWith("Ljava", pos) && !body.startsWith("Ldalvik", pos)) {     //skip internal classes
+                    strings.add(body.substring(pos, endPos + 1));
                 }
             }
             pos = endPos;

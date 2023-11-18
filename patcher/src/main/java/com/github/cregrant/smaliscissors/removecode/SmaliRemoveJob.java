@@ -76,29 +76,18 @@ public class SmaliRemoveJob {
                 }
 
                 for (SmaliTarget dependency : dependencies) {
-                    if (!dependency.isClass()) {
-                        String parentClassRef = dependency.getRef().substring(0, dependency.getRef().indexOf(';') + 1);
-                        if (state.removedTargets.contains(new SmaliTarget().setRef(parentClassRef))) {
-                            continue;
-                        }
-                    } else if (state.removedTargets.contains(dependency)) {
-                        continue;
-                    }
-
                     newTargets.add(dependency);
                     if (!rule.isInternal()) {
                         logger.debug("Also deleting {}", dependency);
                     }
                 }
-                state.patchedClasses.removeAll(classes);
-                state.patchedClasses.addAll(classes);
             }
             currentTargets = newTargets;
         } while (!currentTargets.isEmpty());
     }
 
     boolean containsTargetFiles(SmaliTarget target, State state) {
-        return !new SmaliFilter(project, pool, state).getTargetFiles(target).isEmpty();
+        return !new SmaliFilter(project, pool, state).getPossibleTargetFiles(target).isEmpty();
     }
 
     public boolean isStateModified() {

@@ -62,7 +62,7 @@ public class SmaliWorker {
         int patchedNum = 0;
         int crashReportersNum = 0;
 
-        State currentState = new State(project, project.getSmaliList());
+        State currentState = new State(project.getSmaliList());
         State newState = new State(currentState);
         ClassesPool pool = new ClassesPool(project);
         TargetController controller = new TargetController();
