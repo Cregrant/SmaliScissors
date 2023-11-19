@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.classparts;
 
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassHeader implements ClassPart {
@@ -29,7 +30,7 @@ public class ClassHeader implements ClassPart {
     }
 
     @Override
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
+    public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         if (!deleted && target.isClass()) {
             if (!superclass.startsWith(target.getRef())) {
                 return null;
@@ -39,7 +40,7 @@ public class ClassHeader implements ClassPart {
             String deletedSuperclassRef = superclass;
             superclass = "Ljava/lang/Object;";
             if (!isAbstract && !smaliClass.changeSuperclassOk(deletedSuperclassRef)) {
-                return new SmaliTarget().setRef(smaliClass.getRef());
+                return new SmaliCleanResult(new SmaliTarget().setRef(smaliClass.getRef()));
             }
             deleted = true;
         }

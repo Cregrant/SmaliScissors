@@ -12,7 +12,6 @@ import com.github.cregrant.smaliscissors.removecode.method.opcodes.Opcode;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class SmaliClass {
@@ -32,15 +31,12 @@ public class SmaliClass {
         parts = new ClassParser(this, body).parseParts();
     }
 
-    public List<SmaliTarget> clean(SmaliTarget target) {
-        ArrayList<SmaliTarget> dependencies = new ArrayList<>(3);
+    public SmaliCleanResult clean(SmaliTarget target) {
+        SmaliCleanResult result = new SmaliCleanResult();
         for (ClassPart part : parts) {
-            SmaliTarget dependency = part.clean(target, this);
-            if (dependency != null) {
-                dependencies.add(dependency);
-            }
+            result.merge(part.clean(target, this));
         }
-        return dependencies;
+        return result;
     }
 
     public void makeStub() {

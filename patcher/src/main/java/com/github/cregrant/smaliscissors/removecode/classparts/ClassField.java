@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.classparts;
 
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassField implements ClassPart {
@@ -31,7 +32,7 @@ public class ClassField implements ClassPart {
     }
 
     @Override
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
+    public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         if (!deleted && target.isClass() && text.contains(target.getRef())) {
             return delete(smaliClass);
         }
@@ -43,14 +44,14 @@ public class ClassField implements ClassPart {
         delete(smaliClass);
     }
 
-    private SmaliTarget delete(SmaliClass smaliClass) {
+    private SmaliCleanResult delete(SmaliClass smaliClass) {
         if (deleted) {
             return null;
         }
         deleted = true;
         int end = text.indexOf(";") + 1;
         String fieldRef = smaliClass.getRef() + "->" + text.substring(text.lastIndexOf(" ", end - 1) + 1, end);
-        SmaliTarget target = new SmaliTarget().setRef(fieldRef);
+
         if (singleLine) {
             text = '#' + text;
         } else {
@@ -64,7 +65,7 @@ public class ClassField implements ClassPart {
             } while (i != -1 && i + 1 < sb.length());
             text = sb.toString();
         }
-        return target;
+        return new SmaliCleanResult(new SmaliTarget().setRef(fieldRef));
     }
 
     @Override

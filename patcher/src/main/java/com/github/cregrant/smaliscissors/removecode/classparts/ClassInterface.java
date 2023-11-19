@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.classparts;
 
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassInterface implements ClassPart {
@@ -23,7 +24,7 @@ public class ClassInterface implements ClassPart {
         text = string.substring(pos, end);
     }
 
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
+    public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         if (!deleted && target.isClass() && text.contains(target.getRef())) {
             delete();
         }

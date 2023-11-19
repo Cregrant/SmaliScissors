@@ -1,6 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.classparts;
 
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassMetadata implements ClassPart {
@@ -16,7 +17,7 @@ public class ClassMetadata implements ClassPart {
     }
 
     @Override
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
+    public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         return null;
     }
 

@@ -2,11 +2,13 @@ package com.github.cregrant.smaliscissors.removecode.classparts;
 
 import com.github.cregrant.smaliscissors.removecode.Gzip;
 import com.github.cregrant.smaliscissors.removecode.SmaliClass;
+import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 import com.github.cregrant.smaliscissors.removecode.method.ArgumentParser;
 import com.github.cregrant.smaliscissors.removecode.method.MethodCleaner;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class ClassMethod implements ClassPart {
     private final SmaliClass smaliClass;
@@ -68,25 +70,26 @@ public class ClassMethod implements ClassPart {
     }
 
     @Override
-    public SmaliTarget clean(SmaliTarget target, SmaliClass smaliClass) {
+    public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         if ((!line.contains(target.getRef()) && deleted) || !target.containsInside(getBody())) {
             return null;
         }
         if (returnObject.contains(target.getRef())) {
             deleteBody();
-            return getDeleteTarget();
+            return new SmaliCleanResult(getDeleteTarget());
         }
 
         MethodCleaner cleaner = new MethodCleaner(this, target.getRef());
+        HashSet<SmaliTarget> fieldsCanBeNull = cleaner.getFieldsCanBeNull();
         cleaner.clean();
         if (cleaner.isSuccessful()) {
             if (!isAbstract) {
                 setBody(cleaner.getNewBody());
             }
-            return null;
+            return new SmaliCleanResult(fieldsCanBeNull);
         } else {
             replaceBodyWithStub(generateCommonStub());
-            return getDeleteTarget();
+            return new SmaliCleanResult(getDeleteTarget(), fieldsCanBeNull);
         }
     }
 

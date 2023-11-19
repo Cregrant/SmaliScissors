@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
+import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
 import org.slf4j.Logger;
@@ -15,13 +16,15 @@ public class MethodOpcodeCleaner {
     private final ClassMethod method;
     private final ArrayDeque<MethodCleaner.Line> stack;
     private final ArrayList<Opcode> opcodes;
+    private final HashSet<SmaliTarget> fieldsCanBeNull;
     private final HashSet<String> preventLoopsList = new HashSet<>(5);
     private boolean broken;
     private int i;
 
-    public MethodOpcodeCleaner(ClassMethod method, ArrayList<Opcode> opcodes, ArrayDeque<MethodCleaner.Line> stack) {
+    public MethodOpcodeCleaner(ClassMethod method, ArrayList<Opcode> opcodes, HashSet<SmaliTarget> fieldsCanBeNull, ArrayDeque<MethodCleaner.Line> stack) {
         this.method = method;
         this.opcodes = opcodes;
+        this.fieldsCanBeNull = fieldsCanBeNull;
         this.stack = stack;
     }
 
@@ -61,6 +64,9 @@ public class MethodOpcodeCleaner {
                         }
                         if (op instanceof ArrayPut || op instanceof ArrayGet) {
                             stack.addAll(methodArrayCleaner.delete(op));
+                        }
+                        if (op instanceof Put) {
+                            fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
                         }
 
                         op.deleteLine();

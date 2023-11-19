@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
+import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
 import org.slf4j.Logger;
@@ -7,18 +8,21 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class MethodCleaner {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodCleaner.class);
     private final ClassMethod method;
     private final String removeString;
-    private ArrayList<Opcode> opcodes;
+    private final ArrayList<Opcode> opcodes;
+    private final HashSet<SmaliTarget> fieldsCanBeNull = new HashSet<>();
     private boolean returnBroken;
 
     public MethodCleaner(ClassMethod method, String removeString) {
         this.method = method;
         this.removeString = removeString;
+        opcodes = new MethodParser(method, removeString).parse();
     }
 
     public void clean() {
@@ -27,14 +31,28 @@ public class MethodCleaner {
         if (method.isAbstract()) {
             return;
         }
-        opcodes = new MethodParser(method, removeString).parse();
-        MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, stack);
+
+        MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, fieldsCanBeNull, stack);
         scanMethodBody(cleaner);
         cleaner.processBody();
         returnBroken = cleaner.isBroken();
         checkInfinityLoops();
         fixEmptyCatchBlocks();
+
+        if (returnBroken) {
+            fillFieldsCanBeNull();
+        }
     }
+
+    private void fillFieldsCanBeNull() {
+        for (Opcode op : opcodes) {
+            if (op instanceof Put) {
+                fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
+            }
+        }
+
+    }
+
 
     private void cleanMethodArguments(ArrayDeque<Line> stack) {
         ArrayList<String> inputObjects = method.getInputObjects();
@@ -107,6 +125,9 @@ public class MethodCleaner {
             if (!op.isDeleted() && op.toString().contains(removeString)) {
                 String register = op.getOutputRegister();
                 op.deleteLine();
+                if (op instanceof Put) {
+                    fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
+                }
                 cleaner.removeObjectIfIncomplete(op, i);
                 if (!register.isEmpty()) {
                     cleaner.getStack().add(new Line(register, i + 1));
@@ -161,6 +182,10 @@ public class MethodCleaner {
 
     public String getNewBody() {
         return opcodesToString();
+    }
+
+    public HashSet<SmaliTarget> getFieldsCanBeNull() {
+        return fieldsCanBeNull;
     }
 
     static class Line {

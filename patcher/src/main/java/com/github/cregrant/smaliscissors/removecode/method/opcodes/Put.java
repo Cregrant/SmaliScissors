@@ -6,4 +6,8 @@ public class Put extends Opcode {
         super(line);
         scanRegisters();
     }
+
+    public String getFieldReference() {
+        return line.substring(line.indexOf('L', 12));
+    }
 }

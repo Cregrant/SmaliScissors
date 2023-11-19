@@ -36,6 +36,9 @@ public class SmaliWorker {
 
         if (!Flags.SMALI_DEBUG_NOT_WRITE) {
             writeChanges(state);
+        } else {
+            //debugging
+            logger.info(state.files.size() + " kept, " + state.patchedClasses.size() + " patched, " + state.removedTargets.size() + " removed");
         }
 
         rule.removePendingActions(project);
@@ -45,11 +48,13 @@ public class SmaliWorker {
         int bestLoopTime = Integer.MAX_VALUE;
         while (true) {
             long l = System.currentTimeMillis();
-            applyRule();
+            State state = applyRule();
+            //debugging
+            logger.info(state.files.size() + " kept, " + state.patchedClasses.size() + " patched, " + state.removedTargets.size() + " removed");
 
             int loopTime = (int) (System.currentTimeMillis() - l);
             bestLoopTime = Math.min(loopTime, bestLoopTime);
-            System.out.println("\rLoop takes " + loopTime + " ms (" + bestLoopTime + " ms best)\n");
+            logger.info("\rLoop takes " + loopTime + " ms (" + bestLoopTime + " ms best)\n");
         }
     }
 
