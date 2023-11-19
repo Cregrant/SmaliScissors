@@ -89,11 +89,9 @@ public class SmaliWorker {
                 errorsNum++;
                 logger.warn("Failed to remove " + target + " (" + e.getMessage() + ")");
                 newState = new State(currentState);
-                if (controller.canApply()) {
-                    if (controller.applyAndCheckEnd(target)) {
-                        rule.setLastTarget(project, path);
-                        break;
-                    }
+                if (controller.canApply() && controller.applyAndCheckEnd(target)) {
+                    rule.setLastTarget(project, path);
+                    break;
                 }
                 continue;
             }
@@ -104,11 +102,9 @@ public class SmaliWorker {
 
                 logger.info("Removed " + target);
                 patchedNum++;
-                if (controller.canApply()) {
-                    if (controller.applyAndCheckEnd(target)) {
-                        rule.setLastTarget(project, path);
-                        break;
-                    }
+                if (controller.canApply() && controller.applyAndCheckEnd(target)) {
+                    rule.setLastTarget(project, path);
+                    break;
                 }
             }
 

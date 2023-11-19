@@ -9,10 +9,10 @@ import java.util.ArrayList;
 public class Scanner {
 
     private static final Logger logger = LoggerFactory.getLogger(Scanner.class);
-    File projectsFolder;
-    File patchesFolder;
-    ArrayList<String> scannedProjects;
-    ArrayList<String> scannedPatches;
+    private final File projectsFolder;
+    private final File patchesFolder;
+    private final ArrayList<String> scannedProjects;
+    private final ArrayList<String> scannedPatches;
 
     public Scanner(File projectsFolder, File patchesFolder) {
         this.projectsFolder = projectsFolder;

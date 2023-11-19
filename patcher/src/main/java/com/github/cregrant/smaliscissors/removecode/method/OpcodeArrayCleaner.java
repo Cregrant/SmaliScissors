@@ -62,8 +62,8 @@ public class OpcodeArrayCleaner {
     }
 
     static class ArrayCluster {
-        PositionalOpcode newArray;
-        ArrayList<PositionalOpcode> usages = new ArrayList<>();
+        final PositionalOpcode newArray;
+        final ArrayList<PositionalOpcode> usages = new ArrayList<>();
 
         ArrayCluster(PositionalOpcode newArray) {
             this.newArray = newArray;
@@ -91,8 +91,8 @@ public class OpcodeArrayCleaner {
     }
 
     static class PositionalOpcode {
-        Opcode opcode;
-        int pos;
+        final Opcode opcode;
+        final int pos;
 
         PositionalOpcode(Opcode opcode, int pos) {
             this.opcode = opcode;

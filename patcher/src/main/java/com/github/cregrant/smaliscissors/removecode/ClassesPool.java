@@ -27,7 +27,11 @@ class ClassesPool {
             ArrayList<SmaliFile> list = new ArrayList<>(entry.getValue());
             map.put(entry.getKey(), list);
         }
+        //noinspection unchecked
         array = (Map.Entry<String, ArrayList<SmaliFile>>[]) map.entrySet().toArray(new Map.Entry[0]);
+        if (array.length == 0) {
+            throw new RuntimeException("Classes pool is empty");
+        }
     }
 
     private Map<String, Set<SmaliFile>> scan() {

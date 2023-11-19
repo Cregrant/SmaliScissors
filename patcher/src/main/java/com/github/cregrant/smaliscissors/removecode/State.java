@@ -6,10 +6,10 @@ import java.util.HashSet;
 import java.util.List;
 
 class State {
-    HashSet<SmaliFile> files;
-    HashSet<SmaliFile> deletedFiles;
-    HashSet<SmaliClass> patchedClasses;
-    HashSet<SmaliTarget> removedTargets;
+    final HashSet<SmaliFile> files;
+    final HashSet<SmaliFile> deletedFiles;
+    final HashSet<SmaliClass> patchedClasses;
+    final HashSet<SmaliTarget> removedTargets;
 
     State(List<SmaliFile> files) {
         this.files = new HashSet<>(files);

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.zip.ZipFile;
 
@@ -95,7 +96,7 @@ public class BinaryParser {
         for (int ii = 0; ii < strLen; ii++) {
             chars[ii] = arr[strOff + 2 + ii * 2];
         }
-        return new String(chars);
+        return new String(chars, StandardCharsets.UTF_8);
     }
 
     // LEW -- Return value of a Little Endian 32 bit word from the byte array at offset off.

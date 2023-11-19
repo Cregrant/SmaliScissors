@@ -10,8 +10,8 @@ import java.util.Scanner;
 public class Picker {
 
     private static final Logger logger = LoggerFactory.getLogger(Picker.class);
-    ArrayList<String> strings;
-    String selectMsg;
+    private final ArrayList<String> strings;
+    private final String selectMsg;
 
     public Picker(ArrayList<String> strings, String selectMsg) {
         this.strings = strings;

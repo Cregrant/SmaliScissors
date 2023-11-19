@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode;
 
+import java.util.Objects;
+
 public class SmaliTarget {
 
     private String smaliRef;
@@ -14,8 +16,7 @@ public class SmaliTarget {
 
             do {
                 c = string.charAt(--backPos);
-            }
-            while (backPos > 0 && !(c == '\n' || c == '#' || c == '\"'));
+            } while (backPos > 0 && !(c == '\n' || c == '#' || c == '\"'));
 
             if (c == '\n') {     //line is not commented out and not inside an annotation   //todo clean annotations?
                 return true;
@@ -69,7 +70,7 @@ public class SmaliTarget {
 
     @Override
     public int hashCode() {
-        return smaliRef.hashCode();
+        return Objects.hash(smaliRef, skipPath, isClass);
     }
 
     @Override

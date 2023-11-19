@@ -164,8 +164,8 @@ public class MethodCleaner {
     }
 
     static class Line {
-        String register;
-        int lineNum;
+        final String register;
+        final int lineNum;
 
         public Line(String register, int num) {
             this.register = register;

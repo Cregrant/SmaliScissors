@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
 /**
@@ -116,7 +117,7 @@ public class BinaryStringPoolParser {
                     str_buf[j++] = b;
                 }
             }
-            String str = new String(str_buf);
+            String str = new String(str_buf, StandardCharsets.UTF_8);
             char firstChar = str.charAt(0);
             boolean isDigit = firstChar >= 48 && firstChar <= 57;
             //skip some non-classes strings
