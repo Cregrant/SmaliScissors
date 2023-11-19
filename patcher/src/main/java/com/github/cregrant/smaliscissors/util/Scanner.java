@@ -1,6 +1,5 @@
 package com.github.cregrant.smaliscissors.util;
 
-import com.github.cregrant.smaliscissors.Prefs;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
@@ -47,9 +46,6 @@ public class Scanner {
                 }
 
                 for (final File subfolder : subfolders) {   //skip some folders
-                    if (Prefs.skipSmaliRootFolders && Prefs.smaliFoldersToSkip.contains(subfolder.getName())) {
-                        continue;
-                    }
                     Callable<ArrayList<DecompiledFile>> callable = new Callable<ArrayList<DecompiledFile>>() {
                         @Override
                         public ArrayList<DecompiledFile> call() {
