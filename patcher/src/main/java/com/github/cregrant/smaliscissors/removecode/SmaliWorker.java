@@ -24,10 +24,6 @@ public class SmaliWorker {
         this.project = project;
         this.patch = patch;
         this.rule = rule;
-
-        if (Flags.SMALI_DEBUG_BENCHMARK || Flags.SMALI_DEBUG_NOT_WRITE) {
-            logger.warn("DEBUG FLAG ENABLED");
-        }
     }
 
     public void run() {
