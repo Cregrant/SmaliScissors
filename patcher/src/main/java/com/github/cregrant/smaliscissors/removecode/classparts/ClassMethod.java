@@ -71,7 +71,8 @@ public class ClassMethod implements ClassPart {
 
     @Override
     public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
-        if ((!line.contains(target.getRef()) && deleted) || !target.containsInside(getBody())) {
+        boolean inParameters = isParametersContainsTarget(target);
+        if ((!inParameters && deleted) || (!inParameters && !target.containsInside(getBody()))) {
             return null;
         }
         if (returnObject.contains(target.getRef())) {
@@ -100,6 +101,17 @@ public class ClassMethod implements ClassPart {
         } else {
             replaceBodyWithStub(generateCommonStub());
         }
+    }
+
+    private boolean isParametersContainsTarget(SmaliTarget target) {
+        boolean result = false;
+        for (String parameter : inputObjects) {
+            if (parameter.contains(target.getRef())) {
+                result = true;
+                break;
+            }
+        }
+        return result;
     }
 
     private SmaliTarget getDeleteTarget() {

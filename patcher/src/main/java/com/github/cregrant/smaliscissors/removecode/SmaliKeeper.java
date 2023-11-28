@@ -56,7 +56,6 @@ public class SmaliKeeper {
             if (project.getProtectedClasses().contains(shortPath)) {
                 SmaliClass smaliClass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
                 keepClass(state, returned, smaliClass);
-                returned.add(smaliClass);
             }
         }
         state.patchedClasses.addAll(returned);
