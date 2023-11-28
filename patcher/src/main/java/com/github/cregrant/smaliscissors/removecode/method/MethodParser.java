@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 
 public class MethodParser {
 
@@ -49,7 +50,7 @@ public class MethodParser {
                 AdditionalTable aTable = ((AdditionalTable) op);
                 Table mappedTable = tables.get(aTable.getTableTag());
                 if (mappedTable == null) {
-                    throw new IllegalStateException("Error mapping table to an opcode!");
+                    throw new InputMismatchException("Error mapping table to an opcode!");
                 }
                 aTable.setTable(mappedTable);
             }

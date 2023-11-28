@@ -9,6 +9,7 @@ import com.github.cregrant.smaliscissors.removecode.method.MethodCleaner;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 
 public class ClassMethod implements ClassPart {
     private final SmaliClass smaliClass;
@@ -34,7 +35,7 @@ public class ClassMethod implements ClassPart {
             deleted = true;
         }
         if (end == 12) {
-            throw new IllegalArgumentException();
+            throw new InputMismatchException("Cannot find the end of the method");
         }
 
         setBody(text.substring(signatureEnd, Math.min(end, text.length())));
@@ -185,7 +186,7 @@ public class ClassMethod implements ClassPart {
         int start = body.indexOf("    invoke-direct {p0");
         int end = body.indexOf("\n", start);
         if (start == -1 || end == -1) {
-            throw new IllegalArgumentException("Cannot find the superclass call!");
+            throw new InputMismatchException("Cannot find the superclass call!");
         }
         String call = body.substring(start, end);
         if (call.contains("{p0}")) {

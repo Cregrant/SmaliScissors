@@ -31,8 +31,7 @@ public class Rule {
         try {
             type = Type.valueOf(typeString);
         } catch (IllegalArgumentException e) {
-            logger.error("Unknown rule [{}]", typeString);
-            throw new InputMismatchException();
+            throw new InputMismatchException("Unknown rule [" + typeString + "]");
         }
 
         Rule rule;
@@ -68,15 +67,13 @@ public class Rule {
                 rule = new RemoveCodeAction(rawString);
                 break;
             default:
-                logger.error("Unknown rule: {}", typeString);
-                throw new InputMismatchException();
+                throw new InputMismatchException("Unknown rule: " + typeString);
         }
 
         if (rule.isValid()) {
             return rule;
         } else {
-            logger.error("Rule parsing error: \n{}\n", rule);
-            throw new InputMismatchException();
+            throw new InputMismatchException("Rule parsing error: \n" + rule + "\n");
         }
     }
 

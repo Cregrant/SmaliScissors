@@ -36,6 +36,7 @@ public class SmaliFilter {
         filterPatchedClasses(target, possibleTargetFiles);
         removeTargetFiles(target, possibleTargetFiles);
         scanAllFilesPooled(target, possibleTargetFiles);
+        logger.debug("Filtered {} files", currentState.files.size());
         return result;
     }
 

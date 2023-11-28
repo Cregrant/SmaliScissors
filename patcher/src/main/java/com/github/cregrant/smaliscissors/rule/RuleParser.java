@@ -102,8 +102,8 @@ public class RuleParser {
         try {
             return Rule.parseRule(ruleString);
         } catch (Exception e) {
-            logger.error("Unable to parse rule " + num + ":\n------------\n" + ruleString + "\n--------------", e);
-            throw new InputMismatchException();
+            logger.error("Unable to parse rule " + num + ":\n------------\n" + ruleString + "\n--------------\n" + e.getMessage());
+            throw new InputMismatchException("Please fix the rule and try again.");
         }
     }
 

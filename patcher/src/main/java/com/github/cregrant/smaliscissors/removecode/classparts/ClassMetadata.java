@@ -4,6 +4,8 @@ import com.github.cregrant.smaliscissors.removecode.SmaliClass;
 import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
+import java.util.InputMismatchException;
+
 public class ClassMetadata implements ClassPart {
     private final String text;
     private final int end;
@@ -11,7 +13,7 @@ public class ClassMetadata implements ClassPart {
     public ClassMetadata(String string, int pos) {
         end = string.indexOf('\n', pos + 1) + 1;
         if (end == 0) {
-            throw new IllegalArgumentException();
+            throw new InputMismatchException("Cannot find the end of the metadata!");
         }
         text = string.substring(pos, end);
     }

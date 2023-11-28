@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 
 public class ClassParser {
 
@@ -25,7 +26,7 @@ public class ClassParser {
         }
 
         if (parts.isEmpty() || !(parts.get(0) instanceof ClassHeader) || pos < body.length()) {
-            throw new IllegalArgumentException("Smali class " + smaliClass.getFile().getPath() + " broken");      //should never happen (broken structure)
+            throw new InputMismatchException("Smali class " + smaliClass.getFile().getPath() + " broken");      //should never happen (broken structure)
         }
         return parts;
     }
@@ -61,7 +62,7 @@ public class ClassParser {
             pos = metadata.getEndPos();
             return metadata;
         } else {
-            throw new IllegalArgumentException("Error parsing " + smaliClass.getFile().getPath());
+            throw new InputMismatchException("Error parsing " + smaliClass.getFile().getPath());
         }
     }
 

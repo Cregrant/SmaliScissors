@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 public class Flags {
     public static final Logger logger = LoggerFactory.getLogger(Flags.class);
+
+    //tests
     public static boolean STOP_IF_TEST_FAILED = false;
 
     //debug flags

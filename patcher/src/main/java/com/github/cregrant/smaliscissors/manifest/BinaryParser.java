@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 import java.util.zip.ZipFile;
 
 public class BinaryParser {
@@ -116,7 +117,7 @@ public class BinaryParser {
             buf = new byte[is.available()];
             is.read(buf);
         } catch (IOException e) {
-            throw new IllegalStateException("Error loading AndroidManifest.xml: " + e.getMessage());
+            throw new InputMismatchException("Error loading AndroidManifest.xml: " + e.getMessage());
         }
         return buf;
     }

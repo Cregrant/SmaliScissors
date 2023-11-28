@@ -4,6 +4,8 @@ import com.github.cregrant.smaliscissors.removecode.SmaliClass;
 import com.github.cregrant.smaliscissors.removecode.SmaliCleanResult;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
+import java.util.InputMismatchException;
+
 public class ClassAnnotation implements ClassPart {
     private final String text;
     private final int end;
@@ -15,7 +17,7 @@ public class ClassAnnotation implements ClassPart {
         }
         end = string.indexOf("\n.end annotation", pos) + 18;
         if (end == 17) {
-            throw new IllegalArgumentException();
+            throw new InputMismatchException("Cannot find the end of the annotation!");
         }
         text = string.substring(pos, Math.min(end, string.length()));
     }

@@ -31,6 +31,7 @@ public class SmaliRemoveJob {
         List<SmaliTarget> currentTargets = new ArrayList<>();
         currentTargets.add(initialTarget);
 
+        logger.debug("Started removing {}", initialTarget);
         while (!currentTargets.isEmpty()) {
             List<SmaliTarget> newTargets = new ArrayList<>();
             for (final SmaliTarget target : currentTargets) {
@@ -77,6 +78,7 @@ public class SmaliRemoveJob {
                 }
             }
             if (getterExists && !setterExists) {
+                logger.debug("Also removing null field {}", targetField);
                 result.add(targetField);
             }
         }
@@ -98,7 +100,7 @@ public class SmaliRemoveJob {
         for (final SmaliClass smaliClass : classes) {
             if (smaliClass.getRef().endsWith("Registrar;")) {
                 project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
-                throw new IllegalStateException("Skipped to prevent some firebase errors.");
+                throw new IllegalStateException("causes app crash due to firebase errors");
             }
             if (!rule.isInternal()) {
                 logger.debug("Cleaning {}", smaliClass);
@@ -131,7 +133,7 @@ public class SmaliRemoveJob {
         for (SmaliTarget dependency : dependencies) {
             cascadeTargets.add(dependency);
             if (!rule.isInternal()) {
-                logger.debug("Also deleting {}", dependency);
+                logger.debug("Also removing {}", dependency);
             }
         }
         return cascadeTargets;

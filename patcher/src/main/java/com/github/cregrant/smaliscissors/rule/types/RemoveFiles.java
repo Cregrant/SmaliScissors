@@ -48,12 +48,10 @@ public class RemoveFiles extends Rule {
                 File file = new File(project.getPath() + File.separator + str);
                 IO.delete(file);
                 possibleEmptyFolders.add(file.getParentFile());
-                logger.debug("{} deleted", file);
             }
             File targetFile = new File(project.getPath(), target);
             if (targetFile.exists()) {
                 IO.delete(targetFile);
-                logger.debug("{} deleted", targetFile);
             }
         }
 
@@ -94,7 +92,7 @@ public class RemoveFiles extends Rule {
         for (int i = 0; i < targets.size(); i++) {
             String target = targets.get(i);
             sb.append("    ").append(target).append("\n");
-            if (i >= 30 && logger.isDebugEnabled()) {
+            if (i >= 30 && !logger.isDebugEnabled()) {
                 sb.append("    ... + ").append(targets.size() - i - 1).append(" more lines\n");
                 break;
             }

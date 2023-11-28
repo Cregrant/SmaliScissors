@@ -57,8 +57,7 @@ public class Manifest {
                 }
             }
             if (!success) {
-                logger.error("Cannot find smali file {}", innerPath);
-                throw new IllegalStateException();
+                throw new InputMismatchException("Cannot find smali file " + innerPath);
             }
         }
         return result;

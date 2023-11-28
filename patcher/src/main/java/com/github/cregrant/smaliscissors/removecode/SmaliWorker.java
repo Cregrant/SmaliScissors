@@ -36,9 +36,6 @@ public class SmaliWorker {
 
         if (!Flags.SMALI_DEBUG_NOT_WRITE) {
             writeChanges(state);
-        } else {
-            //debugging
-            logger.info(state.files.size() + " kept, " + state.patchedClasses.size() + " patched, " + state.removedTargets.size() + " removed");
         }
 
         rule.removePendingActions(project);
@@ -48,9 +45,8 @@ public class SmaliWorker {
         int bestLoopTime = Integer.MAX_VALUE;
         while (true) {
             long l = System.currentTimeMillis();
-            State state = applyRule();
-            //debugging
-            logger.info(state.files.size() + " kept, " + state.patchedClasses.size() + " patched, " + state.removedTargets.size() + " removed");
+
+            applyRule();
 
             int loopTime = (int) (System.currentTimeMillis() - l);
             bestLoopTime = Math.min(loopTime, bestLoopTime);
@@ -88,7 +84,7 @@ public class SmaliWorker {
                 job.remove(target, newState);
             } catch (Exception e) {
                 errorsNum++;
-                logger.warn("Failed to remove " + target + " (" + e.getMessage() + ")");
+                logger.warn("Skipped " + target + " (" + e.getMessage() + ")");
                 newState = new State(currentState);
                 if (controller.canApply() && controller.applyAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
@@ -101,23 +97,28 @@ public class SmaliWorker {
                 currentState = newState;
                 newState = new State(currentState);
 
-                logger.info("Removed " + target);
                 patchedNum++;
+                logger.info("Removed " + target);
+                String result = currentState.files.size() + " kept, " + currentState.patchedClasses.size() + " patched, " + currentState.deletedFiles.size() + " deleted, " + currentState.removedTargets.size() + " refs removed";
+                if (Flags.SMALI_DEBUG_NOT_WRITE || Flags.SMALI_DEBUG_BENCHMARK) {
+                    logger.info(result);
+                } else {
+                    logger.debug(result);
+                }
+
                 if (controller.canApply() && controller.applyAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;
                 }
-            }
-
-            //print only user defined rules
-            if (rule.isInternal() && job.isStateModified()) {
-                crashReportersNum++;
+                if (rule.isInternal()) {
+                    crashReportersNum++;
+                }
             }
         }
         project.getSmaliKeeper().keepClasses(currentState);
 
         if (rule.isInternal()) {
-            logger.info(crashReportersNum + " crash reporters deleted silently.");
+            logger.info(crashReportersNum + " crash reporters deleted.");
         } else {
             logger.info(patchedNum + " targets patched and " + errorsNum + " failed.");
         }
@@ -135,7 +136,7 @@ public class SmaliWorker {
             try {
                 removeFiles.apply(project, patch);
             } catch (IOException e) {
-                logger.error("Congratulations! Is your project broken now? How did you do that?", e);
+                logger.error("Failed to delete files", e);
             }
         }
 

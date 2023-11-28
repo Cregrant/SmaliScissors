@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 
 public class MethodOpcodeCleaner {
 
@@ -148,7 +149,7 @@ public class MethodOpcodeCleaner {
     public int searchTag(Tag tag) {
         int index = opcodes.indexOf(tag);
         if (index == -1) {
-            throw new IllegalArgumentException("Critical error: tag :" + tag + " not found in method " + method.getRef());
+            throw new InputMismatchException("Tag :" + tag + " not found in method " + method.getRef());
         } else {
             return index;
         }

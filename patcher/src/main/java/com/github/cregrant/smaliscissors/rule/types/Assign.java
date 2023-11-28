@@ -33,7 +33,7 @@ public class Assign extends Rule {
         assignments = parseAssignments(matchMultiLines(rawString, ASSIGNMENT, Regex.ResultFormat.SPLIT));
         isRegex = RuleParser.parseBoolean(rawString, REGEX);
         if (!isRegex) {
-            throw new InputMismatchException("REGEX field must be true");
+            throw new InputMismatchException("REGEX field of an Assign rule must be true");
         }
 
         if (target == null) {

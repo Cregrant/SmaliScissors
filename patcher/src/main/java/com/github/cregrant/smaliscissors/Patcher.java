@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.InputMismatchException;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -58,8 +59,10 @@ public class Patcher {
             logger.error(e.getMessage());
             logger.error("Probably patch require some files that haven't been decompiled yet.");
             throw e;
+        } catch (InputMismatchException e) {
+            logger.error("Patch cannot be applied:\n{}", e.getMessage());     //can be fixed by user
         } catch (Throwable e) {
-            logger.error("Unexpected error", e);
+            logger.error("Unexpected error, please report it to the developer", e);
             throw e;
         } finally {
             executor.stop();

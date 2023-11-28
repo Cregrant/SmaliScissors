@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 
 import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
 import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
@@ -64,7 +65,7 @@ public class ExecuteDex extends Rule {
                 logger.error("Error executing the dex script\n");
                 if (e instanceof NoClassDefFoundError || e.getCause() instanceof NoClassDefFoundError) {
                     logger.debug("", e);
-                    throw new IOException("This dex script supports only the Android platform!\n");
+                    throw new InputMismatchException("This dex script supports only the Android platform!\n");
                 }
                 throw new RuntimeException(e);
             }
@@ -81,12 +82,10 @@ public class ExecuteDex extends Rule {
             smaliGenerator.generateSmaliFiles(project.getPath().replace('\\', '/'));
             project.rescanSmali();
             if (project.getSmaliList().isEmpty()) {
-                logger.error("Smali files were not generated");
-                throw new FileNotFoundException();
+                throw new FileNotFoundException("Smali files were not generated");
             }
         } else {
-            logger.error("Smali file generation canceled: no smali generator provided.");
-            throw new FileNotFoundException();
+            throw new FileNotFoundException("Smali file generation canceled: no smali generator provided.");
         }
 
     }

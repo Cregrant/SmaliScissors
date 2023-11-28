@@ -23,7 +23,7 @@ public class DecompiledParser {
             pos = 0;
             return result;
         }
-        throw new InputMismatchException();
+        throw new InputMismatchException("Smali application tag is missing!");
     }
 
     public ArrayList<String> getActivityPaths() {
@@ -33,7 +33,7 @@ public class DecompiledParser {
         }
         pos = 0;
         if (result.isEmpty()) {
-            throw new InputMismatchException();
+            throw new InputMismatchException("Smali activity tag is missing!");
         }
         return result;
     }
@@ -49,7 +49,7 @@ public class DecompiledParser {
         }
         pos = 0;
         if (result.isEmpty()) {
-            throw new InputMismatchException();
+            throw new InputMismatchException("Smali launcher activity tag is missing!");
         }
         return result;
     }

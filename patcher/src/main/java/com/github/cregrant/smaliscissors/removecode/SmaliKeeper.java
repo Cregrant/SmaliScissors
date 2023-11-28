@@ -90,7 +90,7 @@ public class SmaliKeeper {
                     return;
                 }
 
-                logger.warn("It is not possible to remove firebase crashlytics from code. Deleting network calls...");
+                logger.warn("Cannot remove firebase crashlytics from code. Deleting network calls instead...");
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_crashlytics_patched, "true");
@@ -107,7 +107,7 @@ public class SmaliKeeper {
                     return;
                 }
 
-                logger.warn("It is not possible to remove firebase analytics from code. Deleting network calls...");
+                logger.warn("Cannot remove firebase analytics from code. Deleting network calls instead...");
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_analytics_patched, "true");

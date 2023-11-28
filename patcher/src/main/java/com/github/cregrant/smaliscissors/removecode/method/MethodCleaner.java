@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.InputMismatchException;
 
 public class MethodCleaner {
 
@@ -94,7 +95,7 @@ public class MethodCleaner {
                     }
                 }
                 if (j == -1) {
-                    throw new IllegalStateException("Catch block end tag not found?");
+                    throw new InputMismatchException("Catch block end tag not found?");
                 }
 
                 j--;
@@ -114,7 +115,7 @@ public class MethodCleaner {
                         continue loop;
                     }
                 }
-                throw new IllegalStateException("Catch block start tag not found?");
+                throw new InputMismatchException("Catch block start tag not found?");
             }
         }
     }
