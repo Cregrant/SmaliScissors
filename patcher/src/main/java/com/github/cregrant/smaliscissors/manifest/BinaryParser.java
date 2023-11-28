@@ -39,6 +39,11 @@ public class BinaryParser {
             while (off < xml.length - 3) {
                 int tag0 = LEW(xml, off);
 
+                if (tag0 == 0) {
+                    classes.clear();    //parse error, should parse binary string pool instead
+                    break;
+                }
+
                 if (tag0 == START_TAG) { // XML START TAG
                     int nameSi = LEW(xml, off + 5 * 4);
                     int numbAttrs = LEW(xml, off + 7 * 4); // Number of Attributes

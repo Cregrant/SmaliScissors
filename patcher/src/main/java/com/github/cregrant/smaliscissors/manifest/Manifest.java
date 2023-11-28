@@ -69,12 +69,16 @@ public class Manifest {
         if (manifestFile != null) {
             return new DecompiledParser(manifestFile.getBody()).getProtectedClasses();
         }
+
+        HashSet<String> strings = null;
         if (project.getApkPath() != null) {
             BinaryParser parser = new BinaryParser(project.getApkPath());
-            return parser.getStrings();
+            strings = parser.getStrings();
         }
-        logger.warn("Both the AndroidManifest.xml and the apk file path are missing. [REMOVE_CODE] may break your project.");
-        return new HashSet<>();
+        if (strings == null || strings.isEmpty()) {
+            throw new InputMismatchException("Both AndroidManifest.xml and an apk file path are missing. Provide the apk file next to your project folder or decompile your project with resources.");
+        }
+        return strings;
     }
 
     private XmlFile findManifestFile() {

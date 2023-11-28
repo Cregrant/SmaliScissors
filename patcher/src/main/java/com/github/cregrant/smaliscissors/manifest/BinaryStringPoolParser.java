@@ -38,9 +38,8 @@ public class BinaryStringPoolParser {
 
                 return parseStringPool(spBuf, headerSize, chunkSize);
             }
-        } catch (IOException e) {
-            throw new IllegalStateException("Binary AndroidManifest.xml has not been parsed. " +
-                    "Suggestion: decompile with resources and try again.\n------------------");
+        } catch (Exception e) {
+            logger.debug("Error parsing string pool", e);
         }
         return new HashSet<>();
     }
