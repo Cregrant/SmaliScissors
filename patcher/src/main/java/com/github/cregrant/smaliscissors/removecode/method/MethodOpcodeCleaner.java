@@ -14,10 +14,10 @@ public class MethodOpcodeCleaner {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodOpcodeCleaner.class);
     private final ClassMethod method;
-    private final ArrayDeque<MethodCleaner.Line> stack;
     private final ArrayList<Opcode> opcodes;
     private final HashSet<SmaliTarget> fieldsCanBeNull;
     private final HashSet<String> preventLoopsList = new HashSet<>(5);
+    private ArrayDeque<MethodCleaner.Line> stack;
     private boolean broken;
     private int i;
 
@@ -133,6 +133,15 @@ public class MethodOpcodeCleaner {
 
     void insertOpcodes(ArrayList<Opcode> ops) {     //the opcodes will be inserted before the current
         opcodes.addAll(i, ops);
+        ArrayDeque<MethodCleaner.Line> newStack = new ArrayDeque<>(stack.size());
+        while (!stack.isEmpty()) {
+            MethodCleaner.Line line = stack.poll();
+            if (line.lineNum > i) {
+                line.lineNum += ops.size();
+            }
+            newStack.push(line);
+        }
+        stack = newStack;
         i += ops.size();
     }
 

@@ -190,7 +190,7 @@ public class MethodCleaner {
 
     static class Line {
         final String register;
-        final int lineNum;
+        int lineNum;
 
         public Line(String register, int num) {
             this.register = register;
