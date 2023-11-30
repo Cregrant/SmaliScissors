@@ -1,7 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.Project;
-import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
 import org.slf4j.Logger;
@@ -10,8 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SmaliFilter {
 
@@ -190,30 +187,4 @@ public class SmaliFilter {
         }
         return null;
     }
-
-    static SmaliTarget getClassRef(DecompiledFile dFile, Pattern match) {
-        String smaliBody = dFile.getBody();
-        Matcher matcher = match.matcher(smaliBody);
-        if (matcher.find()) {
-            logger.debug("Found REMOVE_CODE match {} in {}", matcher.group(0), dFile.getPath());
-            int start = matcher.start(0);
-            if (start == -1) {
-                return null;
-            }
-            return extractClassRef(smaliBody, start);
-        }
-        return null;
-    }
-
-    private static SmaliTarget extractClassRef(String body, int start) {
-        String lineSeparator = body.charAt(body.indexOf('\n') - 1) == '\r' ? "\r\n" : "\n";
-        int startMethod = body.lastIndexOf("\n.method ", start);
-        int endMethod = body.indexOf("\n.end method" + lineSeparator, startMethod);
-        if (startMethod == -1 || endMethod == -1 || endMethod < startMethod) {
-            return null;
-        }
-        String classPath = body.substring(body.indexOf(" L") + 1, body.indexOf(";") + 1);
-        return new SmaliTarget().setRef(classPath);
-    }
-
 }

@@ -6,7 +6,6 @@ import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import com.github.cregrant.smaliscissors.rule.types.RemoveFiles;
-import com.github.cregrant.smaliscissors.util.Misc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,26 +65,14 @@ public class SmaliWorker {
         TargetController controller = new TargetController();
         project.getSmaliKeeper().changeTargets(patch, rule);
         List<String> targets = rule.getTargets();
-        int end = rule.isRegexMatchMode() ? 1 : targets.size();
 
-        for (int i = controller.getStartNumber(targets); i < end; i++) {
-            String path = null;
-            SmaliTarget target = null;
-            String matchTarget = null;
-            String targetLogName;
-
-            if (rule.isRegexMatchMode()) {
-                matchTarget = rule.getMatch();
-                targetLogName = Misc.trimToSize(matchTarget, 35);
-            } else {
-                path = targets.get(i);
-                target = new SmaliTarget().setSkipPath(path);
-                targetLogName = target.toString();
-            }
+        for (int i = controller.getStartNumber(targets); i < targets.size(); i++) {
+            String path = targets.get(i);
+            SmaliTarget target = new SmaliTarget().setSkipPath(path);
 
             SmaliRemoveJob job = new SmaliRemoveJob(project, pool, patch, rule);
 
-            if (target != null && controller.canSkip() && job.containsTargetFiles(target, newState)) {
+            if (controller.canSkip() && job.containsTargetFiles(target, newState)) {
                 if (controller.skipAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;
@@ -94,16 +81,12 @@ public class SmaliWorker {
             }
 
             try {
-                if (target != null) {
-                    job.remove(target, newState);
-                } else {
-                    job.removeIfMatch(matchTarget, newState);
-                }
+                job.remove(target, newState);
             } catch (Exception e) {
                 errorsNum++;
-                logger.warn("Skipped " + targetLogName + " (" + e.getMessage() + ")");
+                logger.warn("Skipped " + target + " (" + e.getMessage() + ")");
                 newState = new State(currentState);
-                if (target != null && controller.canApply() && controller.applyAndCheckEnd(target)) {
+                if (controller.canApply() && controller.applyAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;
                 }
@@ -115,7 +98,7 @@ public class SmaliWorker {
                 newState = new State(currentState);
 
                 patchedNum++;
-                logger.info("Removed " + targetLogName);
+                logger.info("Removed " + target);
                 String result = currentState.files.size() + " kept, " + currentState.patchedClasses.size() + " patched, " + currentState.deletedFiles.size() + " deleted, " + currentState.removedTargets.size() + " refs removed";
                 if (Flags.SMALI_DEBUG_NOT_WRITE || Flags.SMALI_DEBUG_BENCHMARK) {
                     logger.info(result);
@@ -123,7 +106,7 @@ public class SmaliWorker {
                     logger.debug(result);
                 }
 
-                if (target != null && controller.canApply() && controller.applyAndCheckEnd(target)) {
+                if (controller.canApply() && controller.applyAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;
                 }
