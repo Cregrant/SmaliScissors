@@ -17,11 +17,11 @@ public class RuleParser {
 
     public static final Logger logger = LoggerFactory.getLogger(RuleParser.class);
     public static final String CRASH_REPORTERS_RULE = "[REMOVE_CODE]\nTARGET:\ncom/rollbar/android/\ncom/userexperior/\ncom/instabug/\ncom/bugsnag/\ncom/bugfender/sdk/\ncom/microsoft/appcenter/crashes/\ncom/bugsee/library/Bugsee/\ncom/crashlytics/\ncom/google/firebase/crashlytics/\ncom/google/firebase/crash/\ncom/bugsense/trace/\ncom/applause/android/\ncom/mindscapehq/android/raygun4android/\nio/fabric/\nio/invertase/firebase/crashlytics/\nnet/hockeyapp/\n[/REMOVE_CODE]";
-    public static final Pattern RULE = Pattern.compile("(\\[.+?]\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET|ACTION):[\\s\\S]*?\\[/.+?])");
+    public static final Pattern RULE = Pattern.compile("(\\[.+?]\\R(?:NAME|GOTO|SOURCE|SCRIPT|TARGET|ACTION|MATCH):[\\s\\S]*?\\[/.+?])");
     public static final Pattern SOURCE = Pattern.compile("SOURCE:\\s+(.+?)\\s*\\R");
     public static final Pattern EXTRACT = Pattern.compile("EXTRACT:\\s+(.+?)\\s*\\R");
     public static final Pattern ASSIGNMENT = Pattern.compile("ASSIGN:\\R((?:.+?=.+\\R)*)");
-    public static final Pattern REPLACEMENT = Pattern.compile("REPLACE:\\R(\\R?|[\\S\\s]*?\\R)(?:[A-Z]+?:\\R|\\[)");  //issue: match extra \n at the end
+    public static final Pattern REPLACEMENT = Pattern.compile("REPLACE:\\R(\\R?|[\\S\\s]*?\\R)(?:[A-Z]+?:\\R|\\[)");  //issue: matches extra \n at the end
     public static final Pattern TARGET = Pattern.compile("TARGET:\\s+([\\s\\S]*?)\\R(?:[A-Z]+?:\\R|\\[)");
     public static final Pattern MATCH = Pattern.compile("MATCH:\\R(.+)");
     public static final Pattern PAT_NAME = Pattern.compile("NAME:\\s+(.+?)\\s*\\R");

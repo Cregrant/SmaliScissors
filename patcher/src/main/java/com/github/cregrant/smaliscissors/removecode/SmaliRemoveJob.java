@@ -2,6 +2,8 @@ package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.DecompiledFile;
+import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 public class SmaliRemoveJob {
 
@@ -44,6 +47,36 @@ public class SmaliRemoveJob {
                 currentTargets = findNullFields(state);
             }
         }
+    }
+
+    public void removeIfMatch(String matchTarget, State state) throws Exception {
+        logger.debug("Started removing all that match {}", matchTarget);
+        final List<SmaliTarget> results = getMatchedTargets(matchTarget);
+        for (SmaliTarget target : results) {
+            remove(target, state);
+        }
+    }
+
+    private List<SmaliTarget> getMatchedTargets(String matchTarget) {
+        final List<SmaliTarget> results = Collections.synchronizedList(new ArrayList<SmaliTarget>());
+        final Pattern localMatchCompiled = Pattern.compile(patch.applyAssign(matchTarget));
+        ArrayList<SmaliFile> files = project.getSmaliList();
+        ArrayList<Future<?>> futures = new ArrayList<>(files.size());
+
+        for (final DecompiledFile dFile : files) {
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    SmaliTarget classRef = SmaliFilter.getClassRef(dFile, localMatchCompiled);
+                    if (classRef != null) {
+                        results.add(classRef);
+                    }
+                }
+            };
+            futures.add(project.getExecutor().submit(r));
+        }
+        project.getExecutor().waitForFinish(futures);
+        return results;
     }
 
     private List<SmaliTarget> findNullFields(final State state) {

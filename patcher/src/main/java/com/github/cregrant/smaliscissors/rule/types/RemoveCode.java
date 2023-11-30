@@ -4,6 +4,7 @@ import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.ProjectProperties;
 import com.github.cregrant.smaliscissors.removecode.SmaliWorker;
+import com.github.cregrant.smaliscissors.rule.RuleParser;
 import com.github.cregrant.smaliscissors.util.Misc;
 import com.github.cregrant.smaliscissors.util.Regex;
 import org.slf4j.Logger;
@@ -14,18 +15,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.*;
-import static com.github.cregrant.smaliscissors.rule.RuleParser.TARGET;
+import static com.github.cregrant.smaliscissors.rule.RuleParser.*;
 import static com.github.cregrant.smaliscissors.util.Regex.matchMultiLines;
+import static com.github.cregrant.smaliscissors.util.Regex.matchSingleLine;
 
 public class RemoveCode extends Rule {
 
     private static final Logger logger = LoggerFactory.getLogger(RemoveCode.class);
     private final List<String> targets;
+    private String match = null;
+    private boolean isRegex = false;
     private boolean internal;
 
     public RemoveCode(String rawString) {
         super(rawString);
         targets = matchMultiLines(rawString, TARGET, Regex.ResultFormat.SPLIT_TRIM);
+        match = matchSingleLine(rawString, MATCH);
+        isRegex = RuleParser.parseBoolean(rawString, REGEX);
         targetType = TargetType.SMALI;
     }
 
@@ -78,7 +84,7 @@ public class RemoveCode extends Rule {
 
     @Override
     public boolean isValid() {
-        return targets != null && !targets.isEmpty();
+        return (targets != null && !targets.isEmpty()) || (isRegex && match != null && !match.isEmpty());
     }
 
     @Override
@@ -99,6 +105,14 @@ public class RemoveCode extends Rule {
         return targets;
     }
 
+    public boolean isRegexMatchMode() {
+        return isRegex;
+    }
+
+    public String getMatch() {
+        return match;
+    }
+
     @Override
     public String toStringShort() {
         if (isInternal()) {
@@ -109,8 +123,14 @@ public class RemoveCode extends Rule {
         if (name != null) {
             sb.append("(").append(name).append(") ");
         }
-        sb.append("Removing code:\n");
-        sb.append(Misc.trimToSize(targets, "  ", 10, 35));
+        sb.append("Removing code");
+        if (isRegexMatchMode()) {
+            sb.append(" using regexp:\n");
+            sb.append(Misc.trimToSize(match, 35)).append('\n');
+        } else {
+            sb.append(":\n");
+            sb.append(Misc.trimToSize(targets, "  ", 10, 35));
+        }
         return sb.toString();
     }
 
