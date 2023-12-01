@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode;
 
+import com.github.cregrant.smaliscissors.Flags;
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
@@ -94,6 +95,9 @@ public class SmaliKeeper {
                 Replace replaceRule = createReplaceRule("\\\".*?crashlytics\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_crashlytics_patched, "true");
+                if (!project.isSmaliCacheEnabled() || (!Flags.SMALI_DEBUG_DO_NOT_WRITE && project.isSmaliCacheEnabled())) {
+                    project.getProperties().save();
+                }
             }
         }
     }
@@ -111,6 +115,9 @@ public class SmaliKeeper {
                 Replace replaceRule = createReplaceRule("\\\".*?app-measurement\\.com.*?\\\"");
                 replaceRule.apply(project, patch);
                 project.getProperties().set(firebase_analytics_patched, "true");
+                if (!project.isSmaliCacheEnabled() || (!Flags.SMALI_DEBUG_DO_NOT_WRITE && project.isSmaliCacheEnabled())) {
+                    project.getProperties().save();
+                }
             }
         }
     }

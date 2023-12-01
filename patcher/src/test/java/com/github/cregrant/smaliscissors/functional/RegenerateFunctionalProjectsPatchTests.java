@@ -9,7 +9,7 @@ public class RegenerateFunctionalProjectsPatchTests {
 
     public static void main(String[] args) throws Exception {
         Flags.SMALI_DEBUG_BENCHMARK = false;
-        Flags.SMALI_DEBUG_NOT_WRITE = false;
+        Flags.SMALI_DEBUG_DO_NOT_WRITE = false;
 
         waitForConfirmation();
         TestProjectsManager manager = new TestProjectsManager(FunctionalProjectsPatchTest.getTestDir());

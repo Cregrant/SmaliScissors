@@ -35,7 +35,7 @@ class FunctionalProjectsPatchTest {
     @TestFactory
     Stream<DynamicTest> patchTestProjects() throws Exception {
         Flags.SMALI_DEBUG_BENCHMARK = false;
-        Flags.SMALI_DEBUG_NOT_WRITE = false;
+        Flags.SMALI_DEBUG_DO_NOT_WRITE = false;
 
         TestProjectsManager manager = new TestProjectsManager(getTestDir());
         manager.compressTestSuites();

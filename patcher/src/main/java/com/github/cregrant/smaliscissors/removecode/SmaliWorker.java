@@ -34,7 +34,7 @@ public class SmaliWorker {
             state = applyRule();
         }
 
-        if (!Flags.SMALI_DEBUG_NOT_WRITE) {
+        if (!Flags.SMALI_DEBUG_DO_NOT_WRITE) {
             writeChanges(state);
         }
 
@@ -100,7 +100,7 @@ public class SmaliWorker {
                 patchedNum++;
                 logger.info("Removed " + target);
                 String result = currentState.files.size() + " kept, " + currentState.patchedClasses.size() + " patched, " + currentState.deletedFiles.size() + " deleted, " + currentState.removedTargets.size() + " refs removed";
-                if (Flags.SMALI_DEBUG_NOT_WRITE || Flags.SMALI_DEBUG_BENCHMARK) {
+                if (Flags.SMALI_DEBUG_DO_NOT_WRITE) {
                     logger.info(result);
                 } else {
                     logger.debug(result);
