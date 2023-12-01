@@ -72,7 +72,7 @@ public class SmaliWorker {
 
             SmaliRemoveJob job = new SmaliRemoveJob(project, pool, patch, rule);
 
-            if (controller.canSkip() && job.containsTargetFiles(target, newState)) {
+            if (controller.canSkip() && job.containsTargetFiles(newState, target)) {
                 if (controller.skipAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;

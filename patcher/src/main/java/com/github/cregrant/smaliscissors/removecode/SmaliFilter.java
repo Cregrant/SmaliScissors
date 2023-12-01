@@ -3,6 +3,7 @@ package com.github.cregrant.smaliscissors.removecode;
 import com.github.cregrant.smaliscissors.Project;
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
+import com.github.cregrant.smaliscissors.util.ArraySplitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,13 +60,31 @@ public class SmaliFilter {
                 classRef = targetRef.substring(0, targetRef.indexOf(';') + 1);
             }
         }
-        HashSet<SmaliFile> filesToScan = new HashSet<>(100);
-        for (Map.Entry<String, ArrayList<SmaliFile>> entry : pool.getArray()) {
-            if (entry.getKey().startsWith(classRef)) {
-                filesToScan.addAll(entry.getValue());
-            }
+
+        final List<SmaliFile> syncronizedList = Collections.synchronizedList(new ArrayList<SmaliFile>());
+        final Map.Entry<String, ArrayList<SmaliFile>>[] array = pool.getArray();
+        final ArraySplitter splitter = new ArraySplitter(array, 2);
+        final String finalClassRef = classRef;
+
+        while (splitter.hasNext()) {
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    int start = splitter.chunkStart();
+                    int end = splitter.chunkEnd();
+                    for (int i = start; i < end; i++) {
+                        if (array[i].getKey().startsWith(finalClassRef)) {
+                            syncronizedList.addAll(array[i].getValue());
+                        }
+
+                    }
+                }
+            };
+            futures.add(project.getExecutor().submit(r));
         }
-        return filesToScan;
+        project.getExecutor().waitForFinish(futures);
+        futures.clear();
+        return new HashSet<>(syncronizedList);
     }
 
     private void removeTargetFiles(final SmaliTarget target, Set<SmaliFile> possibleTargetFiles) {

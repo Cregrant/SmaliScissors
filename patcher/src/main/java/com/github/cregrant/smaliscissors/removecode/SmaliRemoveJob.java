@@ -37,8 +37,7 @@ public class SmaliRemoveJob {
             for (final SmaliTarget target : currentTargets) {
                 newTargets.addAll(removeTarget(state, target));
             }
-            currentTargets.clear();
-            currentTargets.addAll(newTargets);
+            currentTargets = newTargets;
 
             if (currentTargets.isEmpty()) {
                 currentTargets = findNullFields(state);
@@ -52,6 +51,9 @@ public class SmaliRemoveJob {
         }
         List<SmaliTarget> result = Collections.synchronizedList(new ArrayList<SmaliTarget>());
         for (final SmaliTarget targetField : fieldsCanBeNull) {
+            if (!containsTargetFiles(state, targetField)) {
+                continue;
+            }
             State clonedState = new State(state);
             String fieldRef = targetField.getRef();
             Set<SmaliClass> classes = new SmaliFilter(project, pool, clonedState).separate(targetField);
@@ -129,17 +131,15 @@ public class SmaliRemoveJob {
             throw exception.get();
         }
 
-        List<SmaliTarget> cascadeTargets = new ArrayList<>();
-        for (SmaliTarget dependency : dependencies) {
-            cascadeTargets.add(dependency);
-            if (!rule.isInternal()) {
+        if (!rule.isInternal()) {
+            for (SmaliTarget dependency : dependencies) {
                 logger.debug("Also removing {}", dependency);
             }
         }
-        return cascadeTargets;
+        return dependencies;
     }
 
-    boolean containsTargetFiles(SmaliTarget target, State state) {
+    boolean containsTargetFiles(State state, SmaliTarget target) {
         return !new SmaliFilter(project, pool, state).getPossibleTargetFiles(target).isEmpty();
     }
 
