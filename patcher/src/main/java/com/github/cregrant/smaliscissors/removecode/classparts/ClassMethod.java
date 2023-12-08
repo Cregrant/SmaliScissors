@@ -13,13 +13,14 @@ import java.util.InputMismatchException;
 
 public class ClassMethod implements ClassPart {
     private final SmaliClass smaliClass;
-    private final String ref;
+    private String ref;
     private final String name;
     private final String returnObject;
     private final boolean isStatic;
     private final boolean isAbstract;
     private final boolean isConstructor;
     private boolean deleted = false;
+    private boolean stubbed = false;
     private String line;
     private Object body;
     private ArrayList<String> inputObjects = new ArrayList<>(0);
@@ -32,7 +33,7 @@ public class ClassMethod implements ClassPart {
         end = text.indexOf(".end method", pos) + 13;
         if (text.startsWith("#Deleted body", end)) {     //there is a deleted method body next to the "end"
             end = text.indexOf(".end method", end + 10) + 13;
-            deleted = true;
+            stubbed = true;
         }
         if (end == 12) {
             throw new InputMismatchException("Cannot find the end of the method");
@@ -46,12 +47,16 @@ public class ClassMethod implements ClassPart {
         isStatic = line.contains(" static ");
         isAbstract = line.contains(" abstract ");
         isConstructor = name.equals("<init>");
-        ref = smaliClass.getRef().replace(".smali", "") + "->" + line.substring(namePos);
+        ref = generateRef(smaliClass, namePos);
         returnObject = line.substring(inputEnd + 1);
 
         if (inputEnd - inputStart > 1) {
             inputObjects = new ArgumentParser().parse(line);
         }
+    }
+
+    private String generateRef(SmaliClass smaliClass, int namePos) {
+        return smaliClass.getRef().replace(".smali", "") + "->" + line.substring(namePos);
     }
 
     public String getBody() {
@@ -73,16 +78,18 @@ public class ClassMethod implements ClassPart {
     @Override
     public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
         boolean inParameters = isParametersContainsTarget(target);
-        if ((!inParameters && deleted) || (!inParameters && !target.containsInside(getBody()))) {
+        if ((!inParameters && (stubbed || deleted)) || (line.startsWith("#")) || (!inParameters && !target.containsInside(getBody()))) {
             return null;
         }
-        if (returnObject.contains(target.getRef())) {
-            deleteBody();
-            return new SmaliCleanResult(getDeleteTarget());
-        }
-
         MethodCleaner cleaner = new MethodCleaner(this, target.getRef());
         HashSet<SmaliTarget> fieldsCanBeNull = cleaner.getFieldsCanBeNull();
+
+        if (returnObject.contains(target.getRef())) {
+            deleteBody();
+            cleaner.fillFieldsCanBeNull();
+            return new SmaliCleanResult(getDeleteTarget(), fieldsCanBeNull);
+        }
+
         cleaner.clean();
         if (cleaner.isSuccessful()) {
             if (!isAbstract) {
@@ -90,13 +97,17 @@ public class ClassMethod implements ClassPart {
             }
             return new SmaliCleanResult(fieldsCanBeNull);
         } else {
-            replaceBodyWithStub(generateCommonStub());
+            makeStub(smaliClass);
+            cleaner.fillFieldsCanBeNull();
             return new SmaliCleanResult(getDeleteTarget(), fieldsCanBeNull);
         }
     }
 
     @Override
     public void makeStub(SmaliClass smaliClass) {
+        if (stubbed || deleted) {
+            return;
+        }
         if (isConstructor) {
             replaceBodyWithStub(generateConstructorStub());
         } else {
@@ -130,14 +141,14 @@ public class ClassMethod implements ClassPart {
     }
 
     private void replaceBodyWithStub(String stub) {        //there is a stub that'll help not to broke everything
-        if (deleted) {
+        if (stubbed || deleted) {
             return;
         }
-        deleted = true;
+        stubbed = true;
         changeBody(stub + "#Deleted body:\n");
     }
 
-    private void deleteBody() {
+    public void deleteBody() {
         if (deleted) {
             return;
         }
@@ -173,7 +184,7 @@ public class ClassMethod implements ClassPart {
                     ".end method\n\n";
         } else {
             return "\n    .locals 1\n\n" +
-                    "    new-instance v0, Ljava/lang/Object;\n\n" +
+                    "    new-instance v0, Ljava/lang/Object;\n\n" +  //todo replace to const/4 v0, 0x0 as null?
                     "    invoke-direct {v0}, Ljava/lang/Object;-><init>()V\n\n" +
                     "    check-cast v0, " + returnObject + "\n\n" +
                     "    return-object v0\n" +
@@ -182,19 +193,39 @@ public class ClassMethod implements ClassPart {
     }
 
     public String generateConstructorStub() {
-        String body = getBody();
-        int start = body.indexOf("    invoke-direct {p0");
-        int end = body.indexOf("\n", start);
-        if (start == -1 || end == -1) {
-            throw new InputMismatchException("Cannot find the superclass call!");
+        boolean isEmptyConstructorForManifest = false;
+        String superclass = smaliClass.getSuperclass();
+        if (superclass.contains("Activity") || superclass.contains("Service") || superclass.contains("Receiver") || superclass.contains("Provider")) {
+            isEmptyConstructorForManifest = true;
+            if (!inputObjects.isEmpty() && smaliClass.containsMethodReference(smaliClass.getRef() + "-><init>()V", false)) {
+                deleteBody();
+                return "";      //mandatory empty constructor already exists
+            }
         }
-        String call = body.substring(start, end);
-        if (call.contains("{p0}")) {
+
+        boolean returnObjectInit = isEmptyConstructorForManifest;
+        String call = "";
+        if (!isEmptyConstructorForManifest) {
+            String body = getBody();
+            int start = body.indexOf("    invoke-direct");
+            int end = body.indexOf("\n", start);
+            //int superclassPos = body.lastIndexOf(smaliClass.getSuperclass(), end);
+            if (start == -1 || end == -1) {
+                //throw new InputMismatchException("Cannot find the superclass call!"); //fixme//   fixme
+            }
+            call = body.substring(start, end);
+        }
+        if (returnObjectInit || call.contains("{p0}")) {
             return "\n    .locals 0\n\n" +
                     "    invoke-direct {p0}, " + smaliClass.getSuperclass() + "-><init>()V\n\n" +
                     "    return-void\n" +
                     ".end method\n\n";
         } else {
+            if (true) {
+                return "\n    .locals 0\n\n" +
+                        "    return-void\n" +
+                        ".end method\n\n";    //fixme
+            }
             ArrayList<String> parsedArguments = new ArgumentParser().parse(call);
             if (parsedArguments.isEmpty()) {
                 throw new IllegalStateException("generateConstructorStub() arguments parse error!");
@@ -233,6 +264,7 @@ public class ClassMethod implements ClassPart {
         int inputStart = line.indexOf('(') + 1;
         int inputEnd = line.indexOf(')');
         line = line.substring(0, inputStart) + sb + line.substring(inputEnd);
+        ref = generateRef(smaliClass, line.lastIndexOf(' ') + 1);
     }
 
     @Override
@@ -275,5 +307,9 @@ public class ClassMethod implements ClassPart {
 
     public String getReturnObject() {
         return returnObject;
+    }
+
+    public SmaliClass getSmaliClass() {
+        return smaliClass;
     }
 }

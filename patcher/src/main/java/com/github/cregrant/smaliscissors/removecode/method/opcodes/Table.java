@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,13 +49,13 @@ public class Table extends Opcode {
     }
 
     @Override
-    public void deleteLine() {
+    public void deleteLine(ClassMethod method) {
         if (!deleted) {
-            tag.deleteLine();
-            super.deleteLine();
-            endOpcode.deleteLine();
+            tag.deleteLine(method);
+            super.deleteLine(method);
+            endOpcode.deleteLine(method);
             for (Opcode opcode : content) {
-                opcode.deleteLine();
+                opcode.deleteLine(method);
             }
         }
         deleted = true;

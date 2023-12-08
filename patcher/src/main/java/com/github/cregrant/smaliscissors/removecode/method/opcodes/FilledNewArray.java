@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 public class FilledNewArray extends NewArray {
 
     private Opcode moveResultLink;
@@ -15,11 +17,11 @@ public class FilledNewArray extends NewArray {
     }
 
     @Override
-    public void deleteLine() {
-         if (!deleted) {
+    public void deleteLine(ClassMethod method) {
+        if (!deleted) {
             line = "#" + line;
             if (moveResultLink != null) {
-                moveResultLink.deleteLine();
+                moveResultLink.deleteLine(method);
             }
             deleted = true;
         }

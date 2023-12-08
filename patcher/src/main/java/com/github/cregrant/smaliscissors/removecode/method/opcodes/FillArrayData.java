@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 public class FillArrayData extends Opcode implements AdditionalTable {
 
     private final Tag tag;
@@ -20,8 +22,8 @@ public class FillArrayData extends Opcode implements AdditionalTable {
     }
 
     @Override
-    public void deleteLine() {
-        super.deleteLine();
-        table.deleteLine();
+    public void deleteLine(ClassMethod method) {
+        super.deleteLine(method);
+        table.deleteLine(method);
     }
 }

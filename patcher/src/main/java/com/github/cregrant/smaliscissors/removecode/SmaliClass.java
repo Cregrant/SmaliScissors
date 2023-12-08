@@ -40,6 +40,9 @@ public class SmaliClass {
     }
 
     public void makeStub() {
+        if (getHeader().getText().contains(ClassHeader.STUB)) {
+            return;
+        }
         for (ClassPart part : parts) {
             part.makeStub(this);
         }
@@ -58,6 +61,7 @@ public class SmaliClass {
     }
 
     public boolean changeSuperclassOk(String deletedSuperclassRef) {
+        boolean result = false;
         for (ClassPart part : parts) {
             if (part instanceof ClassMethod) {
                 ClassMethod method = ((ClassMethod) part);
@@ -66,12 +70,14 @@ public class SmaliClass {
                         return false;
                     }
                     fixConstructor(method, deletedSuperclassRef);     //fix for a deleted superclass
-                    return true;
+                    result = true;
                 }
             }
         }
-        logger.warn("<init> method not found inside the " + ref + " class!");
-        return false;   //just delete that strange class
+        if (!result && !isAbstract()) {
+            logger.warn("<init> method not found inside the " + ref + " class!");
+        }
+        return result;   //just delete that strange class without constructors
     }
 
     private void fixConstructor(ClassMethod classMethod, String deletedSuperclassRef) {
@@ -127,13 +133,33 @@ public class SmaliClass {
         return null;
     }
 
+    public boolean containsMethodReference(String reference, boolean isStatic) {
+        for (ClassPart part : parts) {
+            if (part instanceof ClassMethod) {
+                ClassMethod method = ((ClassMethod) part);
+                if (method.isStatic() == isStatic && method.getRef().equals(reference)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+
+    }
+
     public String getSuperclass() {
-        ClassHeader header = ((ClassHeader) parts.get(0));
-        return header.getSuperclass();
+        return getHeader().getSuperclass();
+    }
+
+    public ClassHeader getHeader() {
+        return (ClassHeader) parts.get(0);
+    }
+
+    public boolean isAbstract() {
+        return getHeader().isAbstract();
     }
 
     public boolean isPathValid() {
-        return parts.get(0).getText().contains(ref);    //header do not contain valid path? Welcome to apktool.
+        return getHeader().getText().contains(ref);    //header do not contain valid path? Welcome to apktool.
     }
 
     public String getRef() {

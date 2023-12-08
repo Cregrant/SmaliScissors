@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 public class Unknown extends Opcode {
 
     public Unknown(String line) {
@@ -7,6 +9,6 @@ public class Unknown extends Opcode {
     }
 
     @Override
-    public void deleteLine() {
+    public void deleteLine(ClassMethod method) {
     }
 }

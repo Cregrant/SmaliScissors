@@ -1,5 +1,6 @@
 package com.github.cregrant.smaliscissors.removecode.method;
 
+import com.github.cregrant.smaliscissors.Flags;
 import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
@@ -18,7 +19,7 @@ public class MethodCleaner {
     private final String removeString;
     private final ArrayList<Opcode> opcodes;
     private final HashSet<SmaliTarget> fieldsCanBeNull = new HashSet<>();
-    private boolean returnBroken;
+    private boolean methodBroken;
 
     public MethodCleaner(ClassMethod method, String removeString) {
         this.method = method;
@@ -28,44 +29,41 @@ public class MethodCleaner {
 
     public void clean() {
         ArrayDeque<Line> stack = new ArrayDeque<>();
-        cleanMethodArguments(stack);
-        if (method.isAbstract()) {
+        boolean newSignatureAlreadyExists = cleanMethodArguments(stack);
+        methodBroken = methodBroken || newSignatureAlreadyExists;
+        if (methodBroken || method.isAbstract()) {
             return;
         }
 
         MethodOpcodeCleaner cleaner = new MethodOpcodeCleaner(method, opcodes, fieldsCanBeNull, stack);
-        scanMethodBody(cleaner);
-        cleaner.processBody();
-        returnBroken = cleaner.isBroken();
+        cleaner.processBody(removeString);
+        methodBroken = cleaner.isBroken();
+
         checkInfinityLoops();
         fixEmptyCatchBlocks();
-
-        if (returnBroken) {
-            fillFieldsCanBeNull();
-        }
     }
 
-    private void fillFieldsCanBeNull() {
+    public void fillFieldsCanBeNull() {
         for (Opcode op : opcodes) {
-            if (op instanceof Put) {
+            if (op instanceof Put) {    //no need to check if opcode was deleted
                 fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
             }
         }
 
     }
 
-
-    private void cleanMethodArguments(ArrayDeque<Line> stack) {
+    //returns true if we should delete the method
+    private boolean cleanMethodArguments(ArrayDeque<Line> stack) {
         ArrayList<String> inputObjects = method.getInputObjects();
-        if (inputObjects == null) {
-            return;
-        }
-
         int offset = method.isStatic() ? 0 : 1;
         boolean cleaned = false;
+
         for (int i = 0; i < inputObjects.size(); i++) {
             String obj = inputObjects.get(i);
             if (obj.contains(removeString)) {
+                if (!Flags.SMALI_ALLOW_METHOD_ARGUMENTS_CLEANUP) {
+                    return true;
+                }
                 cleaned = true;
                 stack.add(new Line("p" + (i + offset), 0));
                 inputObjects.set(i, "Z");
@@ -73,10 +71,19 @@ public class MethodCleaner {
         }
         if (cleaned) {
             method.setInputObjects(inputObjects);
+            //delete method if signature collision happened after argument renaming
+            if (method.getSmaliClass().containsMethodReference(method.getRef(), method.isStatic())) {
+                method.deleteBody();
+                return true;
+            }
         }
+        return false;
     }
 
     private void fixEmptyCatchBlocks() {   //try-catch block won't compile if empty
+        if (methodBroken) {
+            return;
+        }
         loop:
         for (int i = opcodes.size() - 1; i >= 0; i--) {
             Opcode op = opcodes.get(i);
@@ -102,10 +109,10 @@ public class MethodCleaner {
                 for (; j >= 0; j--) {
                     Opcode otherOp = opcodes.get(j);
                     if (current.getStartTag().equals(otherOp)) {
-                        otherOp.deleteLine();      //delete start & end tags
-                        endTag.deleteLine();
+                        otherOp.deleteLine(method);      //delete start & end tags
+                        endTag.deleteLine(method);
                         do {
-                            opcodes.get(i).deleteLine();    //delete .catch statements
+                            opcodes.get(i).deleteLine(method);    //delete .catch statements
                             i++;
                         } while (opcodes.get(i) instanceof Catch);
                         i = lastPos;
@@ -120,25 +127,10 @@ public class MethodCleaner {
         }
     }
 
-    private void scanMethodBody(MethodOpcodeCleaner cleaner) {
-        for (int i = 0; i < opcodes.size(); i++) {
-            Opcode op = opcodes.get(i);
-            if (!op.isDeleted() && op.toString().contains(removeString)) {
-                String register = op.getOutputRegister();
-                op.deleteLine();
-                if (op instanceof Put) {
-                    fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
-                }
-                cleaner.removeObjectIfIncomplete(op, i);
-                if (!register.isEmpty()) {
-                    cleaner.getStack().add(new Line(register, i + 1));
-                }
-            }
-        }
-        //stack.sort(Collections.reverseOrder());
-    }
-
     private void checkInfinityLoops() {        //deleting conditions can create an infinity loop
+        if (methodBroken) {
+            return;
+        }
         for (int i = 0; i < opcodes.size(); i++) {
             Opcode op = opcodes.get(i);
             if (op.isDeleted() || !(op instanceof Tag) || !op.toString().startsWith(":goto", 4)) {
@@ -160,7 +152,7 @@ public class MethodCleaner {
                 }
             }
             if (broken) {
-                returnBroken = true;
+                methodBroken = true;
             }
         }
     }
@@ -178,7 +170,7 @@ public class MethodCleaner {
     }
 
     public boolean isSuccessful() {
-        return !returnBroken;
+        return !methodBroken;
     }
 
     public String getNewBody() {

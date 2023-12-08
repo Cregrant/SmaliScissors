@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 import java.util.LinkedList;
 import java.util.Objects;
 
@@ -140,7 +142,7 @@ public class Opcode {
         }
     }
 
-    public void deleteLine() {
+    public void deleteLine(ClassMethod method) {
         if (!deleted) {
             line = "#" + line;
         }

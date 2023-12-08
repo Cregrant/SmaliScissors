@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+
 import java.util.List;
 
 public class Switch extends Opcode implements AdditionalTable, Jump {
@@ -30,8 +32,8 @@ public class Switch extends Opcode implements AdditionalTable, Jump {
     }
 
     @Override
-    public void deleteLine() {
-        super.deleteLine();
-        table.deleteLine();
+    public void deleteLine(ClassMethod method) {
+        super.deleteLine(method);
+        table.deleteLine(method);
     }
 }

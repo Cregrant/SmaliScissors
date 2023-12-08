@@ -1,5 +1,7 @@
 package com.github.cregrant.smaliscissors.removecode.method.opcodes;
 
+import com.github.cregrant.smaliscissors.Flags;
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
 import com.github.cregrant.smaliscissors.removecode.method.ArgumentParser;
 
 import java.util.ArrayList;
@@ -8,7 +10,7 @@ public class Invoke extends Opcode {
     private final boolean constructor;
     private ArrayList<String> replacedRegisters;
     private ArrayList<String> argumentsList;
-    private ArrayList<Opcode> insertList = new ArrayList<>(5);
+    private ArrayList<Opcode> insertList = new ArrayList<>();
     private Opcode moveResultLink;
     private boolean softRemove;
 
@@ -20,48 +22,55 @@ public class Invoke extends Opcode {
     }
 
     private void scanTargetSignatures(String target) {
+        //finding target within brackets
         int start = line.indexOf("(", 26) + 1;
         int end = line.lastIndexOf(")");
         int leftMatch = line.indexOf(target);
         int rightMatch = line.lastIndexOf(target);
-        if (start != end && leftMatch >= start && rightMatch <= end) {    //only arguments should contain target string
+        if (Flags.SMALI_ALLOW_METHOD_ARGUMENTS_CLEANUP && start != end && leftMatch >= start && rightMatch <= end) {
             prepareSoftRemove(target);
         }
     }
 
     private void prepareSoftRemove(String target) {
-        argumentsList = new ArgumentParser().parse(line);
         boolean isStatic = line.charAt(line.charAt(0) == '#' ? 13 : 12) == 't';
         int offset = isStatic ? 0 : 1;
+        argumentsList = new ArgumentParser().parse(line);
         replacedRegisters = new ArrayList<>(3);
-        for (int i = 0; i < argumentsList.size(); i++) {
-            String link = argumentsList.get(i);
+        ArrayList<String> newArgumentsList = new ArrayList<>(argumentsList);
+        for (int i = 0; i < newArgumentsList.size(); i++) {
+            String link = newArgumentsList.get(i);
             if (link.contains(target)) {
-                replacedRegisters.add(inputRegisters.get(i + offset));
-                argumentsList.set(i, "Z");
+                String register = inputRegisters.get(i + offset);
+                replacedRegisters.add(register);
+                newArgumentsList.set(i, "Z");
             }
         }
+        argumentsList = newArgumentsList;
         softRemove = true;
     }
 
     @Override
-    public void deleteLine() {
+    public void deleteLine(ClassMethod method) {
         if (softRemove) {
-            fixCall();
+            fixCall(method);
         } else if (!deleted) {
             line = "#" + line;
             if (moveResultLink != null) {
-                moveResultLink.deleteLine();
+                moveResultLink.deleteLine(method);
             }
             deleted = true;
         }
     }
 
-    private void fixCall() {
+    private void fixCall(ClassMethod method) {
         if (replacedRegisters.isEmpty()) {
             return;
         }
         for (String reg : replacedRegisters) {
+            if (!method.isStatic() && "p0".equals(reg)) {
+                throw new IllegalArgumentException();   //fixme can't replace "p0", we can search for any other unused register
+            }
             insertList.add(new Create("    const/16 " + reg + ", 0x0   #stub"));
             insertList.add(new Blank());
         }
@@ -82,7 +91,7 @@ public class Invoke extends Opcode {
 
     public ArrayList<Opcode> getAndClearInsertList() {
         ArrayList<Opcode> list = insertList;
-        insertList = new ArrayList<>(5);
+        insertList = new ArrayList<>();
         return list;
     }
 

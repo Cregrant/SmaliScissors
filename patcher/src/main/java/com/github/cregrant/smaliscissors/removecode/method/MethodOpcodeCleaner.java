@@ -6,14 +6,12 @@ import com.github.cregrant.smaliscissors.removecode.method.opcodes.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.InputMismatchException;
+import java.util.*;
 
 public class MethodOpcodeCleaner {
 
     private static final Logger logger = LoggerFactory.getLogger(MethodOpcodeCleaner.class);
+    private static final String SCAN_REGISTER = "line that never matches";
     private final ClassMethod method;
     private final ArrayList<Opcode> opcodes;
     private final HashSet<SmaliTarget> fieldsCanBeNull;
@@ -29,9 +27,10 @@ public class MethodOpcodeCleaner {
         this.stack = stack;
     }
 
-    void processBody() {
+    void processBody(String removeString) {
         try {
             OpcodeArrayCleaner methodArrayCleaner = new OpcodeArrayCleaner(this);
+            stack.add(new MethodCleaner.Line(SCAN_REGISTER, 0));
 
             while (!stack.isEmpty()) {
                 MethodCleaner.Line line = stack.pop();
@@ -53,7 +52,8 @@ public class MethodOpcodeCleaner {
                     }
                     boolean isReturningOpcode = op instanceof Return || op instanceof Throw;
                     boolean registerOverwrote = outputRegister.equals(register);
-                    if (op.inputRegisterUsed(register)) {
+                    boolean containsTarget = SCAN_REGISTER.equals(register) && op.toString().contains(removeString);
+                    if (op.inputRegisterUsed(register) || containsTarget) {
                         removeObjectIfIncomplete(op, i);
                         if (isReturningOpcode) {
                             if (op instanceof Throw && method.getReturnObject().equals("V")) {
@@ -64,19 +64,22 @@ public class MethodOpcodeCleaner {
                             }
                         }
                         if (op instanceof ArrayPut || op instanceof ArrayGet) {
-                            stack.addAll(methodArrayCleaner.delete(op));
+                            OpcodeArrayCleaner.ArrayCleanerResult arrayCleanerResult = methodArrayCleaner.delete(op);
+                            stack.addAll(arrayCleanerResult.lines);
+                            insertOpcodes(arrayCleanerResult.insertList);
                         }
-                        if (op instanceof Put) {
+                        if (op instanceof Put && !containsTarget) {
                             fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
                         }
 
-                        op.deleteLine();
+                        op.deleteLine(method);
 
                         registerOverwrote = false;
+                        if (!outputRegister.isEmpty() && !outputRegister.equals(register)) {
+                            stack.add(new MethodCleaner.Line(outputRegister, i));
+                        }
                         if (op instanceof Invoke && ((Invoke) op).isSoftRemove()) {
                             insertOpcodes(((Invoke) op).getAndClearInsertList());
-                        } else if (!outputRegister.isEmpty() && !outputRegister.equals(register)) {
-                            stack.add(new MethodCleaner.Line(outputRegister, i));
                         }
                         if (broken) {
                             return;
@@ -110,7 +113,7 @@ public class MethodOpcodeCleaner {
 
     private void processCondition(String register, Opcode op) {
         if (op.inputRegisterUsed(register)) {
-            op.deleteLine();
+            op.deleteLine(method);
         }
 
         Jump jump = ((Jump) op);
@@ -132,7 +135,10 @@ public class MethodOpcodeCleaner {
         }
     }
 
-    void insertOpcodes(ArrayList<Opcode> ops) {     //the opcodes will be inserted before the current
+    void insertOpcodes(List<Opcode> ops) {     //the opcodes will be inserted before the current
+        if (ops.isEmpty()) {
+            return;
+        }
         opcodes.addAll(i, ops);
         ArrayDeque<MethodCleaner.Line> newStack = new ArrayDeque<>(stack.size());
         while (!stack.isEmpty()) {
@@ -160,7 +166,7 @@ public class MethodOpcodeCleaner {
             Opcode op = opcodes.get(j);
             if (op instanceof NewInstance && op.getOutputRegister().equals(register)) {
                 if (!op.isDeleted()) {
-                    op.deleteLine();
+                    op.deleteLine(method);
                     stack.add(new MethodCleaner.Line(register, j));
                 }
                 return true;
@@ -182,5 +188,9 @@ public class MethodOpcodeCleaner {
 
     public ArrayList<Opcode> getOpcodes() {
         return opcodes;
+    }
+
+    public ClassMethod getMethod() {
+        return method;
     }
 }

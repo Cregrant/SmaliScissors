@@ -17,6 +17,7 @@ public class Flags {
     public static boolean SMALI_DEBUG_BENCHMARK = false;
     public static boolean SMALI_DEBUG_DO_NOT_WRITE = false || SMALI_DEBUG_BENCHMARK;
     public static boolean SMALI_PRESERVE_PARTIALLY_CLEANED_ARRAYS = false;
+    public static boolean SMALI_ALLOW_METHOD_ARGUMENTS_CLEANUP = true;
 
     static {
         if (SMALI_DEBUG_DO_NOT_WRITE || DEBUG_NO_MULTITHREADING) {
