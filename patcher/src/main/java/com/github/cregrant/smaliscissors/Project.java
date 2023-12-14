@@ -146,7 +146,7 @@ public class Project {
         } else {
             for (int i = 0; i < size; i++) {
                 String filePath = files.get(i).getPath();
-                if ((isFile && filePath.equals(shortPath)) || filePath.startsWith(shortPath)) {
+                if (isFile ? filePath.equals(shortPath) : filePath.startsWith(shortPath)) {
                     deleted.add(filePath);
                     files.remove(i);
                     if (isFile) {

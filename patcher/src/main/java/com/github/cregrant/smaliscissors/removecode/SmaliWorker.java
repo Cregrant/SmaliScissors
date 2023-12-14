@@ -72,7 +72,7 @@ public class SmaliWorker {
 
             SmaliRemoveJob job = new SmaliRemoveJob(project, pool, patch, rule);
 
-            if (controller.canSkip() && job.containsTargetFiles(newState, target)) {
+            if (controller.canSkip() && !new SmaliFilter(project, pool, newState).separateDoNotChangeState(target).isEmpty()) {
                 if (controller.skipAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
                     break;
@@ -140,10 +140,10 @@ public class SmaliWorker {
             }
         }
 
-        for (SmaliClass smaliClass : state.patchedClasses) {     //write changes
-            if (!rule.isInternal()) {
-                logger.debug("Writing {}", smaliClass);
-            }
+        if (!rule.isInternal()) {
+            logger.debug("Writing {} classes", state.patchedClasses.size());
+        }
+        for (SmaliClass smaliClass : state.patchedClasses) {
             smaliClass.getFile().setBody(smaliClass.getNewBody());
         }
     }

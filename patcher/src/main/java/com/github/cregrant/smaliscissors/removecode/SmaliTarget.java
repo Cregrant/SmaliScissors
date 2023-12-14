@@ -53,6 +53,14 @@ public class SmaliTarget {
         return this;
     }
 
+    public static String removePathObfuscation(String path) {     //abc.1.smali -> abc.smali
+        int dotPos = path.indexOf('.');
+        if (dotPos == path.length() - 6) {
+            return path;
+        }
+        return path.substring(0, dotPos + 1) + "smali";
+    }
+
     public boolean isClass() {
         return isClass;
     }

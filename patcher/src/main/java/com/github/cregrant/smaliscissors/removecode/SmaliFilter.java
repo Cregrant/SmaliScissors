@@ -18,17 +18,19 @@ public class SmaliFilter {
     private final ClassesPool pool;
     private final State currentState;
     private final List<Future<?>> futures;
-    private final Set<SmaliFile> deletedFiles = new HashSet<>(100);
-    private final Set<SmaliClass> result = Collections.synchronizedSet(new HashSet<SmaliClass>(100));
+    private final Set<SmaliFile> deletedFiles = new HashSet<>();
+    private final Set<SmaliClass> result = Collections.synchronizedSet(new HashSet<SmaliClass>());
+    private boolean allowStateChange;
 
     public SmaliFilter(Project project, ClassesPool pool, State currentState) {
         this.project = project;
         this.pool = pool;
         this.currentState = currentState;
-        futures = new ArrayList<>(currentState.files.size());
+        futures = new ArrayList<>();
     }
 
     Set<SmaliClass> separate(final SmaliTarget target) {
+        allowStateChange = true;
         Set<SmaliFile> possibleTargetFiles = getPossibleTargetFiles(target);
         if (possibleTargetFiles.isEmpty()) {
             return Collections.emptySet();
@@ -41,7 +43,22 @@ public class SmaliFilter {
         return result;
     }
 
+    Set<SmaliClass> separateDoNotChangeState(final SmaliTarget target) {
+        allowStateChange = false;
+        Set<SmaliFile> possibleTargetFiles = getPossibleTargetFiles(target);
+        if (possibleTargetFiles.isEmpty()) {
+            return Collections.emptySet();
+        }
+
+        filterPatchedClasses(target, possibleTargetFiles);
+        removeTargetFiles(target, possibleTargetFiles);
+        scanAllFilesPooled(target, possibleTargetFiles);
+        logger.debug("Filtered {} files, no write", currentState.files.size());
+        return result;
+    }
+
     public Set<SmaliFile> getPossibleTargetFiles(final SmaliTarget target) {
+        String ref = target.getRef();
         if (!target.isClass()) {
             String parentClassRef = target.getRef().substring(0, target.getRef().indexOf(';') + 1);
             if (currentState.removedTargets.contains(new SmaliTarget().setRef(parentClassRef))) {
@@ -49,22 +66,31 @@ public class SmaliFilter {
             }
         } else if (currentState.removedTargets.contains(target)) {
             return Collections.emptySet();              //target already removed
-        }
-
-        String classRef = target.getRef();
-        if (!target.isClass()) {
-            String targetRef = target.getRef();
-            classRef = targetRef;
-            int endPos = targetRef.indexOf(';');
-            if (endPos != -1 && endPos != targetRef.length() - 1) {
-                classRef = targetRef.substring(0, targetRef.indexOf(';') + 1);
+        } else if (ref.contains("/")) {
+            String rootFolder = ref.substring(1, ref.indexOf('/'));
+            if (!pool.getRootFolders().contains(rootFolder)) {
+                return Collections.emptySet();          //parent folder does not exist
             }
         }
 
-        final List<SmaliFile> syncronizedList = Collections.synchronizedList(new ArrayList<SmaliFile>());
+        if (!target.isClass()) {
+            String targetRef = target.getRef();
+            ref = targetRef;
+            int endPos = targetRef.indexOf(';');
+            if (endPos != -1 && endPos != targetRef.length() - 1) {
+                ref = targetRef.substring(0, targetRef.indexOf(';') + 1);
+            }
+        }
+        boolean isSingleClass = target.getRef().endsWith(";");
+        if (isSingleClass) {
+            ArrayList<SmaliFile> files = pool.getMap().get(ref);    //probably null if this is an android framework field
+            return files == null ? Collections.<SmaliFile>emptySet() : new HashSet<>(files);
+        }
+
+        final Set<SmaliFile> syncronizedSet = Collections.synchronizedSet(new HashSet<SmaliFile>());
         final Map.Entry<String, ArrayList<SmaliFile>>[] array = pool.getArray();
         final ArraySplitter splitter = new ArraySplitter(array, 2);
-        final String finalClassRef = classRef;
+        final String finalClassRef = ref;
 
         while (splitter.hasNext()) {
             Runnable r = new Runnable() {
@@ -73,10 +99,10 @@ public class SmaliFilter {
                     int start = splitter.chunkStart();
                     int end = splitter.chunkEnd();
                     for (int i = start; i < end; i++) {
-                        if (array[i].getKey().startsWith(finalClassRef)) {
-                            syncronizedList.addAll(array[i].getValue());
+                        Map.Entry<String, ArrayList<SmaliFile>> entry = array[i];
+                        if (entry.getKey().startsWith(finalClassRef)) {
+                            syncronizedSet.addAll(entry.getValue());
                         }
-
                     }
                 }
             };
@@ -84,7 +110,10 @@ public class SmaliFilter {
         }
         project.getExecutor().waitForFinish(futures);
         futures.clear();
-        return new HashSet<>(syncronizedList);
+        if (syncronizedSet.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return new HashSet<>(syncronizedSet);
     }
 
     private void removeTargetFiles(final SmaliTarget target, Set<SmaliFile> possibleTargetFiles) {
@@ -93,14 +122,16 @@ public class SmaliFilter {
         }
 
         deletedFiles.addAll(getTargetFiles(target, possibleTargetFiles));
-        currentState.deletedFiles.addAll(deletedFiles);
-        currentState.files.removeAll(deletedFiles);
+        if (allowStateChange) {
+            currentState.deletedFiles.addAll(deletedFiles);
+            currentState.files.removeAll(deletedFiles);
+        }
     }
 
     List<SmaliFile> getTargetFiles(final SmaliTarget target, Set<SmaliFile> possibleTargetFiles) {
         List<SmaliFile> filesFiltered = new ArrayList<>();
-        for (SmaliFile file : currentState.files) {
-            if (possibleTargetFiles.contains(file) && acceptPath(file.getPath(), target.getSkipPath())) {
+        for (SmaliFile file : possibleTargetFiles) {
+            if (currentState.files.contains(file) && acceptPath(file.getPath(), target.getSkipPath())) {
                 filesFiltered.add(file);
             }
         }
@@ -108,15 +139,15 @@ public class SmaliFilter {
     }
 
     private void filterPatchedClasses(final SmaliTarget target, Set<SmaliFile> possibleTargetFiles) {
-        for (Iterator<SmaliClass> iterator = currentState.patchedClasses.iterator(); iterator.hasNext(); ) {
-            final SmaliClass smaliClass = iterator.next();
-            if (!possibleTargetFiles.contains(smaliClass.getFile())) {
+        HashSet<SmaliClass> acceptedClasses = new HashSet<>();
+        for (SmaliFile possibleTargetFile : possibleTargetFiles) {
+            final SmaliClass smaliClass = possibleTargetFile.getSmaliClass();
+            if (smaliClass == null || !currentState.patchedClasses.contains(smaliClass)) {
                 continue;
             }
-
             if (target.isClass()) {     //remove patched classes that are matching the target
                 if (acceptPath(smaliClass.getFile().getPath(), target.getSkipPath())) {
-                    iterator.remove();
+                    acceptedClasses.add(smaliClass);
                     deletedFiles.add(smaliClass.getFile());
                     continue;
                 }
@@ -132,6 +163,9 @@ public class SmaliFilter {
             };
             futures.add(project.getExecutor().submit(r));
         }
+        if (allowStateChange) {
+            currentState.patchedClasses.removeAll(acceptedClasses);
+        }
         project.getExecutor().waitForFinish(futures);
         futures.clear();
     }
@@ -141,16 +175,20 @@ public class SmaliFilter {
         final AtomicReference<Exception> error = new AtomicReference<>();
         if (!target.isClass() || !deletedFiles.isEmpty()) {
             for (final SmaliFile df : possibleTargetFiles) {
-                if (currentState.files.contains(df)) {
+                if (currentState.files.contains(df) && (allowStateChange || !deletedFiles.contains(df))) {
                     scheduleFileScan(acceptedFiles, target, df, error);
                 }
             }
             project.getExecutor().waitForFinish(futures);
             futures.clear();
-            currentState.files.removeAll(acceptedFiles);
+            if (allowStateChange) {
+                currentState.files.removeAll(acceptedFiles);
+            }
         }
 
-        currentState.patchedClasses.addAll(result);
+        if (allowStateChange) {
+            currentState.patchedClasses.addAll(result);
+        }
         if (error.get() != null) {
             throw new RuntimeException(error.get());
         }

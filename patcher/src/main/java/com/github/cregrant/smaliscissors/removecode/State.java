@@ -2,8 +2,8 @@ package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.common.decompiledfiles.SmaliFile;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 class State {
     final HashSet<SmaliFile> files;
@@ -11,7 +11,7 @@ class State {
     final HashSet<SmaliClass> patchedClasses;
     final HashSet<SmaliTarget> removedTargets;
 
-    State(List<SmaliFile> files) {
+    State(Collection<SmaliFile> files) {
         this.files = new HashSet<>(files);
         this.deletedFiles = new HashSet<>();
         this.patchedClasses = new HashSet<>();

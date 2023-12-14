@@ -45,47 +45,48 @@ public class SmaliRemoveJob {
         }
     }
 
-    private List<SmaliTarget> findNullFields(final State state) {
+    private Set<SmaliTarget> findNullFields(final State state) {
         if (fieldsCanBeNull.isEmpty()) {
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
-        List<SmaliTarget> result = Collections.synchronizedList(new ArrayList<SmaliTarget>());
+        HashSet<SmaliTarget> nullFields = new HashSet<>();
         for (final SmaliTarget targetField : fieldsCanBeNull) {
-            if (!containsTargetFiles(state, targetField)) {
-                continue;
-            }
-            State clonedState = new State(state);
             String fieldRef = targetField.getRef();
-            Set<SmaliClass> classes = new SmaliFilter(project, pool, clonedState).separate(targetField);
+            Set<SmaliClass> classes = new SmaliFilter(project, pool, state).separateDoNotChangeState(targetField);
             boolean getterExists = false;
             boolean setterExists = false;
             for (SmaliClass smaliClass : classes) {
-                String body = smaliClass.getNewBody();
-                int pos = body.indexOf(fieldRef);
-                while (pos >= 0) {
-                    char c;
-                    int backPos = pos;
+                for (ClassPart part : smaliClass.getBodyParts()) {
+                    if (!(part instanceof ClassMethod)) {
+                        continue;
+                    }
+                    String body = ((ClassMethod) part).getBody();
+                    int pos = body.indexOf(fieldRef);
+                    while (pos >= 0) {
+                        char c;
+                        int backPos = pos;
 
-                    do {
-                        c = body.charAt(--backPos);
-                    } while (backPos > 0 && !(c == '\n' || c == '#' || c == '\"'));
-                    if (c == '\n') {
-                        getterExists = getterExists || body.startsWith("get", backPos + 6);
-                        setterExists = setterExists || body.startsWith("put", backPos + 6);
+                        do {
+                            c = body.charAt(--backPos);
+                        } while (backPos > 0 && !(c == '\n' || c == '#' || c == '\"'));
+                        if (c == '\n') {
+                            getterExists = getterExists || body.startsWith("get", backPos + 6);
+                            setterExists = setterExists || body.startsWith("put", backPos + 6);
+                        }
+                        if (getterExists && setterExists) {
+                            break;
+                        }
+                        pos = body.indexOf(fieldRef, pos + 5);
                     }
-                    if (getterExists && setterExists) {
-                        break;
-                    }
-                    pos = body.indexOf(fieldRef, pos + 5);
                 }
             }
             if (getterExists && !setterExists) {
                 logger.debug("Also removing null field {}", targetField);
-                result.add(targetField);
+                nullFields.add(targetField);
             }
         }
         fieldsCanBeNull.clear();
-        return result;
+        return nullFields;
     }
 
     private List<SmaliTarget> removeTarget(State state, final SmaliTarget target) throws Exception {
@@ -137,10 +138,6 @@ public class SmaliRemoveJob {
             }
         }
         return dependencies;
-    }
-
-    boolean containsTargetFiles(State state, SmaliTarget target) {
-        return !new SmaliFilter(project, pool, state).getPossibleTargetFiles(target).isEmpty();
     }
 
     public boolean isStateModified() {
