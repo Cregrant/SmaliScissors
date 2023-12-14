@@ -39,7 +39,8 @@ public class BinaryStringPoolParser {
                 return parseStringPool(spBuf, headerSize, chunkSize);
             }
         } catch (Exception e) {
-            logger.debug("Error parsing string pool", e);
+            logger.error("Error parsing a binary manifest file");
+            logger.debug("String pool parsing failed", e);
         }
         return new HashSet<>();
     }

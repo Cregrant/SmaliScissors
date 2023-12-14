@@ -25,7 +25,8 @@ public class SmaliClass {
     public SmaliClass(Project project, SmaliFile df, String body) {
         this.project = project;
         file = df;
-        String temp = df.getPath();
+        df.setSmaliClass(this);
+        String temp = SmaliTarget.removePathObfuscation(df.getPath());
         String shortPath = temp.substring(temp.indexOf('/') + 1, temp.lastIndexOf(".smali"));
         ref = 'L' + shortPath + ';';
         parts = new ClassParser(this, body).parseParts();
@@ -81,6 +82,9 @@ public class SmaliClass {
     }
 
     private void fixConstructor(ClassMethod classMethod, String deletedSuperclassRef) {
+        if (classMethod.isAbstract() || classMethod.isDeleted() || classMethod.isStubbed()) {
+            return;
+        }
         String curBody = classMethod.getBody();
         int pos = curBody.indexOf(deletedSuperclassRef + "-><init>(");
         if (pos == -1) {
@@ -148,6 +152,10 @@ public class SmaliClass {
 
     public String getSuperclass() {
         return getHeader().getSuperclass();
+    }
+
+    public boolean hasObjectSuperclass() {
+        return getSuperclass().equals(ClassHeader.OBJECT_REF);
     }
 
     public ClassHeader getHeader() {

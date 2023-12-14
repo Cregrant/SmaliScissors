@@ -2,6 +2,8 @@ package com.github.cregrant.smaliscissors.removecode;
 
 import com.github.cregrant.smaliscissors.Patch;
 import com.github.cregrant.smaliscissors.Project;
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassMethod;
+import com.github.cregrant.smaliscissors.removecode.classparts.ClassPart;
 import com.github.cregrant.smaliscissors.rule.types.RemoveCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,12 +30,11 @@ public class SmaliRemoveJob {
     }
 
     void remove(SmaliTarget initialTarget, State state) throws Exception {
-        List<SmaliTarget> currentTargets = new ArrayList<>();
+        Set<SmaliTarget> currentTargets = new HashSet<>();
         currentTargets.add(initialTarget);
 
-        logger.debug("Started removing {}", initialTarget);
         while (!currentTargets.isEmpty()) {
-            List<SmaliTarget> newTargets = new ArrayList<>();
+            HashSet<SmaliTarget> newTargets = new HashSet<>();
             for (final SmaliTarget target : currentTargets) {
                 newTargets.addAll(removeTarget(state, target));
             }
@@ -94,6 +95,7 @@ public class SmaliRemoveJob {
         if (classes.isEmpty()) {
             return Collections.emptyList();
         }
+        logger.debug("Started removing {}", target);
         stateModified = true;
         state.removedTargets.add(target);
 
@@ -128,7 +130,7 @@ public class SmaliRemoveJob {
         project.getExecutor().waitForFinish(futures);
 
         if (exception.get() != null) {
-            logger.debug("", exception.get());
+            logger.debug("removeTarget failed", exception.get());
             throw exception.get();
         }
 

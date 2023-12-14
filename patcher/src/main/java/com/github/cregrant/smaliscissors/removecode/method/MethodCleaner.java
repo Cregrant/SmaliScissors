@@ -29,8 +29,7 @@ public class MethodCleaner {
 
     public void clean() {
         ArrayDeque<Line> stack = new ArrayDeque<>();
-        boolean newSignatureAlreadyExists = cleanMethodArguments(stack);
-        methodBroken = methodBroken || newSignatureAlreadyExists;
+        methodBroken = methodBroken || cleanMethodArguments(stack);
         if (methodBroken || method.isAbstract()) {
             return;
         }
@@ -45,7 +44,7 @@ public class MethodCleaner {
 
     public void fillFieldsCanBeNull() {
         for (Opcode op : opcodes) {
-            if (op instanceof Put) {    //no need to check if opcode was deleted
+            if (op instanceof Put) {    //no need to check if opcode was deleted (whole method body deleted)
                 fieldsCanBeNull.add(new SmaliTarget().setRef(((Put) op).getFieldReference()));
             }
         }
@@ -73,7 +72,7 @@ public class MethodCleaner {
             method.setInputObjects(inputObjects);
             //delete method if signature collision happened after argument renaming
             if (method.getSmaliClass().containsMethodReference(method.getRef(), method.isStatic())) {
-                method.deleteBody();
+                method.delete();
                 return true;
             }
         }

@@ -10,9 +10,7 @@ import com.github.cregrant.smaliscissors.rule.types.Rule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.firebase_analytics_patched;
 import static com.github.cregrant.smaliscissors.common.ProjectProperties.Property.firebase_crashlytics_patched;
@@ -20,7 +18,10 @@ import static com.github.cregrant.smaliscissors.common.ProjectProperties.Propert
 public class SmaliKeeper {
 
     private static final Logger logger = LoggerFactory.getLogger(SmaliKeeper.class);
+    private static final ArrayList<String> xmlProtectedPackages = new ArrayList<>(Collections.singletonList("Landroid/view/"));
     private final Project project;
+    private HashSet<String> protectedClassRefs;
+    private Map<String, String> hierarchy;
     private boolean scanned = false;
     private boolean firebaseCrashlyticsFound = false;
     private boolean firebaseAnalyticsFound = false;
@@ -34,14 +35,61 @@ public class SmaliKeeper {
             return;
         }
 
-        for (String s : project.getProtectedClasses()) {
+        protectedClassRefs = project.getManifest().getProtectedClasses();
+        for (String s : protectedClassRefs) {
             if (s.startsWith("com/google/firebase/components:com/google/firebase/crashlytics/")) {
                 firebaseCrashlyticsFound = true;
             } else if (s.startsWith("com/google/firebase/components:com/google/firebase/analytics")) {
                 firebaseAnalyticsFound = true;
             }
         }
+
+        fillProtectedClassRefs(protectedClassRefs);
+
         scanned = true;
+    }
+
+    private void fillProtectedClassRefs(HashSet<String> oldProtectedClassRefs) {
+        HashSet<String> diff = new HashSet<>();
+        for (String protectedClass : oldProtectedClassRefs) {
+            String ref = 'L' + protectedClass + ';';
+            if (hierarchy.containsKey(ref)) {
+                diff.add(ref);
+            }
+        }
+        ArrayList<String> xmlUsedClasses = new ArrayList<>();
+        for (String xmlProtectedPackage : xmlProtectedPackages) {
+            for (Map.Entry<String, String> entry : hierarchy.entrySet()) {
+                if (entry.getValue().startsWith(xmlProtectedPackage)) {
+                    findAllChildClassesRecursive(xmlUsedClasses, entry.getKey());
+                }
+            }
+        }
+        diff.addAll(xmlUsedClasses);
+
+        HashSet<String> newProtectedClasses = new HashSet<>();
+        while (!diff.isEmpty()) {
+            HashSet<String> newDiff = new HashSet<>();
+            for (String ref : diff) {
+                String superclassRef = hierarchy.get(ref);
+                if (superclassRef == null || newProtectedClasses.contains(ref)) {
+                    continue;
+                }
+                newProtectedClasses.add(ref);
+                newDiff.add(superclassRef);
+            }
+            diff = newDiff;
+        }
+        this.protectedClassRefs = newProtectedClasses;     //cleaned protected classes with their superclasses (recursive)
+    }
+
+    private void findAllChildClassesRecursive(ArrayList<String> childClasses, String superclassRef) {
+        childClasses.add(superclassRef);
+        for (Map.Entry<String, String> entry : hierarchy.entrySet()) {
+            if (entry.getValue().equals(superclassRef)) {
+                findAllChildClassesRecursive(childClasses, entry.getKey());
+            }
+        }
     }
 
     void changeTargets(Patch patch, RemoveCode rule) {
@@ -50,34 +98,19 @@ public class SmaliKeeper {
 
     void keepClasses(State state) {
         scan();
-        HashSet<SmaliClass> returned = new HashSet<>();
-        for (SmaliFile file : state.deletedFiles) {      //keep activities, services anf other AndroidManifest.xml things
-            String path = file.getPath();
-            String shortPath = path.substring(path.indexOf("/") + 1, path.length() - 6);
-            if (project.getProtectedClasses().contains(shortPath)) {
+        HashSet<SmaliClass> setToKeep = new HashSet<>();
+        for (SmaliFile file : state.deletedFiles) {      //keep activities, services and other AndroidManifest.xml things
+            String path = SmaliTarget.removePathObfuscation(file.getPath());
+            String ref = 'L' + path.substring(path.indexOf("/") + 1, path.length() - 6) + ';';
+            if (protectedClassRefs.contains(ref)) {
                 SmaliClass smaliClass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
-                keepClass(state, returned, smaliClass);
+                smaliClass.makeStub();
+                setToKeep.add(smaliClass);
             }
         }
-        state.patchedClasses.addAll(returned);
-        for (SmaliClass smaliClass : returned) {
+        state.patchedClasses.addAll(setToKeep);
+        for (SmaliClass smaliClass : setToKeep) {
             state.deletedFiles.remove(smaliClass.getFile());
-        }
-    }
-
-    private void keepClass(State state, HashSet<SmaliClass> set, SmaliClass smaliClass) {
-        scan();
-        smaliClass.makeStub();
-        set.add(smaliClass);
-        String superclassPath = smaliClass.getSuperclass().substring(1, smaliClass.getSuperclass().length() - 1);
-        if (!superclassPath.startsWith("android") && project.getProtectedClasses().contains(superclassPath)) {
-            for (SmaliFile file : state.deletedFiles) {
-                if (file.getPath().endsWith(superclassPath)) {
-                    SmaliClass superclass = new SmaliClass(project, file, file.getBody().replace("\r", ""));
-                    keepClass(state, set, superclass);
-                    break;
-                }
-            }
         }
     }
 
@@ -130,5 +163,9 @@ public class SmaliKeeper {
         replaceRule.setRegex(true);
         replaceRule.setTargetType(Rule.TargetType.SMALI);
         return replaceRule;
+    }
+
+    public void setHierarchy(Map<String, String> hierarchy) {
+        this.hierarchy = hierarchy;
     }
 }

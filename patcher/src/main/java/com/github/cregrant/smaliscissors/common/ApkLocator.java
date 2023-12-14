@@ -26,8 +26,12 @@ public class ApkLocator {
                 }
             }
         }
-        logger.debug("Apktool config is not found");
-        return parseParentFolder(project);
+
+        String path = parseParentFolder(project);
+        if (path == null) {
+            logger.debug("Apktool config is not found");
+        }
+        return path;
     }
 
     private String parseApktoolConfig(Project project, File config) {

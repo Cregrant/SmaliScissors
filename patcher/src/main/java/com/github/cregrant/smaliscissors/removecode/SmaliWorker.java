@@ -63,7 +63,10 @@ public class SmaliWorker {
         State newState = new State(currentState);
         ClassesPool pool = new ClassesPool(project);
         TargetController controller = new TargetController();
-        project.getSmaliKeeper().changeTargets(patch, rule);
+        SmaliKeeper smaliKeeper = project.getSmaliKeeper();
+        smaliKeeper.setHierarchy(pool.getHierarchy());
+        smaliKeeper.changeTargets(patch, rule);
+
         List<String> targets = rule.getTargets();
 
         for (int i = controller.getStartNumber(targets); i < targets.size(); i++) {
@@ -84,7 +87,7 @@ public class SmaliWorker {
                 job.remove(target, newState);
             } catch (Exception e) {
                 errorsNum++;
-                logger.warn("Skipped " + target + " (" + e.getMessage() + ")");
+                logger.warn("Skipped " + target + " (" + e.getMessage() + ")");     //fixme catch only expected exceptions
                 newState = new State(currentState);
                 if (controller.canApply() && controller.applyAndCheckEnd(target)) {
                     rule.setLastTarget(project, path);
@@ -115,7 +118,7 @@ public class SmaliWorker {
                 }
             }
         }
-        project.getSmaliKeeper().keepClasses(currentState);
+        smaliKeeper.keepClasses(currentState);
 
         if (rule.isInternal()) {
             logger.info(crashReportersNum + " crash reporters deleted.");

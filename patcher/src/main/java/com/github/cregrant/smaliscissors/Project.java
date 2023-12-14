@@ -20,7 +20,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
@@ -173,8 +172,8 @@ public class Project {
         }
     }
 
-    public HashSet<String> getProtectedClasses() {
-        return manifest.getProtectedClasses();
+    public Manifest getManifest() {
+        return manifest;
     }
 
     public DexExecutor getDexExecutor() {

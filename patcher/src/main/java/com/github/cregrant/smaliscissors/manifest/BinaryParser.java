@@ -82,6 +82,7 @@ public class BinaryParser {
         } catch (Exception ignored) {
         }
         if (classes.isEmpty()) {
+            logger.debug("Error parsing binary manifest file. Falling back to binary string pool");
             BinaryStringPoolParser parser = new BinaryStringPoolParser();
             classes = parser.parseXmlStrings(xml);
         }

@@ -6,6 +6,7 @@ import com.github.cregrant.smaliscissors.removecode.SmaliTarget;
 
 public class ClassHeader implements ClassPart {
     public static final String STUB = "#Stub class to fool AndroidManifest.xml\n";
+    public static final String OBJECT_REF = "Ljava/lang/Object;";
     private String text;
     private String superclass;
     private int end;
@@ -32,18 +33,8 @@ public class ClassHeader implements ClassPart {
 
     @Override
     public SmaliCleanResult clean(SmaliTarget target, SmaliClass smaliClass) {
-        if (!deleted && target.isClass()) {
-            if (!superclass.startsWith(target.getRef())) {
-                return null;
-            }
-
-            String deletedSuperclassRef = superclass;
-            superclass = "Ljava/lang/Object;";
-            text = text.replace(deletedSuperclassRef, superclass);
-
-            if (!smaliClass.changeSuperclassOk(deletedSuperclassRef)) {
-                return new SmaliCleanResult(new SmaliTarget().setRef(smaliClass.getRef()));
-            }
+        if (!deleted && target.isClass() && superclass.startsWith(target.getRef())) {
+            superclass = OBJECT_REF;
             deleted = true;
         }
         return null;
