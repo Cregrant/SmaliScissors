@@ -35,6 +35,11 @@ Then, build the minimalistic `patcher.jar` library for inclusion in your applica
 gradlew :patcher:fatJar
 ```
 
+For more details on integrating SmaliScissors with your Gradle project and configuring logback (for SLF4J), refer to the
+[Example lib usage wiki](https://github.com/Cregrant/SmaliScissors/wiki/Example_lib_usage.md).
+
+---
+
 Alternatively, build a `console_patcher.jar` file to execute patches from the command line:
 
 ```bash
