@@ -36,7 +36,7 @@ gradlew :patcher:fatJar
 ```
 
 For more details on integrating SmaliScissors with your Gradle project and configuring logback (for SLF4J), refer to the
-[Example lib usage wiki](https://github.com/Cregrant/SmaliScissors/wiki/Example_lib_usage.md).
+[Example lib usage wiki](https://github.com/Cregrant/SmaliScissors/wiki/Example_lib_usage).
 
 ---
 
