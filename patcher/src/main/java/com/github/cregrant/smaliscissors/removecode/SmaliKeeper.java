@@ -37,15 +37,16 @@ public class SmaliKeeper {
 
         protectedClassRefs = project.getManifest().getProtectedClasses();
         for (String s : protectedClassRefs) {
-            if (s.startsWith("com/google/firebase/components:com/google/firebase/crashlytics/")) {
+            if (!firebaseCrashlyticsFound && s.startsWith("com/google/firebase/components:com/google/firebase/crashlytics/")) {
                 firebaseCrashlyticsFound = true;
-            } else if (s.startsWith("com/google/firebase/components:com/google/firebase/analytics")) {
+                logger.debug("found firebase crashlytics");
+            } else if (!firebaseAnalyticsFound && s.startsWith("com/google/firebase/components:com/google/firebase/analytics")) {
                 firebaseAnalyticsFound = true;
+                logger.debug("found firebase analytics");
             }
         }
 
         fillProtectedClassRefs(protectedClassRefs);
-
         scanned = true;
     }
 
@@ -81,6 +82,7 @@ public class SmaliKeeper {
             diff = newDiff;
         }
         this.protectedClassRefs = newProtectedClasses;     //cleaned protected classes with their superclasses (recursive)
+        logger.debug("SmaliKeeper: filled {} protected classes", newProtectedClasses.size());
     }
 
     private void findAllChildClassesRecursive(ArrayList<String> childClasses, String superclassRef) {
