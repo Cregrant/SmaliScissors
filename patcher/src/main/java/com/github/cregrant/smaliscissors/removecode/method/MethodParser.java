@@ -30,14 +30,19 @@ public class MethodParser {
         }
         opcodes = new ArrayList<>(lines.length);
         HashMap<Tag, Table> tables = new HashMap<>();
+        int lastOpcodeCanHaveMoveResult = 0;
 
         for (; pos < lines.length; pos++) {
             String line = lines[pos];
             Opcode op = Opcode.parseOpcode(line, target);
             opcodes.add(op);
 
+            if (op instanceof Invoke || op instanceof FilledNewArray) {
+                lastOpcodeCanHaveMoveResult = pos;
+            }
+
             if (op instanceof MoveResult) {
-                appendMoveResult(op);
+                appendMoveResult(op, lastOpcodeCanHaveMoveResult);
             } else if (op instanceof Table) {
                 Table table = (Table) op;
                 fillTable(lines, table);
@@ -58,8 +63,8 @@ public class MethodParser {
         return opcodes;
     }
 
-    private void appendMoveResult(Opcode op) {     //append MoveResult to a prev opcode
-        Opcode prevOpcode = opcodes.get(opcodes.size() - 3);
+    private void appendMoveResult(Opcode op, int lastOpcodeCanHaveMoveResult) {     //append MoveResult to a prev opcode
+        Opcode prevOpcode = opcodes.get(lastOpcodeCanHaveMoveResult);
         if (prevOpcode instanceof Invoke) {
             ((Invoke) prevOpcode).setMoveResultLink(op);
         } else if (prevOpcode instanceof FilledNewArray) {

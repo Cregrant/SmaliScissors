@@ -116,7 +116,7 @@ public class MethodCleaner {
                         } while (opcodes.get(i) instanceof Catch);
                         i = lastPos;
                         continue loop;
-                    } else if (!otherOp.isDeleted()) {
+                    } else if (!(otherOp.isDeleted() || otherOp instanceof Debug)) {
                         i = j;    //don't touch if something left inside
                         continue loop;
                     }

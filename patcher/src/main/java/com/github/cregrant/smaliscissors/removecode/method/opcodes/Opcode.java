@@ -26,6 +26,8 @@ public class Opcode {
 
         if (str.isEmpty()) {
             result = new Blank();
+        } else if (str.startsWith(".line", offset)) {
+            result = new Debug(str);
         } else if (str.startsWith("invoke", offset)) {
             result = new Invoke(str, target);
         } else if (str.startsWith("const", offset) || str.startsWith("move-exception", offset)) {
