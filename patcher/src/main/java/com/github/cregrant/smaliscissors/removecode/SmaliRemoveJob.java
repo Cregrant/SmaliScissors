@@ -105,7 +105,7 @@ public class SmaliRemoveJob {
         for (final SmaliClass smaliClass : classes) {
             if (smaliClass.getRef().endsWith("Registrar;")) {
                 project.getSmaliKeeper().changeFirebaseAnalytics(patch, rule);
-                throw new IllegalStateException("causes app crash due to firebase errors");
+                throw new IllegalStateException("preventing app crash due to firebase errors");
             }
             if (!rule.isInternal()) {
                 logger.debug("Cleaning {}", smaliClass);
