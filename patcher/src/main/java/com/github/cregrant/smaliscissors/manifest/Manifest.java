@@ -64,18 +64,22 @@ public class Manifest {
     }
 
     private HashSet<String> parseProtectedClasses() {
+        HashSet<String> strings = null;
         XmlFile manifestFile = findManifestFile();
         if (manifestFile != null) {
-            return new DecompiledParser(manifestFile.getBody()).getProtectedClasses();
+            strings = new DecompiledParser(manifestFile.getBody()).getProtectedClasses();
+            if (!strings.isEmpty()) {
+                logger.debug("Used decompiled AndroidManifest.xml");
+                return strings;
+            }
         }
 
-        HashSet<String> strings = null;
         if (project.getApkPath() != null) {
             BinaryParser parser = new BinaryParser(project.getApkPath());
             strings = parser.getStrings();
         }
         if (strings == null || strings.isEmpty()) {
-            throw new InputMismatchException("Both AndroidManifest.xml and an apk file path are missing. Provide the apk file next to your project folder or decompile your project with resources.");
+            throw new InputMismatchException("Unable to parse either the AndroidManifest.xml or an APK file. Please provide the APK file next to your project folder or decompile your project with resources.");
         }
         return strings;
     }
@@ -91,6 +95,7 @@ public class Manifest {
     public HashSet<String> getProtectedClasses() {
         if (protectedClasses == null) {
             protectedClasses = parseProtectedClasses();
+            logger.debug("Parsed {} protected classes", protectedClasses.size());
         }
         return protectedClasses;
     }
@@ -98,6 +103,7 @@ public class Manifest {
     public DecompiledFile getApplicationFile() {
         if (applicationFile == null) {
             parseManifestFiles();
+            logger.debug("Parsed application file: {}", applicationFile.getPath());
         }
         return applicationFile;
     }
@@ -105,6 +111,7 @@ public class Manifest {
     public List<DecompiledFile> getActivityFiles() {
         if (activityFiles == null) {
             parseManifestFiles();
+            logger.debug("Parsed {} activity files", activityFiles.size());
         }
         return activityFiles;
     }
@@ -112,6 +119,7 @@ public class Manifest {
     public List<DecompiledFile> getLauncherActivityFiles() {
         if (launcherActivityFiles == null) {
             parseManifestFiles();
+            logger.debug("Parsed {} launcher activity files", launcherActivityFiles.size());
         }
         return launcherActivityFiles;
     }
